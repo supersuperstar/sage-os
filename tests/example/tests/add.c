@@ -2,7 +2,7 @@
 
 int add(int a, int b) {
   int c = a + b;
-  return c - 1;
+  return c - 1;   // intensionally wrong
 }
 
 int test_data[] = {0,          1,          2,          0x7fffffff,

@@ -19,14 +19,21 @@ all: $(addprefix Makefile., $(ALL))
 
 $(ALL): %: Makefile.%
 
+### for qemu target, halt(1) will not pass through qemu return code
+### get halt code by grep its serial output. (Line 27)
 Makefile.%: tests/%.c latest
 	@/bin/echo -e "NAME = $*\nSRCS = $<\nLIBS += klib\ninclude $(AM_HOME)/Makefile" > $@
-	@if make -s -f $@ ARCH=$(ARCH) $(MAKECMDGOALS) ; then \
-		printf "[%14s] $(COLOR_GREEN)PASS!$(COLOR_NONE)\n" $* >> $(RESULT); \
+	@if make -s -f $@ ARCH=$(ARCH) $(MAKECMDGOALS) > .tmp ; then \
+		if [ "$(ARCH)" != "native" ] && [ $$(grep "CPU" .tmp | grep -Eo "\([0-9]{2}\)") != "(00)" ]; then \
+			printf "[%14s] $(COLOR_RED)FAIL!$(COLOR_NONE)\n" $* >> $(RESULT); \
+		else \
+			printf "[%14s] $(COLOR_GREEN)PASS!$(COLOR_NONE)\n" $* >> $(RESULT); \
+		fi \
 	else \
 		printf "[%14s] $(COLOR_RED)FAIL!$(COLOR_NONE)\n" $* >> $(RESULT); \
 	fi
 	-@rm -f Makefile.$*
+	-@rm -f .tmp
 
 run: all
 	@cat $(RESULT)
