@@ -11,3 +11,6 @@ AM_SRCS := x86/qemu/start32.S \
 
 run: build-arg
 	@qemu-system-i386 $(QEMU_FLAGS)
+
+debug: build-arg
+	@qemu-system-i386 $(QEMU_DBG_FLAGS) $(QEMU_FLAGS)

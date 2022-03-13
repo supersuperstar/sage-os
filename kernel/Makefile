@@ -8,5 +8,3 @@ export ARCH    := x86_64-qemu
 endif
 
 include $(AM_HOME)/Makefile
-include ../Makefile.lab
-image: git

@@ -6,3 +6,5 @@ a.out-*
 *-32*
 *-64*
 *.log
+.vscode
+*.sh
