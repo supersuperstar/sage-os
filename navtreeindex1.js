@@ -127,7 +127,7 @@ var NAVTREEINDEX1 =
 "klib_8h.html#ae23144bcbb8e3742b00eb687c36654d1":[2,0,0,1,0,1,10],
 "klib_8h.html#afbedc913aa4651b3c3b4b3aecd9b4711":[2,0,0,1,0,1,3],
 "klib_8h_source.html":[2,0,0,1,0,1],
-"md_kernel_src__r_e_a_d_m_e.html":[0],
+"md_kernel__r_e_a_d_m_e.html":[0],
 "mips32-nemu_8h.html":[2,0,0,0,0,0,0],
 "mips32-nemu_8h.html#a24396b2e28fcfcbc538a56b3b8c672f4":[2,0,0,0,0,0,0,3],
 "mips32-nemu_8h.html#a7e27bee94470929294a5d42e98ea5373":[2,0,0,0,0,0,0,4],

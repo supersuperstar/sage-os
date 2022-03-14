@@ -3,7 +3,7 @@ var searchData=
   ['kalloc_0',['kalloc',['../pmm_8c.html#a350a830083f55f1886e000edec454a99',1,'pmm.c']]],
   ['kcontext_1',['kcontext',['../x86_2qemu_2cte_8c.html#a90a17e3cfc268f5b8ed0a92ffda13a58',1,'kcontext(Area kstack, void(*entry)(void *), void *arg):&#160;cte.c'],['../native_2cte_8c.html#a90a17e3cfc268f5b8ed0a92ffda13a58',1,'kcontext(Area kstack, void(*entry)(void *), void *arg):&#160;cte.c'],['../am_8h.html#a90a17e3cfc268f5b8ed0a92ffda13a58',1,'kcontext(Area kstack, void(*entry)(void *), void *arg):&#160;cte.c']]],
   ['kernel_2',['kernel',['../structvm__area.html#a50bbe3666837524b16f524b03d4b535a',1,'vm_area']]],
-  ['kernel_20说明_3',['Kernel 说明',['../md_kernel_src__r_e_a_d_m_e.html',1,'']]],
+  ['kernel_20说明_3',['Kernel 说明',['../md_kernel__r_e_a_d_m_e.html',1,'']]],
   ['kernel_2eh_4',['kernel.h',['../kernel_8h.html',1,'']]],
   ['kernel_5fstack_5',['kernel_stack',['../structkernel__stack.html',1,'']]],
   ['key_6',['key',['../struct_page_map.html#aba8ec8b73c06b7c981b67e88184a1d08',1,'PageMap']]],

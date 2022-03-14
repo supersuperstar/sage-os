@@ -22,7 +22,7 @@ var searchData=
   ['read_5fdisk_19',['read_disk',['../abstract-machine_2am_2src_2x86_2qemu_2boot_2main_8c.html#a5c78005e67963b2e5e1c05b5e462f186',1,'main.c']]],
   ['read_5frtc_20',['read_rtc',['../x86_2qemu_2ioe_8c.html#a124b85735169c7add3c491093ffbc00e',1,'ioe.c']]],
   ['read_5frtc_5fasync_21',['read_rtc_async',['../x86_2qemu_2ioe_8c.html#ad0681f53bec9167d7a8d4d848b3ce2e0',1,'ioe.c']]],
-  ['readme_2emd_22',['README.md',['../kernel_2src_2_r_e_a_d_m_e_8md.html',1,'(全局命名空间)'],['../_r_e_a_d_m_e_8md.html',1,'(全局命名空间)']]],
+  ['readme_2emd_22',['README.md',['../kernel_2_r_e_a_d_m_e_8md.html',1,'(全局命名空间)'],['../_r_e_a_d_m_e_8md.html',1,'(全局命名空间)']]],
   ['real_23',['real',['../struct_lcomplex.html#a520606ccd2dd5b8bd3f20ee1ba898dd1',1,'Lcomplex::real()'],['../struct_dcomplex.html#a51c821fcf95975271abfc49311e983d4',1,'Dcomplex::real()'],['../struct_fcomplex.html#a06ed4269b34924d748f2f77b17db7d21',1,'Fcomplex::real()']]],
   ['redzone_24',['redzone',['../struct_context.html#ab4f288766d4a33e2345ef357a26835dc',1,'Context']]],
   ['ref_25',['ref',['../struct_event.html#a95744ca80b9365526d8f19ceb8546061',1,'Event']]],

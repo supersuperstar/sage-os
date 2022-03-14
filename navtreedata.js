@@ -25,7 +25,7 @@
 var NAVTREE =
 [
   [ "SageOS", "index.html", [
-    [ "Kernel 说明", "md_kernel_src__r_e_a_d_m_e.html", null ],
+    [ "Kernel 说明", "md_kernel__r_e_a_d_m_e.html", null ],
     [ "结构体", "annotated.html", [
       [ "结构体", "annotated.html", "annotated_dup" ],
       [ "结构体索引", "classes.html", null ],
