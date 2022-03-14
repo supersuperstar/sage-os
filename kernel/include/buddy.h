@@ -10,16 +10,15 @@ struct page {
     //struct slab*
 };
 
-
-struct free_list{
-    uint64_t nr_free;
-    list_head* free_list;
-};
-
 struct list_head{
     struct chunk* _chunk;
     struct list_head* prev;
     struct list_head* next;
+};
+
+struct free_list{
+    uint64_t nr_free;
+    struct list_head* free_list;
 };
 
 struct chunk {
