@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.3"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SageOS: kernel/src/os.c 文件参考</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">SageOS
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 制作者 Doxygen 1.9.3 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search",'搜索','.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','搜索');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_dc43877d82dd332f9fb2071fcca799d6.html">kernel</a></li><li class="navelem"><a class="el" href="dir_3dd30a497388ee684638f120a124721c.html">src</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="summary">
+<a href="#func-members">函数</a>  </div>
+  <div class="headertitle"><div class="title">os.c 文件参考</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><code>#include &lt;<a class="el" href="common_8h_source.html">common.h</a>&gt;</code><br />
+</div><div class="textblock"><div class="dynheader">
+os.c 的引用(Include)关系图:</div>
+<div class="dyncontent">
+<div class="center"><img src="os_8c__incl.png" border="0" usemap="#akernel_2src_2os_8c" alt=""/></div>
+<map name="akernel_2src_2os_8c" id="akernel_2src_2os_8c">
+<area shape="rect" title=" " alt="" coords="69,5,176,32"/>
+<area shape="rect" href="common_8h.html" title=" " alt="" coords="81,80,164,107"/>
+<area shape="rect" href="kernel_8h.html" title=" " alt="" coords="5,155,72,181"/>
+<area shape="rect" title=" " alt="" coords="97,155,149,181"/>
+<area shape="rect" title=" " alt="" coords="173,155,272,181"/>
+<area shape="rect" title=" " alt="" coords="13,229,64,256"/>
+</map>
+</div>
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+函数</h2></td></tr>
+<tr class="memitem:aef4448ba4711b237d8254529f2a4b621"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="os_8c.html#aef4448ba4711b237d8254529f2a4b621">os_init</a> ()</td></tr>
+<tr class="separator:aef4448ba4711b237d8254529f2a4b621"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f9cb32664e017ca15c49ec66e5342e4"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="os_8c.html#a5f9cb32664e017ca15c49ec66e5342e4">os_run</a> ()</td></tr>
+<tr class="separator:a5f9cb32664e017ca15c49ec66e5342e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafec7046aa50c914df86d0d22d4fc1d1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="os_8c.html#aafec7046aa50c914df86d0d22d4fc1d1">MODULE_DEF</a> (os)</td></tr>
+<tr class="separator:aafec7046aa50c914df86d0d22d4fc1d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">函数说明</h2>
+<a id="aafec7046aa50c914df86d0d22d4fc1d1" name="aafec7046aa50c914df86d0d22d4fc1d1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aafec7046aa50c914df86d0d22d4fc1d1">&#9670;&nbsp;</a></span>MODULE_DEF()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">MODULE_DEF </td>
+          <td>(</td>
+          <td class="paramtype">os&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+函数调用图:</div>
+<div class="dyncontent">
+<div class="center"><img src="os_8c_aafec7046aa50c914df86d0d22d4fc1d1_cgraph.png" border="0" usemap="#aos_8c_aafec7046aa50c914df86d0d22d4fc1d1_cgraph" alt=""/></div>
+<map name="aos_8c_aafec7046aa50c914df86d0d22d4fc1d1_cgraph" id="aos_8c_aafec7046aa50c914df86d0d22d4fc1d1_cgraph">
+<area shape="rect" title=" " alt="" coords="5,31,116,57"/>
+<area shape="rect" href="os_8c.html#aef4448ba4711b237d8254529f2a4b621" title=" " alt="" coords="165,5,225,32"/>
+<area shape="rect" href="os_8c.html#a5f9cb32664e017ca15c49ec66e5342e4" title=" " alt="" coords="164,56,225,83"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="aef4448ba4711b237d8254529f2a4b621" name="aef4448ba4711b237d8254529f2a4b621"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aef4448ba4711b237d8254529f2a4b621">&#9670;&nbsp;</a></span>os_init()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void os_init </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<div class="dynheader">
+这是这个函数的调用关系图:</div>
+<div class="dyncontent">
+<div class="center"><img src="os_8c_aef4448ba4711b237d8254529f2a4b621_icgraph.png" border="0" usemap="#aos_8c_aef4448ba4711b237d8254529f2a4b621_icgraph" alt=""/></div>
+<map name="aos_8c_aef4448ba4711b237d8254529f2a4b621_icgraph" id="aos_8c_aef4448ba4711b237d8254529f2a4b621_icgraph">
+<area shape="rect" title=" " alt="" coords="164,5,224,32"/>
+<area shape="rect" href="os_8c.html#aafec7046aa50c914df86d0d22d4fc1d1" title=" " alt="" coords="5,5,116,32"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a5f9cb32664e017ca15c49ec66e5342e4" name="a5f9cb32664e017ca15c49ec66e5342e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f9cb32664e017ca15c49ec66e5342e4">&#9670;&nbsp;</a></span>os_run()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void os_run </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<div class="dynheader">
+这是这个函数的调用关系图:</div>
+<div class="dyncontent">
+<div class="center"><img src="os_8c_a5f9cb32664e017ca15c49ec66e5342e4_icgraph.png" border="0" usemap="#aos_8c_a5f9cb32664e017ca15c49ec66e5342e4_icgraph" alt=""/></div>
+<map name="aos_8c_a5f9cb32664e017ca15c49ec66e5342e4_icgraph" id="aos_8c_a5f9cb32664e017ca15c49ec66e5342e4_icgraph">
+<area shape="rect" title=" " alt="" coords="164,5,225,32"/>
+<area shape="rect" href="os_8c.html#aafec7046aa50c914df86d0d22d4fc1d1" title=" " alt="" coords="5,5,116,32"/>
+</map>
+</div>
+
+</div>
+</div>
+</div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+制作者&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.3
+</small></address>
+</body>
+</html>
