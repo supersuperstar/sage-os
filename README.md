@@ -8,6 +8,7 @@ View document at [https://sage-os-team.github.io/sage-os/](https://sage-os-team.
 │   ├── am
 │   ├── klib
 │   └── scripts
+├── docs
 ├── kernel
 │   ├── framework
 │   ├── include
