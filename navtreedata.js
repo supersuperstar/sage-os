@@ -25,7 +25,7 @@
 var NAVTREE =
 [
   [ "SageOS", "index.html", [
-    [ "Kernel 说明", "md_kernel__r_e_a_d_m_e.html", null ],
+    [ "Kernel 说明", "md_docs_kernel.html", null ],
     [ "结构体", "annotated.html", [
       [ "结构体", "annotated.html", "annotated_dup" ],
       [ "结构体索引", "classes.html", null ],
@@ -52,10 +52,10 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "abstract-machine_2am_2src_2x86_2qemu_2boot_2main_8c.html",
-"globals_s.html",
-"platform_8c.html#a995c6e1c7dfdc8a01e5b7437c30e50de",
-"struct_seg_desc.html#a1fab8d68d051eca3d118d5408e1200ca",
-"x86_2qemu_2trm_8c.html#a1e1b7250fe486b4222868bcc45cadd10"
+"globals_r.html",
+"platform_8c.html#a9730b6fe94ece5291a8f4e78b5189304",
+"struct_seg_desc.html#a1b064e2f6a6eae2b71e0444d64736a36",
+"x86_2qemu_2trm_8c.html#a12a49ff4d3a586b2315e292c5da3df7e"
 ];
 
 var SYNCONMSG = '点击 关闭 面板同步';

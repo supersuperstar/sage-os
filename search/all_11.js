@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['r_0',['r',['../structpixel.html#a4c5c6ceb8ed33456261fa907136e0c3a',1,'pixel::r()'],['../x86_2qemu_2ioe_8c.html#a4c5c6ceb8ed33456261fa907136e0c3a',1,'r():&#160;ioe.c']]],
+  ['r_0',['r',['../x86_2qemu_2ioe_8c.html#a4c5c6ceb8ed33456261fa907136e0c3a',1,'r():&#160;ioe.c'],['../structpixel.html#a4c5c6ceb8ed33456261fa907136e0c3a',1,'pixel::r()']]],
   ['r_1',['R',['../x86_2qemu_2ioe_8c.html#a283a97eb969495ff8d6c70d7cff572d6',1,'ioe.c']]],
   ['r10_2',['r10',['../struct_context.html#a672542f94403b54948dff9d8fa7cb0f1',1,'Context']]],
   ['r11_3',['r11',['../struct_context.html#a9fc079aa0f66433a06c5fcc4d20bec15',1,'Context']]],
@@ -10,7 +10,7 @@ var searchData=
   ['r15_7',['r15',['../struct_context.html#a88c0b64834f9e74a82375b66aebee207',1,'Context']]],
   ['r8_8',['r8',['../struct_context.html#a338c714a93a43aa16b7b45f969e22e31',1,'Context']]],
   ['r9_9',['r9',['../struct_context.html#a478d9f99683e61a00d104d13f0739f64',1,'Context']]],
-  ['rand_10',['rand',['../stdlib_8c.html#ae23144bcbb8e3742b00eb687c36654d1',1,'rand(void):&#160;stdlib.c'],['../klib_8h.html#ae23144bcbb8e3742b00eb687c36654d1',1,'rand(void):&#160;stdlib.c']]],
+  ['rand_10',['rand',['../klib_8h.html#ae23144bcbb8e3742b00eb687c36654d1',1,'rand(void):&#160;stdlib.c'],['../stdlib_8c.html#ae23144bcbb8e3742b00eb687c36654d1',1,'rand(void):&#160;stdlib.c']]],
   ['range_11',['RANGE',['../klib-macros_8h.html#a88ba2ef36e68c59ef4fc8b27ad8e6336',1,'klib-macros.h']]],
   ['rax_12',['rax',['../struct_context.html#afae317c0ec04889d6c9452dc30711975',1,'Context']]],
   ['rbp_13',['rbp',['../struct_context.html#a9d073dc105e374fd995ca8f3308cb0df',1,'Context']]],
@@ -22,8 +22,8 @@ var searchData=
   ['read_5fdisk_19',['read_disk',['../abstract-machine_2am_2src_2x86_2qemu_2boot_2main_8c.html#a5c78005e67963b2e5e1c05b5e462f186',1,'main.c']]],
   ['read_5frtc_20',['read_rtc',['../x86_2qemu_2ioe_8c.html#a124b85735169c7add3c491093ffbc00e',1,'ioe.c']]],
   ['read_5frtc_5fasync_21',['read_rtc_async',['../x86_2qemu_2ioe_8c.html#ad0681f53bec9167d7a8d4d848b3ce2e0',1,'ioe.c']]],
-  ['readme_2emd_22',['README.md',['../kernel_2_r_e_a_d_m_e_8md.html',1,'(全局命名空间)'],['../_r_e_a_d_m_e_8md.html',1,'(全局命名空间)']]],
-  ['real_23',['real',['../struct_lcomplex.html#a520606ccd2dd5b8bd3f20ee1ba898dd1',1,'Lcomplex::real()'],['../struct_dcomplex.html#a51c821fcf95975271abfc49311e983d4',1,'Dcomplex::real()'],['../struct_fcomplex.html#a06ed4269b34924d748f2f77b17db7d21',1,'Fcomplex::real()']]],
+  ['readme_2emd_22',['README.md',['../_r_e_a_d_m_e_8md.html',1,'']]],
+  ['real_23',['real',['../struct_fcomplex.html#a06ed4269b34924d748f2f77b17db7d21',1,'Fcomplex::real()'],['../struct_dcomplex.html#a51c821fcf95975271abfc49311e983d4',1,'Dcomplex::real()'],['../struct_lcomplex.html#a520606ccd2dd5b8bd3f20ee1ba898dd1',1,'Lcomplex::real()']]],
   ['redzone_24',['redzone',['../struct_context.html#ab4f288766d4a33e2345ef357a26835dc',1,'Context']]],
   ['ref_25',['ref',['../struct_event.html#a95744ca80b9365526d8f19ceb8546061',1,'Event']]],
   ['reg_26',['reg',['../x86_2qemu_2ioe_8c.html#a6b91636401516a477989a336376d7b40',1,'reg():&#160;ioe.c'],['../struct_i_o_a_p_i_c.html#a6b91636401516a477989a336376d7b40',1,'IOAPIC::reg()']]],

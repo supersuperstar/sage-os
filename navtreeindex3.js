@@ -1,5 +1,6 @@
 var NAVTREEINDEX3 =
 {
+"struct_seg_desc.html#a1b064e2f6a6eae2b71e0444d64736a36":[1,0,26,7],
 "struct_seg_desc.html#a1fab8d68d051eca3d118d5408e1200ca":[1,0,26,6],
 "struct_seg_desc.html#a2dee666f0c1fe072c549ff86b1d0a8ab":[1,0,26,11],
 "struct_seg_desc.html#a2eb230347b872886f0919559966383ae":[1,0,26,3],
@@ -248,6 +249,5 @@ var NAVTREEINDEX3 =
 "x86_2qemu_2mpe_8c.html#afc800fc7438b6762f113c46d25cab75b":[2,0,0,0,1,1,0,3,3],
 "x86_2qemu_2trm_8c.html":[2,0,0,0,1,1,0,4],
 "x86_2qemu_2trm_8c.html#a00dbb3ab1c59e14699be9393693e2248":[2,0,0,0,1,1,0,4,0],
-"x86_2qemu_2trm_8c.html#a05a6ef2fefbc05e322a90f02b3fbbcf4":[2,0,0,0,1,1,0,4,11],
-"x86_2qemu_2trm_8c.html#a12a49ff4d3a586b2315e292c5da3df7e":[2,0,0,0,1,1,0,4,7]
+"x86_2qemu_2trm_8c.html#a05a6ef2fefbc05e322a90f02b3fbbcf4":[2,0,0,0,1,1,0,4,11]
 };

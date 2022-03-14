@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=9" />
     <meta name="generator" content="Doxygen 1.9.3" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SageOS: abstract-machine/am/src -&gt; include 关系</title>
+    <title>SageOS: Kernel 说明</title>
     <link href="tabs.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="dynsections.js"></script>
@@ -80,7 +80,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('dir_ab9c339ca6939bbe6f6a41b1e4730185.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('md_docs_kernel.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -98,13 +98,23 @@ $(document).ready(function(){initNavTree('dir_ab9c339ca6939bbe6f6a41b1e4730185.h
 </iframe>
 </div>
 
+<div><div class="header">
+  <div class="headertitle"><div class="title">Kernel 说明 </div></div>
+</div><!--header-->
 <div class="contents">
-<h3>src &rarr; include 关系</h3><table class="dirtab"><tr class="dirtab"><th class="dirtab">文件在 abstract-machine/am/src</th><th class="dirtab">在 abstract-machine/am/include 中引用</th></tr><tr class="dirtab"><td class="dirtab"><a class="el" href="dir_26e1a664acda5db86c9818004634fd71.html">native</a>&#160;/&#160;<a class="el" href="dir_27778207f3aa29020f43ff1601370953.html">ioe</a>&#160;/&#160;<a class="el" href="disk_8c.html">disk.c</a></td><td class="dirtab"><a class="el" href="am_8h.html">am.h</a></td></tr><tr class="dirtab"><td class="dirtab"><a class="el" href="dir_26e1a664acda5db86c9818004634fd71.html">native</a>&#160;/&#160;<a class="el" href="dir_27778207f3aa29020f43ff1601370953.html">ioe</a>&#160;/&#160;<a class="el" href="gpu_8c.html">gpu.c</a></td><td class="dirtab"><a class="el" href="am_8h.html">am.h</a></td></tr><tr class="dirtab"><td class="dirtab"><a class="el" href="dir_26e1a664acda5db86c9818004634fd71.html">native</a>&#160;/&#160;<a class="el" href="dir_27778207f3aa29020f43ff1601370953.html">ioe</a>&#160;/&#160;<a class="el" href="input_8c.html">input.c</a></td><td class="dirtab"><a class="el" href="am_8h.html">am.h</a></td></tr><tr class="dirtab"><td class="dirtab"><a class="el" href="dir_26e1a664acda5db86c9818004634fd71.html">native</a>&#160;/&#160;<a class="el" href="native_2ioe_8c.html">ioe.c</a></td><td class="dirtab"><a class="el" href="am_8h.html">am.h</a></td></tr><tr class="dirtab"><td class="dirtab"><a class="el" href="dir_26e1a664acda5db86c9818004634fd71.html">native</a>&#160;/&#160;<a class="el" href="platform_8h.html">platform.h</a></td><td class="dirtab"><a class="el" href="am_8h.html">am.h</a></td></tr><tr class="dirtab"><td class="dirtab"><a class="el" href="dir_26e1a664acda5db86c9818004634fd71.html">native</a>&#160;/&#160;<a class="el" href="dir_27778207f3aa29020f43ff1601370953.html">ioe</a>&#160;/&#160;<a class="el" href="timer_8c.html">timer.c</a></td><td class="dirtab"><a class="el" href="am_8h.html">am.h</a></td></tr><tr class="dirtab"><td class="dirtab"><a class="el" href="dir_26e1a664acda5db86c9818004634fd71.html">native</a>&#160;/&#160;<a class="el" href="native_2trm_8c.html">trm.c</a></td><td class="dirtab"><a class="el" href="am_8h.html">am.h</a></td></tr><tr class="dirtab"><td class="dirtab"><a class="el" href="dir_84ebb354b97ad405f7394d9a50d5c853.html">x86</a>&#160;/&#160;<a class="el" href="dir_182591d9ec1b85284dfbe5e03d401e71.html">qemu</a>&#160;/&#160;<a class="el" href="src_2x86_2qemu_2x86-qemu_8h.html">x86-qemu.h</a></td><td class="dirtab"><a class="el" href="am_8h.html">am.h</a></td></tr></table></div><!-- contents -->
+<div class="textblock"><p >Kernel 包括如下模块：</p>
+<ul>
+<li><code>pmm</code> 物理内存分配</li>
+<li><code>kmt</code> 线程管理</li>
+<li><code>uproc</code> 用户进程管理</li>
+<li><code>vfs</code> 文件系统管理 </li>
+</ul>
+</div></div><!-- contents -->
+</div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_57953e885fa30d3cda66aaff14f5e717.html">abstract-machine</a></li><li class="navelem"><a class="el" href="dir_221aa689d77dcd1abd530cb13a599f6c.html">am</a></li><li class="navelem"><a class="el" href="dir_ab9c339ca6939bbe6f6a41b1e4730185.html">src</a></li>
     <li class="footer">制作者 <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.3 </li>
   </ul>
 </div>
