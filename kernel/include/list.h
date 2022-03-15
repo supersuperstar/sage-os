@@ -1,3 +1,14 @@
+/**
+ * @file list.h
+ * @author kg (kkwang@outlook.com)
+ * @brief  double circular linked list impl **without concurrency**
+ * @version 0.1
+ * @date 2022-03-15
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
@@ -7,7 +18,7 @@
 #define list_entry(ptr, type, member) \
 	((type*)((char*)(ptr) - (unsigned long)(&((type*)0)->member)))
 
-//pos为传入的空指针
+
 #define list_for_each(pos, head) \
 	for(pos = (head)->next; pos != (head); pos = pos->next)
 
@@ -54,8 +65,6 @@ static inline void list_add_tail(struct list_head* node, struct list_head* head)
     __list_add(node, head->prev, head);
 }
 
-//del
-
 static inline void __list_del(struct list_head* prev, struct list_head* next)
 {
     next->prev = prev;
@@ -83,7 +92,6 @@ static inline int list_empty(const struct list_head* head)
 {
     return head == head -> next;
 }
-
 
 static inline void __list_splice(struct list_head* list, struct list_head* head)
 {
