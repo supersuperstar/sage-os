@@ -22,7 +22,7 @@ void buddy_init(struct pmm_pool* mm_pool, struct chunk* start_chunk,
 
   for (order = 0; order < BUDDY_MAX_ORDER; order++) {
     mm_pool->free_lists[order].nr_free = 0;
-    INIT_LIST_HEAD(&(mm_pool->free_lists[order].free_list));
+    INIT_LIST_HEAD(mm_pool->free_lists[order].free_list);
   }
 
   memset((char*)start_chunk, 0, page_num * sizeof(struct chunk));
@@ -65,20 +65,23 @@ void chunk_free(struct pmm_pool* mm_pool, struct chunk* chunk) {
  */
 void chunk_append(struct pmm_pool* mm_pool, struct chunk* chunk) {
   struct free_list* free_list = &mm_pool->free_lists[chunk->order];
-  list_add(free_list, &chunk->node);
+  list_add(free_list->free_list, &chunk->node);
   free_list->nr_free++;
 }
 
 struct chunk* chunk_merge(struct pmm_pool* mm_pool, struct chunk* chunk) {
   // todo
+  return NULL;
 }
 
 struct chunk* get_buddy_chunk(struct pmm_pool* mm_pool, struct chunk* chunk) {
   // todo
+  return NULL;
 }
 
 struct chunk* chunk_alloc(struct pmm_pool* mm_pool, uint8_t order) {
   // todo
+  return NULL;
 }
 
 void chunk_del(struct pmm_pool* mm_pool, struct chunk* chunk) {
@@ -88,4 +91,5 @@ void chunk_del(struct pmm_pool* mm_pool, struct chunk* chunk) {
 struct chunk* chunk_split(struct pmm_pool* mm_pool, uint8_t order,
                           struct chunk* chunk) {
   // todo
+  return NULL;
 }
