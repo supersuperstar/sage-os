@@ -13,6 +13,7 @@ __attribute__((noinline)) void setbit(void *buf, int offset, bool bit) {
   uint8_t mask = 1 << offset;
 
   uint8_t *volatile p = buf + byte;
+
   *p = (bit == 0 ? (*p & ~mask) : (*p | mask));
 }
 
