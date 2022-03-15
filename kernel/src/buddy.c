@@ -42,7 +42,7 @@ void buddy_init(struct pmm_pool* mm_pool, struct chunk* start_chunk,
 /**
  * @brief free a chunk and process in deep.
  *
- * @param mm_pool
+ * @param mm_pool pointer of pmm-pool
  * @param chunk
  */
 void chunk_free(struct pmm_pool* mm_pool, struct chunk* chunk) {
@@ -82,4 +82,10 @@ struct chunk* chunk_alloc(struct pmm_pool* mm_pool, uint8_t order) {
 }
 
 void chunk_del(struct pmm_pool* mm_pool, struct chunk* chunk) {
+  // todo
+}
+
+struct chunk* chunk_split(struct pmm_pool* mm_pool, uint8_t order,
+                          struct chunk* chunk) {
+  // todo
 }
