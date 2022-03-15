@@ -17,8 +17,8 @@ void buddy_init(struct pmm_pool* mm_pool, struct chunk* start_chunk,
   int order;
   int chunk_idx;
   mm_pool->begin_addr = start_addr;
-  mm_pool->page_num = page_num;
-  mm_pool->size = page_num * SZ_PAGE;
+  mm_pool->page_num   = page_num;
+  mm_pool->size       = page_num * SZ_PAGE;
 
   for (order = 0; order < BUDDY_MAX_ORDER; order++) {
     mm_pool->free_lists[order].nr_free = 0;
@@ -28,8 +28,8 @@ void buddy_init(struct pmm_pool* mm_pool, struct chunk* start_chunk,
   memset((char*)start_chunk, 0, page_num * sizeof(struct chunk));
 
   for (chunk_idx = 0; chunk_idx < page_num; chunk_idx++) {
-    chunk = start_chunk + chunk_idx;
-    chunk->used = 1;
+    chunk        = start_chunk + chunk_idx;
+    chunk->used  = 1;
     chunk->order = 0;
   }
 
@@ -81,4 +81,5 @@ struct chunk* chunk_alloc(struct pmm_pool* mm_pool, uint8_t order) {
   // todo
 }
 
-void chunk_del(struct pmm_pool* mm_pool, struct chunk* chunk) {}
+void chunk_del(struct pmm_pool* mm_pool, struct chunk* chunk) {
+}
