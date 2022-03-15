@@ -10,7 +10,7 @@ var searchData=
   ['vm_5farea_7',['vm_area',['../structvm__area.html',1,'']]],
   ['vm_5fareas_8',['vm_areas',['../x86_2qemu_2vme_8c.html#aabd6d0176a15f8db91d5f77151241689',1,'vme.c']]],
   ['vm_5fhead_9',['vm_head',['../struct_context.html#a6934a6429e0a517f6c6c1e6bfb3c03fd',1,'Context::vm_head()'],['../struct____am__cpu__t.html#a6934a6429e0a517f6c6c1e6bfb3c03fd',1,'__am_cpu_t::vm_head()']]],
-  ['vme_2ec_10',['vme.c',['../x86_2qemu_2vme_8c.html',1,'(全局命名空间)'],['../native_2vme_8c.html',1,'(全局命名空间)']]],
+  ['vme_2ec_10',['vme.c',['../x86_2qemu_2vme_8c.html',1,'(Global Namespace)'],['../native_2vme_8c.html',1,'(Global Namespace)']]],
   ['vme_5fenable_11',['vme_enable',['../native_2vme_8c.html#a17a2da2782e0f7bb97095baa46ad73a8',1,'vme.c']]],
   ['vme_5finit_12',['vme_init',['../native_2vme_8c.html#a9ecb065d26e4096562fe0b07c25cefab',1,'vme_init(void *(*pgalloc_f)(int), void(*pgfree_f)(void *)):&#160;vme.c'],['../x86_2qemu_2vme_8c.html#a102a03634ce449f78facc63eee85d9b8',1,'vme_init(void *(*_pgalloc)(int size), void(*_pgfree)(void *)):&#160;vme.c'],['../am_8h.html#ad494a936062fad2d199a556be02e2233',1,'vme_init(void *(*pgalloc)(int), void(*pgfree)(void *)):&#160;vme.c']]],
   ['vmem_13',['vmem',['../x86_2qemu_2ioe_8c.html#ae7e4d867b798ce0384109f0f80f2c4a4',1,'ioe.c']]],

@@ -11,7 +11,7 @@
 <g id="clust1" class="cluster">
 <title>clusterdir_ab9c339ca6939bbe6f6a41b1e4730185</title>
 <g id="a_clust1"><a xlink:href="dir_ab9c339ca6939bbe6f6a41b1e4730185.html" target="_top" xlink:title="src">
-<polygon fill="#edf0f7" stroke="#7f7f7f" stroke-dasharray="5,2" points="20,-56 20,-143 178,-143 178,-56 20,-56"/>
+<polygon fill="#daedff" stroke="#7f7f7f" stroke-dasharray="5,2" points="20,-56 20,-143 178,-143 178,-56 20,-56"/>
 <text text-anchor="middle" x="99" y="-131" font-family="Helvetica,sans-Serif" font-size="10.00">src</text>
 </a>
 </g>
@@ -19,7 +19,7 @@
 <g id="clust2" class="cluster">
 <title>clusterdir_84ebb354b97ad405f7394d9a50d5c853</title>
 <g id="a_clust2"><a xlink:href="dir_84ebb354b97ad405f7394d9a50d5c853.html" target="_top">
-<polygon fill="#edf0f7" stroke="#404040" stroke-width="2" points="28,-64 28,-116 170,-116 170,-64 28,-64"/>
+<polygon fill="#daedff" stroke="#404040" stroke-width="2" points="28,-64 28,-116 170,-116 170,-64 28,-64"/>
 </a>
 </g>
 </g>
@@ -32,7 +32,7 @@
 <g id="node2" class="node">
 <title>dir_182591d9ec1b85284dfbe5e03d401e71</title>
 <g id="a_node2"><a xlink:href="dir_182591d9ec1b85284dfbe5e03d401e71.html" target="_top" xlink:title="qemu">
-<polygon fill="#a2b4d6" stroke="#404040" points="90,-108 36,-108 36,-72 90,-72 90,-108"/>
+<polygon fill="#4ea9ff" stroke="#404040" points="90,-108 36,-108 36,-72 90,-72 90,-108"/>
 <text text-anchor="middle" x="63" y="-87.5" font-family="Helvetica,sans-Serif" font-size="10.00">qemu</text>
 </a>
 </g>

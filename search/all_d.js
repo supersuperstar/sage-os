@@ -2,7 +2,7 @@ var searchData=
 [
   ['magic_0',['magic',['../struct_m_p_desc.html#a6480f97b5704e0c84200f69c08d46870',1,'MPDesc']]],
   ['main_1',['main',['../kernel_2framework_2main_8c.html#ae66f6b31b5ad750f1fe042a706a4e3d4',1,'main():&#160;main.c'],['../x86_2qemu_2trm_8c.html#aa12a9403d4e36817688700b1c1bd442e',1,'main(const char *args):&#160;trm.c'],['../platform_8c.html#aa12a9403d4e36817688700b1c1bd442e',1,'main(const char *args):&#160;platform.c']]],
-  ['main_2ec_2',['main.c',['../abstract-machine_2am_2src_2x86_2qemu_2boot_2main_8c.html',1,'(全局命名空间)'],['../kernel_2framework_2main_8c.html',1,'(全局命名空间)']]],
+  ['main_2ec_2',['main.c',['../abstract-machine_2am_2src_2x86_2qemu_2boot_2main_8c.html',1,'(Global Namespace)'],['../kernel_2framework_2main_8c.html',1,'(Global Namespace)']]],
   ['mainarg_5faddr_3',['MAINARG_ADDR',['../x86_8h.html#ab6f32236e4a77c81a095ad8a1dac9165',1,'x86.h']]],
   ['malloc_4',['malloc',['../stdlib_8c.html#a9c36d0fe3ec4675cbffdc9b52f5fb399',1,'malloc(size_t size):&#160;stdlib.c'],['../klib_8h.html#a9c36d0fe3ec4675cbffdc9b52f5fb399',1,'malloc(size_t size):&#160;stdlib.c']]],
   ['map_5',['map',['../am_8h.html#a48560940e9ec2600b147fe67df0a1ddc',1,'map(AddrSpace *as, void *vaddr, void *paddr, int prot):&#160;vme.c'],['../native_2vme_8c.html#a81194a0d7c70a35be43bc54c27f4da63',1,'map(AddrSpace *as, void *va, void *pa, int prot):&#160;vme.c'],['../x86_2qemu_2vme_8c.html#a81194a0d7c70a35be43bc54c27f4da63',1,'map(AddrSpace *as, void *va, void *pa, int prot):&#160;vme.c']]],
@@ -24,7 +24,7 @@ var searchData=
   ['module_5fdef_21',['MODULE_DEF',['../kernel_8h.html#abeb95e99b8b234249d79016bacac3523',1,'MODULE_DEF():&#160;kernel.h'],['../os_8c.html#aafec7046aa50c914df86d0d22d4fc1d1',1,'MODULE_DEF(os):&#160;os.c'],['../pmm_8c.html#a7ada9deb0ae8705f2cc158b0283aaeb3',1,'MODULE_DEF(pmm):&#160;pmm.c']]],
   ['mpconf_22',['MPConf',['../struct_m_p_conf.html',1,'']]],
   ['mpdesc_23',['MPDesc',['../struct_m_p_desc.html',1,'']]],
-  ['mpe_2ec_24',['mpe.c',['../x86_2qemu_2mpe_8c.html',1,'(全局命名空间)'],['../native_2mpe_8c.html',1,'(全局命名空间)']]],
+  ['mpe_2ec_24',['mpe.c',['../x86_2qemu_2mpe_8c.html',1,'(Global Namespace)'],['../native_2mpe_8c.html',1,'(Global Namespace)']]],
   ['mpe_5finit_25',['mpe_init',['../am_8h.html#a2e4a724e2d067425ff3fd49bc0bf42e1',1,'mpe_init(void(*entry)()):&#160;mpe.c'],['../native_2mpe_8c.html#a2e4a724e2d067425ff3fd49bc0bf42e1',1,'mpe_init(void(*entry)()):&#160;mpe.c'],['../x86_2qemu_2mpe_8c.html#a2e4a724e2d067425ff3fd49bc0bf42e1',1,'mpe_init(void(*entry)()):&#160;mpe.c']]],
   ['msg_26',['msg',['../struct_event.html#a2c3cb87d009c003069b9a90f020f8a9f',1,'Event']]],
   ['msg_27',['MSG',['../x86_2qemu_2cte_8c.html#ae2535322c69dfb1e440613bb3f78bdb4',1,'cte.c']]]

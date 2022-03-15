@@ -35,7 +35,7 @@ var searchData=
   ['ioapic_5faddr_32',['IOAPIC_ADDR',['../x86_2qemu_2ioe_8c.html#af985d95b809f39a24a5e1e6fdef50315',1,'ioe.c']]],
   ['ioapicread_33',['ioapicread',['../x86_2qemu_2ioe_8c.html#a37f2f997f05e2447bda6bace9bd59efa',1,'ioe.c']]],
   ['ioapicwrite_34',['ioapicwrite',['../x86_2qemu_2ioe_8c.html#aef6c47d7966a31659d7e494efed1b15c',1,'ioe.c']]],
-  ['ioe_2ec_35',['ioe.c',['../native_2ioe_8c.html',1,'(全局命名空间)'],['../x86_2qemu_2ioe_8c.html',1,'(全局命名空间)']]],
+  ['ioe_2ec_35',['ioe.c',['../native_2ioe_8c.html',1,'(Global Namespace)'],['../x86_2qemu_2ioe_8c.html',1,'(Global Namespace)']]],
   ['ioe_5finit_36',['ioe_init',['../am_8h.html#ae60b46e44a4d942c97f93c0c3749abc9',1,'ioe_init(void):&#160;ioe.c'],['../native_2ioe_8c.html#a45ecef4130276c1c79d872c582cd3839',1,'ioe_init():&#160;ioe.c'],['../x86_2qemu_2ioe_8c.html#a45ecef4130276c1c79d872c582cd3839',1,'ioe_init():&#160;ioe.c']]],
   ['ioe_5finit_5fdone_37',['ioe_init_done',['../native_2ioe_8c.html#a3a2a7e4447bb889f557e9c494088ef47',1,'ioe.c']]],
   ['ioe_5fread_38',['ioe_read',['../am_8h.html#a9e4d8844a1b291f3594ac00297a918a4',1,'ioe_read(int reg, void *buf):&#160;ioe.c'],['../native_2ioe_8c.html#a9e4d8844a1b291f3594ac00297a918a4',1,'ioe_read(int reg, void *buf):&#160;ioe.c'],['../x86_2qemu_2ioe_8c.html#a9e4d8844a1b291f3594ac00297a918a4',1,'ioe_read(int reg, void *buf):&#160;ioe.c']]],

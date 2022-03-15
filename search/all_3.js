@@ -33,6 +33,6 @@ var searchData=
   ['cr3_30',['cr3',['../struct_context.html#a7d6d082851ba8b052b6070614085a758',1,'Context']]],
   ['cr4_5fpae_31',['CR4_PAE',['../x86_8h.html#a1ca5cfd0c966d604caca75537046dd84',1,'x86.h']]],
   ['cs_32',['cs',['../struct_gate_desc64.html#a8519dc239502dfcbac171b3128dc7054',1,'GateDesc64::cs()'],['../struct_gate_desc32.html#a8519dc239502dfcbac171b3128dc7054',1,'GateDesc32::cs()'],['../structtrap__frame.html#a8519dc239502dfcbac171b3128dc7054',1,'trap_frame::cs()'],['../struct_context.html#aea3e8b50ef91f54dad11c01a77675324',1,'Context::cs()'],['../struct_context.html#a8519dc239502dfcbac171b3128dc7054',1,'Context::cs()'],['../struct_context.html#a5029c54e8d80d05dbc085498b431cbc8',1,'Context::cs()']]],
-  ['cte_2ec_33',['cte.c',['../x86_2qemu_2cte_8c.html',1,'(全局命名空间)'],['../native_2cte_8c.html',1,'(全局命名空间)']]],
+  ['cte_2ec_33',['cte.c',['../x86_2qemu_2cte_8c.html',1,'(Global Namespace)'],['../native_2cte_8c.html',1,'(Global Namespace)']]],
   ['cte_5finit_34',['cte_init',['../am_8h.html#a38b6faa9eb5efb72008f8077e4adbcb3',1,'cte_init(Context *(*handler)(Event ev, Context *ctx)):&#160;am.h'],['../native_2cte_8c.html#a14d86719abbc247f8a0dd5eb2662ea88',1,'cte_init(Context *(*handler)(Event, Context *)):&#160;cte.c'],['../x86_2qemu_2cte_8c.html#a14d86719abbc247f8a0dd5eb2662ea88',1,'cte_init(Context *(*handler)(Event, Context *)):&#160;cte.c']]]
 ];
