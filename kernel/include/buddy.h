@@ -20,7 +20,7 @@ struct page {
  */
 struct free_list {
   uint64_t nr_free;
-  struct list_head* free_list;
+  struct list_head free_list;
 };
 
 /**
@@ -41,8 +41,12 @@ struct pmm_pool {
   void* begin_addr;
   uint64_t page_num;
   uint64_t size;
+  struct chunk* chunk_metadata;
   struct free_list free_lists[BUDDY_MAX_ORDER];
 };
+void* chunk2virt(struct pmm_pool* mm_pool, struct chunk* chunk);
+
+struct chunk* virt2chunk(struct pmm_pool* mm_pool, void* virt);
 
 struct chunk* chunk_merge(struct pmm_pool* mm_pool, struct chunk* chunk);
 

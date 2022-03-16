@@ -22,7 +22,7 @@ void buddy_init(struct pmm_pool* mm_pool, struct chunk* start_chunk,
 
   for (order = 0; order < BUDDY_MAX_ORDER; order++) {
     mm_pool->free_lists[order].nr_free = 0;
-    INIT_LIST_HEAD(mm_pool->free_lists[order].free_list);
+    INIT_LIST_HEAD(&mm_pool->free_lists[order].free_list);
   }
 
   memset((char*)start_chunk, 0, page_num * sizeof(struct chunk));
@@ -65,31 +65,157 @@ void chunk_free(struct pmm_pool* mm_pool, struct chunk* chunk) {
  */
 void chunk_append(struct pmm_pool* mm_pool, struct chunk* chunk) {
   struct free_list* free_list = &mm_pool->free_lists[chunk->order];
-  list_add(free_list->free_list, &chunk->node);
+  list_add(&free_list->free_list, &chunk->node);
   free_list->nr_free++;
 }
 
+/**
+ * @brief
+ *
+ * @param mm_pool
+ * @param chunk
+ * @return struct chunk*
+ */
 struct chunk* chunk_merge(struct pmm_pool* mm_pool, struct chunk* chunk) {
-  // todo
-  return NULL;
+  if (chunk->used) {
+    // TODO:LOG USING
+    return NULL;
+  }
+  chunk_del(mm_pool, chunk);
+  while (chunk->order < BUDDY_MAX_ORDER - 1) {
+    struct chunk* buddy_chunk = get_buddy_chunk(mm_pool, chunk);
+    if (buddy_chunk->used) {
+      // TODO:LOG USING
+      return NULL;
+    }
+    if (chunk > buddy_chunk) {
+      struct chunk* tmp = chunk;
+      chunk             = buddy_chunk;
+      buddy_chunk       = tmp;
+    }
+    buddy_chunk->used = true;
+    chunk_del(mm_pool, buddy_chunk);
+    chunk->order++;
+  }
+  chunk_append(mm_pool, chunk);
+  return chunk;
 }
 
+/**
+ * @brief Get the buddy chunk
+ *
+ * @param mm_pool
+ * @param chunk
+ * @return struct chunk*
+ */
 struct chunk* get_buddy_chunk(struct pmm_pool* mm_pool, struct chunk* chunk) {
-  // todo
-  return NULL;
+  int64_t chunk_addr;
+  int64_t buddy_chunk_addr;
+  int order;
+
+  chunk_addr = (int64_t)chunk2virt(mm_pool, chunk);
+  order      = chunk->order;
+
+#define BUDDY_PAGE_SIZE_ORDER (12)
+  buddy_chunk_addr = chunk_addr ^ (1ul << (order + BUDDY_PAGE_SIZE_ORDER));
+
+  if (buddy_chunk_addr < mm_pool->begin_addr ||
+      buddy_chunk_addr >= mm_pool->begin_addr + mm_pool->size) {
+    return NULL;
+  }
+  return virt2chunk(mm_pool, (void*)buddy_chunk_addr);
 }
 
+/**
+ * @brief
+ *
+ * @param mm_pool
+ * @param order
+ * @return struct chunk*
+ */
 struct chunk* chunk_alloc(struct pmm_pool* mm_pool, uint8_t order) {
-  // todo
-  return NULL;
+  int current_order = order;
+  while (current_order < BUDDY_MAX_ORDER &&
+         mm_pool->free_lists[current_order].nr_free <= 0)
+    current_order++;
+  if (current_order >= BUDDY_MAX_ORDER) {
+    // TODO: log
+    return NULL;
+  }
+  struct chunk* chunk = list_entry(
+      mm_pool->free_lists[current_order].free_list.next, struct chunk, node);
+  if (chunk == NULL) {
+    // TODO: log
+    return NULL;
+  }
+  chunk_split(mm_pool, order, chunk);
+  chunk->used = 1;
+  return chunk;
 }
 
+/**
+ * @brief
+ *
+ * @param mm_pool
+ * @param chunk
+ */
 void chunk_del(struct pmm_pool* mm_pool, struct chunk* chunk) {
-  // todo
+  struct free_list* free_list = &mm_pool->free_lists[chunk->order];
+  list_del(&chunk->node);
+  free_list->nr_free--;
 }
 
+/**
+ * @brief
+ *
+ * @param mm_pool
+ * @param order
+ * @param chunk
+ * @return struct chunk*
+ */
 struct chunk* chunk_split(struct pmm_pool* mm_pool, uint8_t order,
                           struct chunk* chunk) {
-  // todo
-  return NULL;
+  if (chunk->used) {
+    // TODO:
+    return NULL;
+  }
+  chunk->used = 0;
+  chunk_del(mm_pool, chunk);
+
+  while (chunk->order > order) {
+    chunk->order--;
+    struct chunk* buddy_chunk = get_buddy_chunk(mm_pool, chunk);
+    if (buddy_chunk != NULL) {
+      buddy_chunk->used  = 0;
+      buddy_chunk->order = chunk->order;
+      chunk_append(mm_pool, buddy_chunk);
+    }
+  }
+  return chunk;
+}
+
+/**
+ * @brief translate chunk address to virtual address
+ *
+ * @param mm_pool
+ * @param chunk
+ * @return void*
+ */
+void* chunk2virt(struct pmm_pool* mm_pool, struct chunk* chunk) {
+  uint64_t addr;
+  addr = (chunk - mm_pool->chunk_metadata) * SZ_PAGE + mm_pool->begin_addr;
+  return (void*)addr;
+}
+
+/**
+ * @brief translate virtual address to chunk address
+ *
+ * @param mm_pool
+ * @param virt
+ * @return struct chunk*
+ */
+struct chunk* virt2chunk(struct pmm_pool* mm_pool, void* virt) {
+  struct chunk* chunk;
+  chunk = mm_pool->chunk_metadata + (virt - mm_pool->begin_addr) / SZ_PAGE;
+  return chunk;
 }
