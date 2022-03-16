@@ -1,7 +1,17 @@
+/**
+ * @file buddy.c
+ * @author kg (kkwang@outlook.com)
+ * @brief impl of buddy system
+ * @version 0.1
+ * @date 2022-03-16
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
+
 #include <buddy.h>
 #include <common.h>
-
-// todo:impl
+#include <logger.h>
 
 /**
  * @brief initialize the buddy system
@@ -47,7 +57,7 @@ void buddy_init(struct pmm_pool* mm_pool, struct chunk* start_chunk,
  */
 void chunk_free(struct pmm_pool* mm_pool, struct chunk* chunk) {
   if (!chunk->used) {
-    // todo：无法回收空闲内存块
+    warn("try to FREE an unalloced page");
     return;
   }
 
@@ -78,15 +88,15 @@ void chunk_append(struct pmm_pool* mm_pool, struct chunk* chunk) {
  */
 struct chunk* chunk_merge(struct pmm_pool* mm_pool, struct chunk* chunk) {
   if (chunk->used) {
-    // TODO:LOG USING
+    warn("try to MERGE an allocated page.");
     return NULL;
   }
   chunk_del(mm_pool, chunk);
   while (chunk->order < BUDDY_MAX_ORDER - 1) {
     struct chunk* buddy_chunk = get_buddy_chunk(mm_pool, chunk);
-    if (buddy_chunk->used) {
-      // TODO:LOG USING
-      return NULL;
+    if (buddy_chunk == NULL || buddy_chunk->used ||
+        buddy_chunk->order != chunk->order) {
+      break;
     }
     if (chunk > buddy_chunk) {
       struct chunk* tmp = chunk;
@@ -139,13 +149,13 @@ struct chunk* chunk_alloc(struct pmm_pool* mm_pool, uint8_t order) {
          mm_pool->free_lists[current_order].nr_free <= 0)
     current_order++;
   if (current_order >= BUDDY_MAX_ORDER) {
-    // TODO: log
+    warn("try to ALLOCATE an buddy chunk greater than BUDDY_MAX_ORDER");
     return NULL;
   }
   struct chunk* chunk = list_entry(
       mm_pool->free_lists[current_order].free_list.next, struct chunk, node);
   if (chunk == NULL) {
-    // TODO: log
+    warn("get a NULL page");
     return NULL;
   }
   chunk_split(mm_pool, order, chunk);
@@ -176,7 +186,7 @@ void chunk_del(struct pmm_pool* mm_pool, struct chunk* chunk) {
 struct chunk* chunk_split(struct pmm_pool* mm_pool, uint8_t order,
                           struct chunk* chunk) {
   if (chunk->used) {
-    // TODO:
+    warn("try to SPLIT an allocated chunk");
     return NULL;
   }
   chunk->used = 0;
