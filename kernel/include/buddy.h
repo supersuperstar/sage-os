@@ -1,7 +1,7 @@
 #include <common.h>
 #include <list.h>
 
-#define BUDDY_MAX_ORDER 8
+#define BUDDY_MAX_ORDER 20
 #define KB              1024
 #define SZ_PAGE         4 * KB
 
@@ -28,7 +28,6 @@ struct free_list {
  */
 struct chunk {
   struct list_head node;
-  void* start_addr;
   uint8_t order;
   bool used;
 };
@@ -38,7 +37,7 @@ struct chunk {
  *
  */
 struct pmm_pool {
-  void* begin_addr;
+  uint64_t begin_addr;
   uint64_t page_num;
   uint64_t size;
   struct chunk* chunk_metadata;

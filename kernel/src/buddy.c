@@ -127,13 +127,13 @@ struct chunk* get_buddy_chunk(struct pmm_pool* mm_pool, struct chunk* chunk) {
   order      = chunk->order;
 
 #define BUDDY_PAGE_SIZE_ORDER (12)
-  buddy_chunk_addr = chunk_addr ^ (1ul << (order + BUDDY_PAGE_SIZE_ORDER));
+  buddy_chunk_addr = chunk_addr ^ (1ul << order);
 
   if (buddy_chunk_addr < mm_pool->begin_addr ||
       buddy_chunk_addr >= mm_pool->begin_addr + mm_pool->size) {
     return NULL;
   }
-  return virt2chunk(mm_pool, (void*)buddy_chunk_addr);
+  return virt2chunk(mm_pool, buddy_chunk_addr);
 }
 
 /**
@@ -226,6 +226,7 @@ void* chunk2virt(struct pmm_pool* mm_pool, struct chunk* chunk) {
  */
 struct chunk* virt2chunk(struct pmm_pool* mm_pool, void* virt) {
   struct chunk* chunk;
-  chunk = mm_pool->chunk_metadata + (virt - mm_pool->begin_addr) / SZ_PAGE;
+  chunk = mm_pool->chunk_metadata +
+          ((uint64_t)virt - mm_pool->begin_addr) / SZ_PAGE;
   return chunk;
 }
