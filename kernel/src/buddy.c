@@ -127,7 +127,7 @@ struct chunk* get_buddy_chunk(struct pmm_pool* mm_pool, struct chunk* chunk) {
   order      = chunk->order;
 
 #define BUDDY_PAGE_SIZE_ORDER (12)
-  buddy_chunk_addr = chunk_addr ^ (1ul << order);
+  buddy_chunk_addr = chunk_addr ^ (1ul << (order + SZ_PAGE));
 
   if (buddy_chunk_addr < mm_pool->begin_addr ||
       buddy_chunk_addr >= mm_pool->begin_addr + mm_pool->size) {
