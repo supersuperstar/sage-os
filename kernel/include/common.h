@@ -1,8 +1,13 @@
+#ifndef __COMMON_H__
+#define __COMMON_H__
+
 #include <kernel.h>
 #include <klib.h>
 #include <klib-macros.h>
 
-int power2ify(uint64_t size) {
+#define DEBUG
+
+static inline int power2ify(uint64_t size) {
   assert((int)size > 0);
   int order = 0;
   do {
@@ -11,3 +16,5 @@ int power2ify(uint64_t size) {
   } while (size);
   return order - 1;
 }
+
+#endif

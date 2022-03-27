@@ -86,6 +86,19 @@ extern const char* type_str[10];
 #define Log(format, ...) ;
 #define CLog(color, format, ...)
 #endif
+#define Assert(cond, format, ...) \
+  do { \
+    if (!(cond)) { \
+      printf("\33[0m" BG_RED "[%d][%s,%d,%s] " format " \33[0m\n", _cpu(), \
+             __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+      assert(cond); \
+    } \
+  } while (0)
+
+#define Panic(format, ...) \
+  printf("\33[0m" BG_RED "[%d][%s,%d,%s] " format " \33[0m\n", _cpu(), \
+         __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+  assert(0)
 
 /**
  * @brief Control whether enable function trace

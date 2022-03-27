@@ -1,9 +1,11 @@
+#ifndef __BUDDY_H__
+#define __BUDDY_H__
 #include <common.h>
 #include <list.h>
 
-#define BUDDY_MAX_ORDER 20
+#define BUDDY_MAX_ORDER 32
 #define KB              1024
-#define SZ_PAGE         4 * KB
+#define SZ_PAGE         (4 * KB)
 
 /**
  * @brief page metadata
@@ -19,7 +21,7 @@ struct page {
  *
  */
 struct free_list {
-  uint64_t nr_free;
+  int64_t nr_free;
   struct list_head free_list;
 };
 
@@ -64,3 +66,5 @@ struct chunk* chunk_split(struct pmm_pool* mm_pool, uint8_t order,
                           struct chunk* chunk);
 
 struct chunk* chunk_alloc(struct pmm_pool* mm_pool, uint8_t order);
+
+#endif

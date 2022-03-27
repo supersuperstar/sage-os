@@ -26,23 +26,24 @@ void buddy_init(struct pmm_pool* mm_pool, struct chunk* start_chunk,
   struct chunk* chunk;
   int order;
   int chunk_idx;
-  mm_pool->begin_addr = start_addr;
-  mm_pool->page_num   = page_num;
-  mm_pool->size       = page_num * SZ_PAGE;
+  mm_pool->begin_addr     = (uint64_t)start_addr;
+  mm_pool->page_num       = page_num;
+  mm_pool->size           = page_num * SZ_PAGE;
+  mm_pool->chunk_metadata = start_chunk;
 
+  info("begin address: %#llx, metadata begin address: %#llx",
+       mm_pool->begin_addr, start_chunk);
   for (order = 0; order < BUDDY_MAX_ORDER; order++) {
+    // info("order:%d, addr: %#x", order, &mm_pool->free_lists[order]);
     mm_pool->free_lists[order].nr_free = 0;
     INIT_LIST_HEAD(&mm_pool->free_lists[order].free_list);
   }
-
   memset((char*)start_chunk, 0, page_num * sizeof(struct chunk));
-
   for (chunk_idx = 0; chunk_idx < page_num; chunk_idx++) {
     chunk        = start_chunk + chunk_idx;
     chunk->used  = 1;
     chunk->order = 0;
   }
-
   for (chunk_idx = 0; chunk_idx < page_num; chunk_idx++) {
     chunk = start_chunk + chunk_idx;
     chunk_free(mm_pool, chunk);
@@ -55,6 +56,7 @@ void buddy_init(struct pmm_pool* mm_pool, struct chunk* start_chunk,
  * @param mm_pool pointer of pmm-pool
  * @param chunk
  */
+
 void chunk_free(struct pmm_pool* mm_pool, struct chunk* chunk) {
   if (!chunk->used) {
     warn("try to FREE an unalloced page");
@@ -63,7 +65,6 @@ void chunk_free(struct pmm_pool* mm_pool, struct chunk* chunk) {
 
   chunk->used = false;
   chunk_append(mm_pool, chunk);
-
   chunk_merge(mm_pool, chunk);
 }
 
@@ -75,7 +76,7 @@ void chunk_free(struct pmm_pool* mm_pool, struct chunk* chunk) {
  */
 void chunk_append(struct pmm_pool* mm_pool, struct chunk* chunk) {
   struct free_list* free_list = &mm_pool->free_lists[chunk->order];
-  list_add(&free_list->free_list, &chunk->node);
+  list_add(&chunk->node, &free_list->free_list);
   free_list->nr_free++;
 }
 
@@ -94,6 +95,7 @@ struct chunk* chunk_merge(struct pmm_pool* mm_pool, struct chunk* chunk) {
   chunk_del(mm_pool, chunk);
   while (chunk->order < BUDDY_MAX_ORDER - 1) {
     struct chunk* buddy_chunk = get_buddy_chunk(mm_pool, chunk);
+
     if (buddy_chunk == NULL || buddy_chunk->used ||
         buddy_chunk->order != chunk->order) {
       break;
@@ -127,13 +129,14 @@ struct chunk* get_buddy_chunk(struct pmm_pool* mm_pool, struct chunk* chunk) {
   order      = chunk->order;
 
 #define BUDDY_PAGE_SIZE_ORDER (12)
-  buddy_chunk_addr = chunk_addr ^ (1ul << (order + SZ_PAGE));
+
+  buddy_chunk_addr = chunk_addr ^ (1ul << (order + BUDDY_PAGE_SIZE_ORDER));
 
   if (buddy_chunk_addr < mm_pool->begin_addr ||
       buddy_chunk_addr >= mm_pool->begin_addr + mm_pool->size) {
     return NULL;
   }
-  return virt2chunk(mm_pool, buddy_chunk_addr);
+  return virt2chunk(mm_pool, (void*)buddy_chunk_addr);
 }
 
 /**
@@ -149,7 +152,9 @@ struct chunk* chunk_alloc(struct pmm_pool* mm_pool, uint8_t order) {
          mm_pool->free_lists[current_order].nr_free <= 0)
     current_order++;
   if (current_order >= BUDDY_MAX_ORDER) {
-    warn("try to ALLOCATE an buddy chunk greater than BUDDY_MAX_ORDER");
+    error("current order:%d try to ALLOCATE an buddy chunk greater than "
+          "BUDDY_MAX_ORDER",
+          current_order);
     return NULL;
   }
   struct chunk* chunk = list_entry(
