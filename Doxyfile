@@ -918,6 +918,9 @@ RECURSIVE              = YES
 # run.
 
 EXCLUDE                = ./abstract-machine/scripts \
+                         ./abstract-machine/am/include/arch \
+                         ./abstract-machine/am/src/native \
+                         ./abstract-machine/am/src/x86/qemu/boot \
                          ./docs/style \
                          ./docs/html \
                          ./docs/xml \
