@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug QEMU",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/${command:extension.commandvariable.file.fileDirBasename1Up}/build/${command:extension.commandvariable.file.fileDirBasename1Up}-x86_64-qemu.elf",
+            "miDebuggerServerAddress": "127.0.0.1:1234",
+            "MIMode": "gdb",
+            "cwd": "${workspaceRoot}",
+            "stopAtConnect": true
+        },
+        {
+            "name": "Debug native",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/${command:extension.commandvariable.file.fileDirBasename1Up}/build/${command:extension.commandvariable.file.fileDirBasename1Up}-native",
+            "MIMode": "gdb",
+            "cwd": "${workspaceRoot}",
+            "stopAtEntry": true,
+            "preLaunchTask": "build native"
+        },
+        {
+            "name": "Debug test unit (native)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/${command:extension.commandvariable.file.fileDirBasename1Up}/build/${fileBasenameNoExtension}-native",
+            "MIMode": "gdb",
+            "cwd": "${workspaceRoot}",
+            "stopAtEntry": true,
+            "preLaunchTask": "build test unit (native)"
+        },
+        {
+            "name": "Debug test unit (QEMU)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/${command:extension.commandvariable.file.fileDirBasename1Up}/build/${fileBasenameNoExtension}-x86_64-qemu.elf",
+            "miDebuggerServerAddress": "127.0.0.1:1234",
+            "MIMode": "gdb",
+            "cwd": "${workspaceRoot}",
+            "stopAtConnect": true
+        },
+    ]
+}

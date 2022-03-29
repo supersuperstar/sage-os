@@ -1,0 +1,39 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build native",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "ARCH=native"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/${command:extension.commandvariable.file.fileDirBasename1Up}"
+            }
+        },
+        {
+            "label": "build test unit (native)",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "build",
+                "ARCH=native",
+                "target=${fileBasenameNoExtension}"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/${command:extension.commandvariable.file.fileDirBasename1Up}"
+            }
+        }
+    ]
+}
