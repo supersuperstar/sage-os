@@ -29,9 +29,9 @@ $(ALL): %: Makefile.%
 ### get halt code by grep its serial output. (Line 27)
 Makefile.%: units/%.c latest
 	@if [ "$(NOKERNEL)" = "true" ] ; then \
-		/bin/echo -e "NAME = $*\nSRCS = $<\nLIBS += klib\nCFLAGS+=-DTEST\ninclude $(AM_HOME)/Makefile" > $@; \
+		/bin/echo -e "NAME = $*\nSRCS = $<\nLIBS += klib\nCFLAGS += -DTEST $(CFLAGS_EXTRA)\ninclude $(AM_HOME)/Makefile" > $@; \
 	else \
-		/bin/echo -e "NAME = $*\nSRCS = $< $(shell find -L ../kernel/src/ -name "*.c")\nINC_PATH = ../kernel/include/ ../kernel/framework/\nCFLAGS+=-DTEST\ninclude $(AM_HOME)/Makefile" > $@; \
+		/bin/echo -e "NAME = $*\nSRCS = $< $(shell find -L ../kernel/src/ -name "*.c")\nINC_PATH = include ../kernel/include/ ../kernel/framework/\nCFLAGS += -DTEST $(CFLAGS_EXTRA)\ninclude $(AM_HOME)/Makefile" > $@; \
 	fi
 	@mkdir -p out
 	@printf "\n========== Unit test start: %s\n" $*
@@ -57,9 +57,9 @@ build: latest
 		exit 1; \
 	else \
 		if [ "$(NOKERNEL)" = "true" ] ; then \
-			/bin/echo -e "NAME = $(target)\nSRCS = units/$(target).c\nLIBS += klib\nCFLAGS+=-DTEST\ninclude $(AM_HOME)/Makefile" > Makefile.$(target); \
+			/bin/echo -e "NAME = $(target)\nSRCS = units/$(target).c\nLIBS += klib\nCFLAGS += -DTEST $(CFLAGS_EXTRA)\ninclude $(AM_HOME)/Makefile" > Makefile.$(target); \
 		else \
-			/bin/echo -e "NAME = $(target)\nSRCS = units/$(target).c $(shell find -L ../kernel/src/ -name "*.c")\nINC_PATH = ../kernel/include/ ../kernel/framework/\nCFLAGS+=-DTEST\ninclude $(AM_HOME)/Makefile" > Makefile.$(target); \
+			/bin/echo -e "NAME = $(target)\nSRCS = units/$(target).c $(shell find -L ../kernel/src/ -name "*.c")\nINC_PATH = include ../kernel/include/ ../kernel/framework/\nCFLAGS += -DTEST $(CFLAGS_EXTRA)\ninclude $(AM_HOME)/Makefile" > Makefile.$(target); \
 		fi \
 	fi
 	@make -s -f Makefile.$(target) ARCH=$(ARCH)
