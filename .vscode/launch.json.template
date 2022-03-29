@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug QEMU",
+            "name": "QEMU",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/${command:extension.commandvariable.file.fileDirBasename1Up}/build/${command:extension.commandvariable.file.fileDirBasename1Up}-x86_64-qemu.elf",
@@ -15,27 +15,41 @@
             "stopAtConnect": true
         },
         {
-            "name": "Debug native",
+            "name": "native",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/${command:extension.commandvariable.file.fileDirBasename1Up}/build/${command:extension.commandvariable.file.fileDirBasename1Up}-native",
             "MIMode": "gdb",
             "cwd": "${workspaceRoot}",
             "stopAtEntry": true,
-            "preLaunchTask": "build native"
+            "preLaunchTask": "build native",
+            "setupCommands": [
+                {
+                    "text": "handle SIGUSR1 SIGUSR2 SIGSEGV noprint nostop",
+                    "description": "忽略自定义signal",
+                    "ignoreFailures": false
+                }
+            ]
         },
         {
-            "name": "Debug test unit (native)",
+            "name": "unit test (native)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/${command:extension.commandvariable.file.fileDirBasename1Up}/build/${fileBasenameNoExtension}-native",
             "MIMode": "gdb",
             "cwd": "${workspaceRoot}",
             "stopAtEntry": true,
-            "preLaunchTask": "build test unit (native)"
+            "preLaunchTask": "build test unit (native)",
+            "setupCommands": [
+                {
+                    "text": "handle SIGUSR1 SIGUSR2 SIGSEGV noprint nostop",
+                    "description": "忽略自定义signal",
+                    "ignoreFailures": false
+                }
+            ]
         },
         {
-            "name": "Debug test unit (QEMU)",
+            "name": "unit test (QEMU)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/${command:extension.commandvariable.file.fileDirBasename1Up}/build/${fileBasenameNoExtension}-x86_64-qemu.elf",
