@@ -17,7 +17,30 @@ static void os_run() {
 #endif
 }
 
+/**
+ * @brief System trap entry
+ *
+ * @param ev
+ * @param context
+ * @return Context*
+ */
+static Context *os_trap(Event ev, Context *context) {
+}
+
+/**
+ * @brief register interrupt handlers.
+ *
+ * @param seq determines the order in which handlers are called。
+ *            smaller seq are called first。
+ * @param event event type, see am.h
+ * @param handler
+ */
+static void os_on_irq(int seq, int event, handler_t handler) {
+}
+
 MODULE_DEF(os) = {
-    .init = os_init,
-    .run  = os_run,
+    .init   = os_init,
+    .run    = os_run,
+    .trap   = os_trap,
+    .on_irq = os_on_irq,
 };
