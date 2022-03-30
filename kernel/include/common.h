@@ -5,8 +5,6 @@
 #include <klib.h>
 #include <klib-macros.h>
 
-#define DEBUG
-
 static inline int power2ify(uint64_t size) {
   assert((int)size > 0);
   int order = 0;

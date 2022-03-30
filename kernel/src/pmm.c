@@ -2,25 +2,25 @@
 #include <buddy.h>
 #include <logger.h>
 
-struct pmm_pool* global_mm_pool = NULL;
+struct pmm_pool global_mm_pool;
 
 static void* kalloc(size_t size) {
   int npage         = (size + 1) / SZ_PAGE;
   int acquire_order = power2ify(npage);
   log_detail(LOG_INFO, "acquire order: %d", acquire_order);
-  struct chunk* page_addr = chunk_alloc(global_mm_pool, acquire_order);
+  struct chunk* page_addr = chunk_alloc(&global_mm_pool, acquire_order);
   if (page_addr != NULL) {
     log_detail(LOG_INFO, "allocate addr: %#x",
-               chunk2virt(global_mm_pool, page_addr));
-    return chunk2virt(global_mm_pool, page_addr);
+               chunk2virt(&global_mm_pool, page_addr));
+    return chunk2virt(&global_mm_pool, page_addr);
   }
-  log_detail(LOG_WARN, "fail to alloc addr");
+  warn("fail to alloc addr");
   return NULL;
 }
 
 static void kfree(void* ptr) {
-  struct chunk* chunk = virt2chunk(global_mm_pool, ptr);
-  chunk_free(global_mm_pool, chunk);
+  struct chunk* chunk = virt2chunk(&global_mm_pool, ptr);
+  chunk_free(&global_mm_pool, chunk);
   info_detail("free successfully, address: %#x", ptr);
 }
 
@@ -31,17 +31,18 @@ static void pmm_init() {
   void* pg_start = NULL;
   void* pi_start = NULL;
   int nr_page;
-  nr_page        = 1024;
-  pg_start       = heap.start;
-  pi_start       = (bool*)(pg_start + nr_page * SZ_PAGE);
-  global_mm_pool = pi_start;
-  pi_start       = (struct pmm_pool*)pi_start + 1;
+  nr_page =
+      (uint64_t)(heap.end - heap.start) / (SZ_PAGE + sizeof(struct chunk));
+  pg_start = heap.start;
+  pi_start = (bool*)(pg_start + nr_page * SZ_PAGE);
+  // global_mm_pool = pi_start;
+  // pi_start       = (struct pmm_pool*)pi_start + 1;
   log_detail(
       LOG_INFO,
       "page start addr: %#x, page indicator addr: %#x, available page: %d",
       pg_start, pi_start, nr_page);
   log_detail(LOG_INFO, "begin to init buddy system");
-  buddy_init(global_mm_pool, pi_start, pg_start, nr_page);
+  buddy_init(&global_mm_pool, pi_start, pg_start, nr_page);
 }
 
 MODULE_DEF(pmm) = {
