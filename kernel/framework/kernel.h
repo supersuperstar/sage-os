@@ -1,3 +1,5 @@
+#ifndef __KERNEL_H__
+#define __KERNEL_H__
 #include <am.h>
 
 #define MODULE(mod) \
@@ -20,3 +22,5 @@ MODULE(pmm) {
   void *(*alloc)(size_t size);
   void (*free)(void *ptr);
 };
+
+#endif
