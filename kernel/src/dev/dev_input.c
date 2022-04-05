@@ -1,4 +1,3 @@
-#include <os.h>
 #include <devices.h>
 
 #define NEVENTS 128

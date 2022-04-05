@@ -1,4 +1,3 @@
-#include <os.h>
 #include <devices.h>
 
 static int sd_init(device_t *dev) {

@@ -25,6 +25,7 @@ static void os_run() {
  * @return Context*
  */
 static Context *os_trap(Event ev, Context *context) {
+  return NULL;
 }
 
 /**

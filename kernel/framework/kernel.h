@@ -1,3 +1,6 @@
+#ifndef __KERNEL_H__
+#define __KERNEL_H__
+
 #include <am.h>
 
 #define MODULE(mod) \
@@ -27,6 +30,7 @@ MODULE(pmm) {
 typedef struct task task_t;
 typedef struct spinlock spinlock_t;
 typedef struct semaphore sem_t;
+
 MODULE(kmt) {
   void (*init)();
   int (*create)(task_t * task, const char *name, void (*entry)(void *arg),
@@ -45,3 +49,5 @@ MODULE(dev) {
   void (*init)();
   device_t *(*lookup)(const char *name);
 };
+
+#endif
