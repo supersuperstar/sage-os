@@ -10,7 +10,7 @@ void spin_lock(spinlock_t *lk) {
   //spin_pushcli();     //interrupt disable
   //Assert();
 
-  while(atomic_xchg(&lk->lock_flag, 1)) {
+  while(atomic_xchg((int *) &lk->lock_flag, 1)) {
     ;
   }
   //warning: this func unable before gdb version year 2008
