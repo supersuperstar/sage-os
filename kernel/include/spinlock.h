@@ -3,11 +3,10 @@
 
 #include <kernel.h>
 
-struct spinlock_t {
+struct spinlock {
   bool lock_flag;     //check the lock locked , 1 means locked
-  const char *name;   //Name of lock
-  int hold_cpuid;     //The cpu holding the lock
-  int pcs[10];        //The call stack that locked the lock(for debugger)
+  const char *name;   //Name of lock(for debug)
+  int hold_cpuid;     //The cpu holding the lock(for debug)
 };
 
 void spin_init(spinlock_t *lk, const char *name);

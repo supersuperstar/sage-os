@@ -1,7 +1,7 @@
 #include <spinlock.h>
 
 void spin_init(spinlock_t *lk, const char *name) {
-  lk->lock_flag = 0;
+  lk->lock_flag = false;
   lk->name = name;
   lk->hold_cpuid = -1;
 }
@@ -10,7 +10,7 @@ void spin_lock(spinlock_t *lk) {
   //spin_pushcli();     //interrupt disable
   //Assert();
 
-  while(atomic_xchg((intptr_t *) &lk->lock_flag, 1)) {
+  while(atomic_xchg(&lk->lock_flag, 1)) {
     ;
   }
   //warning: this func unable before gdb version year 2008
@@ -25,7 +25,10 @@ void spin_unlock(spinlock_t *lk) {
   //Assert();
   lk->hold_cpuid = -1;
   __sync_synchronize(); //memory barrier
-  
+
+  // Release the lock, equivalent to lk->locked = 0.
+  // This code can't use a C assignment, since it might
+  // not be atomic. A real OS would use C atomics here.  
   asm volatile ("movl $0, %0" : "+m"(lk->lock_flag) : );
   //spin_popcli();
 }
