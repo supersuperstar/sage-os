@@ -1,7 +1,5 @@
 var NAVTREEINDEX2 =
 {
-"struct_fcomplex.html#aa4331a3d00f2e714f1cb72efe5ca590e":[2,0,9,0],
-"struct_gate_desc32.html":[2,0,11],
 "struct_gate_desc32.html#a2dee666f0c1fe072c549ff86b1d0a8ab":[2,0,11,7],
 "struct_gate_desc32.html#a60ddd92edfaca845a48488f7d294f0a6":[2,0,11,2],
 "struct_gate_desc32.html#a815e2cd61a2dcdf08fcbe28120d938f8":[2,0,11,6],
@@ -249,5 +247,7 @@ var NAVTREEINDEX2 =
 "x86_8h.html#a9321b5b232838b8b230c6b681be9a882":[3,0,0,0,1,0,1,47],
 "x86_8h.html#a9ae3838aeb488df573d50b292975d76a":[3,0,0,0,1,0,1,27],
 "x86_8h.html#aa0cce706d7a3321fdd62e48a74284aa3":[3,0,0,0,1,0,1,58],
-"x86_8h.html#aa355176d1d778943a3ef9a7955d72790":[3,0,0,0,1,0,1,14]
+"x86_8h.html#aa355176d1d778943a3ef9a7955d72790":[3,0,0,0,1,0,1,14],
+"x86_8h.html#aa899fa0a2a7dd414343fb2fada767622":[3,0,0,0,1,0,1,8],
+"x86_8h.html#ab3e07b1b3b2b295b8caacd0f0989cd38":[3,0,0,0,1,0,1,35]
 };
