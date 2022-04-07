@@ -51,8 +51,9 @@
 
 extern const char* type_str[10];
 
-#ifdef NOLOGGING
-#define log(type, format, ...) ;
+#ifdef NODEBUG
+#define log(type, format, ...)        ;
+#define log_detail(type, format, ...) ;
 #else
 #define log(type, format, ...) \
   if (type & LOG_MASK) { \
@@ -64,6 +65,8 @@ extern const char* type_str[10];
     printf("#%d %s (%s:%d, %s):\n" format "\n", cpu_current(), type_str[type], \
            __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
   }
+#endif
+
 #define success(format, ...) log(LOG_SUCCESS, format, ##__VA_ARGS__)
 #define info(format, ...)    log(LOG_INFO, format, ##__VA_ARGS__)
 #define warn(format, ...)    log(LOG_WARN, format, ##__VA_ARGS__)
@@ -73,29 +76,16 @@ extern const char* type_str[10];
 #define info_detail(format, ...)  log_detail(LOG_INFO, format, ##__VA_ARGS__)
 #define warn_detail(format, ...)  log_detail(LOG_WARN, format, ##__VA_ARGS__)
 #define error_detail(format, ...) log_detail(LOG_ERROR, format, ##__VA_ARGS__)
-#endif
-
-#ifdef DEBUG
-#define Log(format, ...) \
-  printf(COLOR_NONE BG_BLUE "[%d][%s,%d,%s] " format " \33[0m\n", _cpu(), \
-         __FILE__, __LINE__, __func__, ##__VA_ARGS__)
-#define CLog(color, format, ...) \
-  printf("\33[0m" color "[%d][%s,%d,%s] " format " \33[0m\n", _cpu(), \
-         __FILE__, __LINE__, __func__, ##__VA_ARGS__)
-#else
-#define Log(format, ...) ;
-#define CLog(color, format, ...)
-#endif
 
 /**
  * @brief Control whether enable function trace
  */
-#ifdef TRACE_F
-#define TRACE_ENTRY printf("[trace] %s:entry\n", __func__)
-#define TRACE_EXIT  printf("[trace] %s:exit\n", __func__)
-#else
+#ifdef NODEBUG
 #define TRACE_ENTRY ((void)0)
 #define TRACE_EXIT  ((void)0)
+#else
+#define TRACE_ENTRY info("[trace] %s:entry\n", __func__)
+#define TRACE_EXIT  info("[trace] %s:exit\n", __func__)
 #endif
 
 #endif
