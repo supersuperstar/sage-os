@@ -18,10 +18,25 @@ static void* kalloc(size_t size) {
   return NULL;
 }
 
+static void* kalloc_safe(size_t size) {
+  bool i = ienabled();
+  iset(false);
+  void* ret = kalloc(size);
+  if (i) iset(true);
+  return ret;
+}
+
 static void kfree(void* ptr) {
   struct chunk* chunk = virt2chunk(&global_mm_pool, ptr);
   chunk_free(&global_mm_pool, chunk);
   info_detail("free successfully, address: %#x", ptr);
+}
+
+static void kfree_safe(void* ptr) {
+  int i = ienabled();
+  iset(false);
+  kfree(ptr);
+  if (i) iset(true);
 }
 
 static void pmm_init() {
@@ -47,6 +62,6 @@ static void pmm_init() {
 
 MODULE_DEF(pmm) = {
     .init  = pmm_init,
-    .alloc = kalloc,
-    .free  = kfree,
+    .alloc = kalloc_safe,
+    .free  = kfree_safe,
 };
