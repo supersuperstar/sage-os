@@ -5,6 +5,7 @@
 #include <list.h>
 
 #define FILL_STACK 0xfd
+#define FILL_FENCE 0xcd
 
 enum task_states {
   ST_U,  // Unused
@@ -22,14 +23,16 @@ struct task {
   const char* name;
   void (*entry)(void*);
   void* arg;
-
-  Context* context;
   enum task_states state;
+  sem_t* wait_sem;
+  bool killed;
+  uint32_t owner;
   uint32_t count;
 
+  char fenceA[32];
   char stack[8192];
-
-  bool killed;
+  char fenceB[32];
+  Context* context;
 
   struct list_head list;
 };
