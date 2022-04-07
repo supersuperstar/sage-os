@@ -1,4 +1,7 @@
 #include <common.h>
+#include <spinlock.h>
+
+struct spinlock os_trap_lock = {"OS Trap Lock", 0, -1};
 
 static void os_init() {
   pmm->init();
