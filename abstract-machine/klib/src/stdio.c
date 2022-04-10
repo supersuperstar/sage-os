@@ -43,17 +43,13 @@ int print_num(char *buf, int value, char format) {
   int maxlen = 0, values = value;
   int len = 0;
   int t;
-<<<<<<< HEAD
   int atmo;
-=======
->>>>>>> dev
   if (format == 'x' || format == 'p')
     t = 16;
   else
     t = 10;
   for (; values; len++, maxlen++, values /= t)
     ;
-<<<<<<< HEAD
   if (value == 0) {
     buf[0] = '0';
     buf[1] = '\0';
@@ -64,15 +60,6 @@ int print_num(char *buf, int value, char format) {
       atmo       = value % t;
       atmo       = atmo > 0 ? atmo : -atmo;
       buf[--len] = h[atmo];
-=======
-  buf[len] = '\0';
-  if (value == 0) {
-    buf[0] = '0';
-    maxlen = 1;
-  } else {
-    while (value) {
-      buf[--len] = h[value % t];
->>>>>>> dev
       value /= t;
     }
   }
@@ -140,14 +127,9 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
   int minw      = 0;       // width
   char pad      = ' ';     // padding char
   int space     = 0;       // space
-<<<<<<< HEAD
   int precision = 0;       // precision,default length is 6
   int value;
   int negative = 0;
-=======
-  int precision = 0;       // precision
-  int value;
->>>>>>> dev
 
   while (*pfmt) {
     /*copy string until '%'*/
@@ -164,155 +146,6 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
     /*
     FORMAT:
       %[flags][width][.precision][length]specifier
-<<<<<<< HEAD
-=======
-
-    flags:-,+,space,0,#
-    width
-    .precision
-    length:h,hh,l,ll,L
-    specifier:c,d,i,e/E,f,g/G,o,s,u,x/X,p,n,%
-    */
-    spec      = 0;    // specifier
-    minw      = 0;    // width
-    pad       = ' ';  // padding char
-    space     = 0;    // space
-    precision = 0;    // precision,default length is 6
-    /*flags*/
-    while (1) {
-      if (*pfmt == '-') continue;
-      // minus = 1;
-      else if (*pfmt == '+')
-        continue;
-      // plus = 1;
-      else if (*pfmt == ' ')
-        space = 1;
-      else if (*pfmt == '0') {
-        // zeropad = 1;
-        pad = '0';
-      } else if (*pfmt == '#')
-        /*to do*/
-        continue;
-      else
-        break;
-      pfmt++;
-    }
-
-    /*width*/
-    if (*pfmt == '*') {  // this means next args in va_list is minw
-      pfmt++;            // skip char '*'
-      minw = va_arg(ap, int);
-      if (minw < 0) {
-        // minus = 1;
-        minw = -minw;
-      }
-    } else {
-      while (*pfmt >= '0' && *pfmt <= '9')
-        minw = minw * 10 + ((*pfmt++) - '0');
-    }
-
-    /*precision*/
-    if (*pfmt == '.') {
-      pfmt++; /* skip period */
-      // pr_flag   = 1;
-      precision = 0;
-      if (*pfmt == '*') {
-        pfmt++; /* skip char */
-        precision = va_arg(ap, int);
-        if (precision < 0) precision = 0;
-      } else {
-        while (*pfmt >= '0' && *pfmt <= '9') {
-          precision = precision * 10 + (*pfmt++) - '0';
-        }
-      }
-    }
-
-    /*length*/
-    do {
-      if (*pfmt == 'l') {
-        pfmt++;
-        // length = 1;
-        if (*pfmt == 'l') {
-          pfmt++;
-          // length = 2;
-        }
-      } else if (*pfmt == 'h') {
-        pfmt++;
-        // length = -1;
-        if (*pfmt == 'h') {
-          pfmt++;
-          // length = -2;
-        }
-      } else if (*pfmt == 'L') {
-        pfmt++;
-        // lengthL = 1;
-      }
-    } while (0);
-
-    /*get the specifier*/
-    if (!*pfmt)
-      spec = 0;
-    else
-      spec = *pfmt++;
-
-    /**
-     * @brief print the argument designation
-     */
-    int len = 1;
-    if (n > 1) {
-      switch (spec) {
-        case 'c':
-          *argbuf = va_arg(ap, int);
-          len     = 1;
-          break;
-        case 's':
-          argbuf = va_arg(ap, char *);
-          len = strlen(argbuf);
-          break;
-        case 'p':
-          precision = 8;
-        case 'd':
-        case 'x':
-        case 'i':
-          value  = va_arg(ap, int);
-          len    = print_num(vbuf, value, spec);
-          argbuf = vbuf;
-          break;
-        default:
-          break;
-      }
-      /*can hold the length of buf*/
-      if (n > len) {
-        /*need padding*/
-        if (space) {  // space padding
-          add_pad(&pout, &n, &ret, ' ', 1);
-        }
-        if (precision > len) {  // width padding
-          if (minw - space - precision > 0)
-            add_pad(&pout, &n, &ret, pad, minw - space - precision);
-          add_pad(&pout, &n, &ret, '0', precision - len);  // precision padding
-        } else if (minw - space - len > 0) {
-          add_pad(&pout, &n, &ret, pad, minw - space - len);
-        }
-
-        if (n > 1) {
-          len = len > n - 1 ? n - 1 : len;
-          ret += len;
-          strncpy(pout, argbuf, len);
-          pout += len;
-        }
-      } else {
-        ret += n - 1;
-        len = n - 1;
-        strncpy(pout, argbuf, len);
-        pout += len;
-      }
-    }
-    *pout = '\0';
-  }
-  return ret;
-}
->>>>>>> dev
 
     flags:-,+,space,0,#
     width
