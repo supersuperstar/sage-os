@@ -7,6 +7,8 @@
 #define FILL_STACK 0xfd
 #define FILL_FENCE 0xcd
 
+#define MAX_TASK_STATES 8
+
 enum task_states {
   ST_U,  // Unused
   ST_E,  // Embryo
@@ -35,6 +37,6 @@ struct task {
   struct list_head list;
 };
 
-const char* task_states_str[];
+const char* task_states_str[MAX_TASK_STATES];
 
 #endif

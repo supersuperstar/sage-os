@@ -161,9 +161,15 @@ void kmt_set_task(task_t *task) {
 }
 
 MODULE_DEF(kmt) = {
-    .init     = kmt_init,
-    .create   = kmt_create,
-    .teardown = kmt_teardown,
-    .get_task = kmt_get_task,
-    .set_task = kmt_set_task,
+    .init        = kmt_init,
+    .create      = kmt_create,
+    .teardown    = kmt_teardown,
+    .get_task    = kmt_get_task,
+    .set_task    = kmt_set_task,
+    .spin_init   = spin_init,
+    .spin_lock   = spin_lock,
+    .spin_unlock = spin_unlock,
+    .sem_init    = sem_init,
+    .sem_signal  = sem_signal,
+    .sem_wait    = sem_wait,
 };
