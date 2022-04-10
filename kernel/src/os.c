@@ -1,20 +1,44 @@
 #include <common.h>
+#include <spinlock.h>
 
+/**
+ * @brief wrap struct for handler_t, use in os_trap and os_on_irq;
+ *        use as a linked list.
+ */
+typedef struct irq_handler {
+  int seq;
+  int event;
+  handler_t handler;
+  struct irq_handler *next;
+} IRQ_handler;
+
+IRQ_handler root_irq_handler = {INT_MIN, EVENT_NULL, NULL, NULL};
+
+// spinlock_t irq_handler_lock;  // global lock for irq handler linked list
+
+/**
+ * @brief initialze system; will be executed only once (not per cpu)
+ *
+ */
 static void os_init() {
   pmm->init();
+  info("pmm initialized");
+
+  kmt->init();
+  info("kmt initialized");
+
+  // TODO: create init thread here
 }
 
+/**
+ * @brief cpu start entry
+ *
+ */
 static void os_run() {
-#ifndef TEST
-  for (const char *s = "Hello World from CPU #*\n"; *s; s++) {
-    putch(*s == '*' ? '0' + cpu_current() : *s);
-  }
+  info("CPU started");
+  iset(true);
   while (1)
     ;
-#else  // for unit test
-  printf("Hello World from CPU #%d\n", cpu_current());
-  halt(0);  // must halt at here, not in unit test
-#endif
 }
 
 /**
@@ -25,7 +49,17 @@ static void os_run() {
  * @return Context*
  */
 static Context *os_trap(Event ev, Context *context) {
-  return NULL;
+  Context *next = NULL;
+  for (IRQ_handler *p = &root_irq_handler; p != NULL; p = p->next) {
+    if (p->event == EVENT_NULL || p->event == ev.event) {
+      Context *r = p->handler(ev, context);
+      panic_on(r && next, "returning multiple contexts");
+      if (r) next = r;
+    }
+  }
+  panic_on(!next, "returning NULL context");
+  // panic_on(sane_context(next), "returning to invalid context");
+  return next;
 }
 
 /**
@@ -34,9 +68,22 @@ static Context *os_trap(Event ev, Context *context) {
  * @param seq determines the order in which handlers are called。
  *            smaller seq are called first。
  * @param event event type, see am.h
- * @param handler
+ * @param handler interrupt handler
  */
 static void os_on_irq(int seq, int event, handler_t handler) {
+  IRQ_handler *new_irq_handler = pmm->alloc(sizeof(IRQ_handler));
+
+  new_irq_handler->seq     = seq;
+  new_irq_handler->event   = event;
+  new_irq_handler->handler = handler;
+
+  // insert to irq_handler list
+  // spin_lock(&irq_handler_lock);
+  IRQ_handler *p = &root_irq_handler;
+  while (p->next && p->next->seq <= seq)
+    p = p->next;
+  p->next = new_irq_handler;
+  // spin_unlock(&irq_handler_lock);
 }
 
 MODULE_DEF(os) = {
