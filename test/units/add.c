@@ -2,7 +2,7 @@
 
 int add(int a, int b) {
   int c = a + b;
-  return c - 1;  // intensionally wrong
+  return c;  // intensionally wrong
 }
 
 int test_data[] = {0,          1,          2,          0x7fffffff,
@@ -29,8 +29,6 @@ int main() {
     }
     check(j == NR_DATA);
   }
-
   check(i == NR_DATA);
-
   return 0;
 }
