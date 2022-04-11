@@ -1,6 +1,5 @@
 #ifndef __KERNEL_H__
 #define __KERNEL_H__
-
 #include <am.h>
 
 #define MODULE(mod) \
