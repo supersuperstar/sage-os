@@ -23,7 +23,11 @@ const char fence_val[32] = {
     FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE,
     FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE,
     FILL_FENCE, FILL_FENCE};
-extern spinlock_t os_trap_lock;
+
+// extern spinlock_t os_trap_lock;
+
+// special root point, do not execute
+// all tasks are in root_task.list
 task_t root_task;
 
 // context to return when no task to schedule
@@ -47,6 +51,7 @@ void check_fence(task_t *task) {
  *
  */
 void kmt_init() {
+  // create root_task
   root_task.pid   = next_pid++;
   root_task.name  = "Root Task";
   root_task.state = ST_X;
