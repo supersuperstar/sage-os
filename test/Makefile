@@ -2,7 +2,7 @@ SHELL := /bin/bash
 export AM_HOME := $(PWD)/../abstract-machine
 
 ifeq ($(ARCH),)
-export ARCH    := native
+export ARCH    := x86_64-qemu
 endif
 
 ifeq ($(smp),)
@@ -18,7 +18,7 @@ COLOR_RED   = \033[1;31m
 COLOR_GREEN = \033[1;32m
 COLOR_NONE  = \033[0m
 
-ALL = $(basename $(notdir $(shell find units/. -name "*.c")))
+ALL = $(basename $(notdir $(shell find units/. -name "test_*.c")))
 
 all: $(addprefix Makefile., $(ALL))
 	@printf "\nTargets:\n$(ALL)\n"
@@ -27,6 +27,7 @@ $(ALL): %: Makefile.%
 
 ### for qemu target, halt(1) will not pass through qemu return code
 ### get halt code by grep its serial output. (Line 27)
+### will skip running _*.c files
 Makefile.%: units/%.c latest
 	@if [ "$(NOKERNEL)" = "true" ] ; then \
 		/bin/echo -e "NAME = $*\nSRCS = $<\nLIBS += klib\nCFLAGS += -DTEST $(CFLAGS_EXTRA)\ninclude $(AM_HOME)/Makefile" > $@; \
@@ -35,7 +36,7 @@ Makefile.%: units/%.c latest
 	fi
 	@mkdir -p out
 	@printf "\n========== Unit test start: %s\n" $*
-	@if make -s -f $@ ARCH=$(ARCH) $(MAKECMDGOALS) > out/$*.out ; then \
+	@if make -s -f $@ ARCH=$(ARCH) run > out/$*.out ; then \
 		cat out/$*.out; \
 		if [ "$(ARCH)" != "native" ] && [ $$(grep "CPU" out/$*.out | grep -Eo "\([0-9]{2}\)") != "(00)" ]; then \
 			printf "========== $(COLOR_RED)FAIL!$(COLOR_NONE)\n"; \
@@ -64,20 +65,32 @@ build: latest
 	fi
 	@make -s -f Makefile.$(target) ARCH=$(ARCH)
 
+### run single test unit
+run: build latest
+	@if [ "$(ARCH)" = "x86_64-qemu" ]; then \
+		qemu-system-x86_64 \
+			  -serial mon:stdio \
+			  -machine accel=tcg \
+              -smp $(smp) \
+              -drive format=raw,file="build/$(target)-x86_64-qemu"; \
+	else \
+		./build/$(target)-native; \
+	fi
+
 ### debug single test unit
 debug: build latest
 	@if [ "$(ARCH)" = "x86_64-qemu" ]; then \
 		qemu-system-x86_64 \
 			  -serial mon:stdio \
               -machine accel=tcg \
-              -smp "$(smp)" \
+              -smp $(smp) \
               -drive format=raw,file=build/$(target)-x86_64-qemu \
 			  -s -S; \
 	else \
 		gdb -ex "handle SIGUSR1 SIGUSR2 SIGSEGV noprint nostop" build/$(target)-native; \
 	fi
 
-run: clean all
+test: clean all
 	@printf "\nTest Result:\n"
 	@cat $(RESULT)
 	@if [[ `cat $(RESULT)` == *"FAIL!"* ]] ; then exit 1; fi
