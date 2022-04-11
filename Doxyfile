@@ -924,7 +924,9 @@ EXCLUDE                = ./abstract-machine/scripts \
                          ./docs/style \
                          ./docs/html \
                          ./docs/xml \
-                         ./docs/latex
+                         ./docs/latex \
+                         ./test/include \
+                         ./test/units
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -940,9 +942,7 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = */tests/* \
-                         */test/* \
-                         *.py
+EXCLUDE_PATTERNS       = *.py
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
