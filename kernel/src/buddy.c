@@ -31,7 +31,7 @@ void buddy_init(struct pmm_pool* mm_pool, struct chunk* start_chunk,
   mm_pool->size           = page_num * SZ_PAGE;
   mm_pool->chunk_metadata = start_chunk;
 
-  info("begin address: %#llx, metadata begin address: %#llx",
+  info("begin address: 0x%llx, metadata begin address: 0x%llx",
        mm_pool->begin_addr, start_chunk);
   for (order = 0; order < BUDDY_MAX_ORDER; order++) {
     // info("order:%d, addr: %#x", order, &mm_pool->free_lists[order]);
