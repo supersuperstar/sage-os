@@ -51,7 +51,13 @@ void spin_unlock(spinlock_t *lk) {
   asm volatile("movl $0, %0" : "+m"(lk->lock_flag) :);
   spin_popcli();  // interrupt able
 }
-
+/**
+ * @brief check current cpu has the lock
+ *
+ * @param lk address of spinlock example
+ * @return true
+ * @return false
+ */
 bool spin_holding(spinlock_t *lk) {
   bool res = 0;
   spin_pushcli();
@@ -60,6 +66,10 @@ bool spin_holding(spinlock_t *lk) {
   return res;
 }
 
+/**
+ * @brief interrupt disable
+ *
+ */
 void spin_pushcli() {
   iset(false);
 
@@ -69,6 +79,10 @@ void spin_pushcli() {
   ncli[cpu_current()] += 1;
 }
 
+/**
+ * @brief interrupt able
+ *
+ */
 void spin_popcli() {
   ncli[cpu_current()] -= 1;
   // assert(ncli[cpu_current()] >= 0, "Cli level is negative.");
