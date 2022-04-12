@@ -43,19 +43,23 @@ int print_num(char *buf, int value, char format) {
   int maxlen = 0, values = value;
   int len = 0;
   int t;
+  int atmo;
   if (format == 'x' || format == 'p')
     t = 16;
   else
     t = 10;
   for (; values; len++, maxlen++, values /= t)
     ;
-  buf[len] = '\0';
   if (value == 0) {
     buf[0] = '0';
+    buf[1] = '\0';
     maxlen = 1;
   } else {
+    buf[len] = '\0';
     while (value) {
-      buf[--len] = h[value % t];
+      atmo       = value % t;
+      atmo       = atmo > 0 ? atmo : -atmo;
+      buf[--len] = h[atmo];
       value /= t;
     }
   }
@@ -123,8 +127,9 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
   int minw      = 0;       // width
   char pad      = ' ';     // padding char
   int space     = 0;       // space
-  int precision = 0;       // precision
+  int precision = 0;       // precision,default length is 6
   int value;
+  int negative = 0;
 
   while (*pfmt) {
     /*copy string until '%'*/
@@ -242,6 +247,7 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
           break;
         case 's':
           argbuf = va_arg(ap, char *);
+          // strcpy(outbuf, buf);
           len = strlen(argbuf);
           break;
         case 'p':
@@ -249,9 +255,10 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
         case 'd':
         case 'x':
         case 'i':
-          value  = va_arg(ap, int);
-          len    = print_num(vbuf, value, spec);
-          argbuf = vbuf;
+          value    = va_arg(ap, int);
+          negative = value < 0;
+          len      = print_num(vbuf, value, spec);
+          argbuf   = vbuf;
           break;
         default:
           break;
@@ -262,6 +269,9 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
         if (space) {  // space padding
           add_pad(&pout, &n, &ret, ' ', 1);
         }
+        if (negative) {
+          add_pad(&pout, &n, &ret, '-', 1);
+        }
         if (precision > len) {  // width padding
           if (minw - space - precision > 0)
             add_pad(&pout, &n, &ret, pad, minw - space - precision);
@@ -269,23 +279,26 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
         } else if (minw - space - len > 0) {
           add_pad(&pout, &n, &ret, pad, minw - space - len);
         }
-
         if (n > 1) {
           len = len > n - 1 ? n - 1 : len;
           ret += len;
           strncpy(pout, argbuf, len);
           pout += len;
+          n -= len;
         }
       } else {
+        if (negative) {
+          add_pad(&pout, &n, &ret, '-', 1);
+        }
         ret += n - 1;
         len = n - 1;
         strncpy(pout, argbuf, len);
         pout += len;
+        n = 1;
       }
     }
-    *pout = '\0';
   }
+  *pout = '\0';
   return ret;
 }
-
 #endif

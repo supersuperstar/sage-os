@@ -2,12 +2,55 @@
 #include <sem.h>
 #include <spinlock.h>
 #include <thread.h>
+#include <logger.h>
+
+static uint32_t next_pid        = 1;
+const char *task_states_trans[] = {"Unused",   "Embryo",   "To sleep",
+                                   "Sleeping", "Waken up", "Running",
+                                   "Zombie",   "Special"};
+const char fence_val[32]        = {
+    FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE,
+    FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE,
+    FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE,
+    FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE,
+    FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE,
+    FILL_FENCE, FILL_FENCE};
+extern spinlock_t os_trap_lock;
+task_t root_task;
+
+Context *null_contexts[MAX_CPU] = {};
+task_t *cpu_tasks[MAX_CPU]      = {};
+
+/**
+ * @brief check the fence protection value.
+ *
+ * @param task
+ */
+void check_fence(task_t *task) {
+  assert(memcmp(fence_val, task->fenceA, sizeof(fence_val)) == 0);
+  assert(memcmp(fence_val, task->fenceB, sizeof(fence_val)) == 0);
+}
 
 /**
  * @brief initialize kmt module
  *
  */
 static void kmt_init() {
+  root_task.pid   = next_pid++;
+  root_task.name  = "Root Task";
+  root_task.state = ST_X;
+  root_task.count = 0;
+  memset(root_task.fenceA, FILL_FENCE, sizeof(root_task.fenceA));
+  memset(root_task.stack, FILL_STACK, sizeof(root_task.stack));
+  memset(root_task.fenceB, FILL_FENCE, sizeof(root_task.fenceB));
+  check_fence(&root_task);
+  INIT_LIST_HEAD(&root_task.list);
+
+  os->on_irq(INT32_MIN, EVENT_NULL, kmt_context_save);
+  os->on_irq(0, EVENT_ERROR, kmt_error);
+  os->on_irq(0, EVENT_IRQ_TIMER, kmt_timer);
+  os->on_irq(0, EVENT_YIELD, kmt_yield);
+  os->on_irq(INT32_MAX, EVENT_NULL, kmt_context_switch);
 }
 
 /**
@@ -30,6 +73,17 @@ static int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
  * @param task task of thread
  */
 static void kmt_teardown(task_t *task) {
+}
+
+Context *kmt_context_save(Event ev, Context *context) {
+}
+Context *kmt_context_switch(Event ev, Context *context) {
+}
+Context *kmt_timer(Event ev, Context *context) {
+}
+Context *kmt_error(Event ev, Context *context) {
+}
+Context *kmt_yield(Event ev, Context *context) {
 }
 
 MODULE_DEF(kmt) = {
