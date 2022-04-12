@@ -31,7 +31,7 @@ struct task {
   enum task_states state;         // process state
   sem_t* wait_sem;                // whether is waiting a semaphore
   bool killed;                    // whether process is killed
-  uint32_t owner;                 // cpu which owns this process
+  int32_t owner;                  // cpu which owns this process
   uint32_t count;                 // a counter to avoid deadlock
   char fenceA[STACK_FENCE_SIZE];  // 32 bytes fence
   char stack[STACK_SIZE];         // user stack

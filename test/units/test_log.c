@@ -2,6 +2,8 @@
 #include <logger.h>
 
 int main(int argc, char const *argv[]) {
+  int mask = LOG_MASK;
+  printf("mask: %d", mask);
   success("succeed!");
   info("info!");
   warn("warn!");

@@ -36,11 +36,6 @@ static void create_threads() {
   kmt->create(task_producer, "producer", producer, NULL);
 }
 
-void mp_entry() {
-  iset(true);
-  yield();
-}
-
 int main() {
   ioe_init();
   cte_init(os->trap);

@@ -10,6 +10,8 @@ Context *kmt_yield(Event ev, Context *context);
 Context *kmt_error(Event ev, Context *context);
 Context *kmt_timer(Event ev, Context *context);
 Context *kmt_schedule(Event ev, Context *context);
+void kmt_print_all_tasks();
+void kmt_print_cpu_tasks();
 
 uint32_t next_pid = 1;  // next pid to allocate
 
@@ -24,7 +26,7 @@ const char fence_val[32] = {
     FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE,
     FILL_FENCE, FILL_FENCE};
 
-// extern spinlock_t os_trap_lock;
+extern spinlock_t ir_lock;
 
 // special root point, do not execute
 // all tasks are in root_task.list
@@ -41,7 +43,7 @@ task_t *cpu_tasks[MAX_CPU] = {};
  *
  * @param task
  */
-void check_fence(task_t *task) {
+void _check_fence(task_t *task) {
   assert(memcmp(fence_val, task->fenceA, sizeof(fence_val)) == 0);
   assert(memcmp(fence_val, task->fenceB, sizeof(fence_val)) == 0);
 }
@@ -60,7 +62,7 @@ void kmt_init() {
   memset(root_task.fenceA, FILL_FENCE, sizeof(root_task.fenceA));
   memset(root_task.stack, FILL_STACK, sizeof(root_task.stack));
   memset(root_task.fenceB, FILL_FENCE, sizeof(root_task.fenceB));
-  check_fence(&root_task);
+  _check_fence(&root_task);
   INIT_LIST_HEAD(&root_task.list);
 
   os->on_irq(INT32_MIN, EVENT_NULL, kmt_context_save);
@@ -73,15 +75,39 @@ void kmt_init() {
 /**
  * @brief create thread
  *
- * @param task task of thread
+ * @param task task ptr of thread
  * @param name thread name
  * @param entry thread user code function entry
  * @param arg args pass to entry
- * @return int status code
+ * @return int task's pid
  */
 int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
                void *arg) {
-  return 0;
+  assert(task != NULL && name != NULL && entry != NULL);
+  task->pid      = next_pid++;
+  task->name     = name;
+  task->entry    = entry;
+  task->arg      = arg;
+  task->state    = ST_E;
+  task->owner    = -1;
+  task->count    = 0;
+  task->wait_sem = NULL;
+  task->killed   = 0;
+  INIT_LIST_HEAD(&task->list);
+
+  memset(task->fenceA, FILL_FENCE, sizeof(task->fenceA));
+  memset(task->stack, FILL_STACK, sizeof(task->stack));
+  memset(task->fenceB, FILL_FENCE, sizeof(task->fenceB));
+  _check_fence(task);
+  Area stack = {(void *)task->stack, (void *)task->stack + sizeof(task->stack)};
+  task->context = kcontext(stack, entry, arg);
+
+  bool holding = spin_holding(&ir_lock);
+  if (!holding) spin_lock(&ir_lock);
+  list_add_tail(&root_task.list, &task->list);
+  if (!holding) spin_unlock(&ir_lock);
+
+  return task->pid;
 }
 
 /**
@@ -90,7 +116,10 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
  * @param task task of thread
  */
 void kmt_teardown(task_t *task) {
-  // task_t *cur = kmt->get_task();
+  bool holding = spin_holding(&ir_lock);
+  if (!holding) spin_lock(&ir_lock);
+  task->killed = 1;
+  if (!holding) spin_unlock(&ir_lock);
 }
 
 /**
@@ -101,7 +130,18 @@ void kmt_teardown(task_t *task) {
  * @return Context* always NULL
  */
 Context *kmt_context_save(Event ev, Context *context) {
-  // task_t *cur = kmt->get_task();
+  assert(spin_holding(&ir_lock));
+  task_t *cur = kmt_get_task();
+  if (cur) {
+    assert(!cur->context);
+    // TODO: more checks for context
+    cur->state   = ST_W;
+    cur->context = context;
+  } else {
+    // if no current task (initial), save to null_context
+    assert(!null_contexts[cpu_current()]);
+    null_contexts[cpu_current()] = context;
+  }
   return NULL;
 }
 
@@ -125,7 +165,57 @@ Context *kmt_yield(Event ev, Context *context) {
  * @return Context*
  */
 Context *kmt_schedule(Event ev, Context *context) {
-  return context;
+  assert(spin_holding(&ir_lock));
+  task_t *cur = kmt_get_task();
+
+  // free killed process
+  if (cur && cur->killed) {
+    list_del(&cur->list);
+    pmm->free(cur);
+  }
+
+  // pick the next task to run
+  Context *ret = NULL;
+  task_t *pos  = NULL;
+  list_for_each_entry(pos, &root_task.list, list) {
+    if (pos->owner != -1 && pos->owner != cpu_current()) continue;
+    if (pos->state == ST_E || pos->state == ST_W) {
+      break;
+    }
+  }
+
+  // switch context
+  if (pos != NULL && pos != &root_task) {
+    pos->owner = cpu_current();
+    _check_fence(pos);
+    pos->state   = ST_R;
+    ret          = pos->context;
+    pos->context = NULL;
+    pos->count   = (pos->count + 1) % 1024;
+
+    // TODO: more checks here
+    kmt_set_task(pos);
+
+    info("schedule: run next pid=%d, name=%s, count=%d", pos->pid, pos->name,
+         pos->count);
+  } else {
+    // if no task to run
+    warn("schedule: no task to run");
+    kmt_print_all_tasks();
+    kmt_print_cpu_tasks();
+    ret = null_contexts[cpu_current()];
+
+    null_contexts[cpu_current()] = NULL;
+    kmt_set_task(NULL);
+  }
+
+  if (ret == NULL) {
+    error_detail("switch to null context");
+    kmt_print_all_tasks();
+    kmt_print_cpu_tasks();
+    panic("");
+  }
+  return ret;
 }
 
 /**
@@ -147,6 +237,11 @@ Context *kmt_timer(Event ev, Context *context) {
  * @return Context* always NULL
  */
 Context *kmt_error(Event ev, Context *context) {
+  assert(spin_holding(&ir_lock));
+  assert(ev.event == EVENT_ERROR);
+  error_detail("error detected: %s", ev.msg);
+  kmt_print_all_tasks();
+  kmt_print_cpu_tasks();
   return NULL;
 }
 
@@ -160,9 +255,40 @@ task_t *kmt_get_task() {
   return cpu_tasks[cpu_current()];
 }
 
+/**
+ * @brief set cpu's current task
+ *
+ * @param task
+ */
 void kmt_set_task(task_t *task) {
   assert(cpu_current() < MAX_CPU);
   cpu_tasks[cpu_current()] = task;
+}
+
+/**
+ * @brief print all tasks
+ *        notice: do not garantee concurrency safety
+ */
+void kmt_print_all_tasks() {
+  printf("\n[all tasks]:\n");
+  task_t *pos;
+  list_for_each_entry(pos, &root_task.list, list) {
+    printf("pid=%d\tname=%s\towner=%d\tcount=%d\twait_sem=%s\n", pos->pid,
+           pos->name, pos->owner, pos->count, "pos->wait_sem");
+  }
+}
+
+/**
+ * @brief print all current_tasks
+ *        notice: do not garantee concurrency safety
+ */
+void kmt_print_cpu_tasks() {
+  printf("\n[cpu tasks]:\n");
+  for (int i = 0; i < cpu_count(); i++) {
+    task_t *pos = cpu_tasks[i];
+    printf("#%d: pid=%d\tname=%s\towner=%d\tcount=%d\twait_sem=%s\n", i,
+           pos->pid, pos->name, pos->owner, pos->count, "pos->wait_sem");
+  }
 }
 
 MODULE_DEF(kmt) = {

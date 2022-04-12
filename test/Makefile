@@ -6,7 +6,7 @@ export ARCH    := x86_64-qemu
 endif
 
 ifeq ($(smp),)
-export smp	   := 1
+export smp	   := 2
 endif
 
 .PHONY: all run debug clean latest $(ALL)

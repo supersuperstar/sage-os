@@ -14,7 +14,7 @@ typedef struct irq_handler {
 
 IRQ_handler root_irq_handler = {INT_MIN, EVENT_NULL, NULL, NULL};
 
-// spinlock_t irq_handler_lock;  // global lock for irq handler linked list
+spinlock_t ir_lock;  // lock all os_trap
 
 /**
  * @brief initialze system; will be executed only once (not per cpu)
@@ -27,6 +27,8 @@ static void os_init() {
   kmt->init();
   info("kmt initialized");
 
+  spin_init(&ir_lock, "ir_lock");
+
   // TODO: create init thread here
 }
 
@@ -37,6 +39,7 @@ static void os_init() {
 static void os_run() {
   info("CPU started");
   iset(true);
+  yield();
   while (1)
     ;
 }
@@ -49,14 +52,20 @@ static void os_run() {
  * @return Context*
  */
 static Context *os_trap(Event ev, Context *context) {
+  if (spin_holding(&ir_lock)) {
+    panic("trap on trap");
+  }
   Context *next = NULL;
-  for (IRQ_handler *p = &root_irq_handler; p != NULL; p = p->next) {
+  spin_lock(&ir_lock);
+  assert(root_irq_handler.next);
+  for (IRQ_handler *p = root_irq_handler.next; p != NULL; p = p->next) {
     if (p->event == EVENT_NULL || p->event == ev.event) {
       Context *r = p->handler(ev, context);
       panic_on(r && next, "returning multiple contexts");
       if (r) next = r;
     }
   }
+  spin_unlock(&ir_lock);
   panic_on(!next, "returning NULL context");
   // panic_on(sane_context(next), "returning to invalid context");
   return next;
