@@ -50,10 +50,7 @@ void spin_unlock(spinlock_t *lk) {
   asm volatile("movl $0, %0" : "+m"(lk->lock_flag) :);
   spin_popcli();  // interrupt able
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> dev-2-cds
 /**
  * @brief check current cpu has the lock
  *
