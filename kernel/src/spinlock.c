@@ -71,10 +71,10 @@ bool spin_holding(spinlock_t *lk) {
  *
  */
 void spin_pushcli() {
+  bool i = ienabled();
   iset(false);
-
   if (ncli[cpu_current()] == 0) {
-    efif[cpu_current()] = ienabled();
+    efif[cpu_current()] = i;
   }
   ncli[cpu_current()] += 1;
 }
