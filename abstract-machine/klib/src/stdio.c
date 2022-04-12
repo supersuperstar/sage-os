@@ -279,7 +279,6 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
         } else if (minw - space - len > 0) {
           add_pad(&pout, &n, &ret, pad, minw - space - len);
         }
-
         if (n > 1) {
           len = len > n - 1 ? n - 1 : len;
           ret += len;
