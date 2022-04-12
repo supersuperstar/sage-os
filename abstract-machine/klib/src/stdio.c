@@ -6,6 +6,7 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 #define OUTBUF_SIZE 65536
 #define VBUF_SIZE   64
+#define FORMAT_ERROR ("[NOTICE:not implemented]")
 char outbuf[OUTBUF_SIZE];  // out buf,for stdout
 char vbuf[VBUF_SIZE];      // num buf,store %d arg
 char *argbuf;              // arg buf
@@ -19,15 +20,31 @@ char *argbuf;              // arg buf
  * @param pad char for padding
  * @param num num of padding char
  */
-void add_pad(char **out, size_t *n, int *ret, char pad, int num) {
-  while (num--) {
-    if (*n > 1) {
-      *(*out)++ = pad;
-      (*n)--;
-    }
-    (*ret)++;
+#define add_pad(out, n, ret, pad, num) \
+  for (int i = 0; i < num; i++) { \
+    if ((n) > 1) { \
+      *(out)++ = (pad); \
+      (n)--; \
+    } \
+    (ret)++; \
   }
-}
+
+#define add_single_pad(out, n, ret, pad) \
+  if ((n) > 1) { \
+    *(out)++ = (pad); \
+    (n)--; \
+  } \
+  (ret)++;
+
+// void add_pad(char **out, size_t *n, int *ret, char pad, int num) {
+//   while (num--) {
+//     if (*n > 1) {
+//       *(*out)++ = pad;
+//       (*n)--;
+//     }
+//     (*ret)++;
+//   }
+// }
 
 /**
  * @brief
@@ -124,12 +141,14 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
   char *pout       = out;  // pointer
   const char *pfmt = fmt;  // pointer
   int spec;                // specifier
-  int minw      = 0;       // width
-  char pad      = ' ';     // padding char
-  int space     = 0;       // space
-  int precision = 0;       // precision,default length is 6
+  int minw       = 0;      // width
+  char pad       = ' ';    // padding char
+  int space      = 0;      // space
+  int precision  = 0;      // precision,default length is 6
+  int wellnumber = 0;      //#
   int value;
   int negative = 0;
+  int legal    = 1;  // check if the format is legal
 
   while (*pfmt) {
     /*copy string until '%'*/
@@ -160,19 +179,12 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
     precision = 0;    // precision,default length is 6
     /*flags*/
     while (1) {
-      if (*pfmt == '-') continue;
-      // minus = 1;
-      else if (*pfmt == '+')
-        continue;
-      // plus = 1;
-      else if (*pfmt == ' ')
+      if (*pfmt == ' ')
         space = 1;
       else if (*pfmt == '0') {
-        // zeropad = 1;
         pad = '0';
       } else if (*pfmt == '#')
-        /*to do*/
-        continue;
+        wellnumber = 1;
       else
         break;
       pfmt++;
@@ -207,28 +219,6 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
       }
     }
 
-    /*length*/
-    do {
-      if (*pfmt == 'l') {
-        pfmt++;
-        // length = 1;
-        if (*pfmt == 'l') {
-          pfmt++;
-          // length = 2;
-        }
-      } else if (*pfmt == 'h') {
-        pfmt++;
-        // length = -1;
-        if (*pfmt == 'h') {
-          pfmt++;
-          // length = -2;
-        }
-      } else if (*pfmt == 'L') {
-        pfmt++;
-        // lengthL = 1;
-      }
-    } while (0);
-
     /*get the specifier*/
     if (!*pfmt)
       spec = 0;
@@ -247,8 +237,7 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
           break;
         case 's':
           argbuf = va_arg(ap, char *);
-          // strcpy(outbuf, buf);
-          len = strlen(argbuf);
+          len    = strlen(argbuf);
           break;
         case 'p':
           precision = 8;
@@ -261,25 +250,64 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
           argbuf   = vbuf;
           break;
         default:
+          legal  = 0;
+          len    = 25;
+          argbuf = FORMAT_ERROR;
           break;
       }
       /*can hold the length of buf*/
-      if (n > len) {
-        /*need padding*/
-        if (space) {  // space padding
-          add_pad(&pout, &n, &ret, ' ', 1);
-        }
-        if (negative) {
-          add_pad(&pout, &n, &ret, '-', 1);
-        }
-        if (precision > len) {  // width padding
-          if (minw - space - precision > 0)
-            add_pad(&pout, &n, &ret, pad, minw - space - precision);
-          add_pad(&pout, &n, &ret, '0', precision - len);  // precision padding
-        } else if (minw - space - len > 0) {
-          add_pad(&pout, &n, &ret, pad, minw - space - len);
-        }
+      if (legal) {
+        if (n > len) {
+          /*need padding*/
+          if (spec != 'c' && spec != 's') {
+            if (space) {  // space padding
+              // add_pad(pout, n, ret, ' ', 1);
+              if ((n) > 1) {
+                *(out)++ = (pad);
+                (n)--;
+              }
+              (ret)++;
+            }
+            if (negative) {
+              add_single_pad(pout, n, ret, '-');
+            }
+            if (wellnumber) {
+              add_single_pad(pout, n, ret, '0');
+              add_single_pad(pout, n, ret, 'x');
+            }
+            if (precision > len) {  // width padding
+              if (minw - space - precision > 0)
+                add_pad(pout, n, ret, pad, minw - space - precision);
+              add_pad(pout, n, ret, '0', precision - len);  // precision padding
+            } else if (minw - space - len > 0) {
+              add_pad(pout, n, ret, pad, minw - space - len);
+            }
+          }
 
+          if (n > 1) {
+            len = len > n - 1 ? n - 1 : len;
+            ret += len;
+            strncpy(pout, argbuf, len);
+            pout += len;
+            n -= len;
+          }
+        } else {
+          if (spec != 'c' && spec != 's') {
+            if (negative) {
+              add_single_pad(pout, n, ret, '-');
+            }
+            if (wellnumber) {
+              add_single_pad(pout, n, ret, '0');
+              add_single_pad(pout, n, ret, 'x');
+            }
+          }
+          ret += n - 1;
+          len = n - 1;
+          strncpy(pout, argbuf, len);
+          pout += len;
+          n = 1;
+        }
+      } else {
         if (n > 1) {
           len = len > n - 1 ? n - 1 : len;
           ret += len;
@@ -287,15 +315,8 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
           pout += len;
           n -= len;
         }
-      } else {
-        if (negative) {
-          add_pad(&pout, &n, &ret, '-', 1);
-        }
-        ret += n - 1;
-        len = n - 1;
-        strncpy(pout, argbuf, len);
-        pout += len;
-        n = 1;
+        *pout = '\0';
+        return ret;
       }
     }
   }
