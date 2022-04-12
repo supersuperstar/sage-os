@@ -41,6 +41,8 @@ int main() {
   cte_init(os->trap);
   os->init();
   create_threads();
+  kmt_print_all_tasks();
+  kmt_print_cpu_tasks();
   mpe_init(os->run);
   return 1;
 }

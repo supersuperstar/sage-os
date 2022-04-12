@@ -43,10 +43,9 @@ task_t *cpu_tasks[MAX_CPU] = {};
  *
  * @param task
  */
-void _check_fence(task_t *task) {
-  assert(memcmp(fence_val, task->fenceA, sizeof(fence_val)) == 0);
-  assert(memcmp(fence_val, task->fenceB, sizeof(fence_val)) == 0);
-}
+#define CHECK_FENCE(task) \
+  assert(memcmp(fence_val, (task)->fenceA, sizeof(fence_val)) == 0); \
+  assert(memcmp(fence_val, (task)->fenceB, sizeof(fence_val)) == 0)
 
 /**
  * @brief initialize kmt module
@@ -62,7 +61,7 @@ void kmt_init() {
   memset(root_task.fenceA, FILL_FENCE, sizeof(root_task.fenceA));
   memset(root_task.stack, FILL_STACK, sizeof(root_task.stack));
   memset(root_task.fenceB, FILL_FENCE, sizeof(root_task.fenceB));
-  _check_fence(&root_task);
+  CHECK_FENCE(&root_task);
   INIT_LIST_HEAD(&root_task.list);
 
   os->on_irq(INT32_MIN, EVENT_NULL, kmt_context_save);
@@ -93,18 +92,19 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
   task->count    = 0;
   task->wait_sem = NULL;
   task->killed   = 0;
-  INIT_LIST_HEAD(&task->list);
 
   memset(task->fenceA, FILL_FENCE, sizeof(task->fenceA));
   memset(task->stack, FILL_STACK, sizeof(task->stack));
   memset(task->fenceB, FILL_FENCE, sizeof(task->fenceB));
-  _check_fence(task);
+
   Area stack = {(void *)task->stack, (void *)task->stack + sizeof(task->stack)};
   task->context = kcontext(stack, entry, arg);
+  CHECK_FENCE(task);
 
   bool holding = spin_holding(&ir_lock);
   if (!holding) spin_lock(&ir_lock);
-  list_add_tail(&root_task.list, &task->list);
+  // LIST_INIT_HEAD(task->list);
+  list_add_tail(&task->list, &root_task.list);
   if (!holding) spin_unlock(&ir_lock);
 
   return task->pid;
@@ -187,7 +187,7 @@ Context *kmt_schedule(Event ev, Context *context) {
   // switch context
   if (pos != NULL && pos != &root_task) {
     pos->owner = cpu_current();
-    _check_fence(pos);
+    CHECK_FENCE(pos);
     pos->state   = ST_R;
     ret          = pos->context;
     pos->context = NULL;
@@ -286,8 +286,11 @@ void kmt_print_cpu_tasks() {
   printf("\n[cpu tasks]:\n");
   for (int i = 0; i < cpu_count(); i++) {
     task_t *pos = cpu_tasks[i];
-    printf("#%d: pid=%d\tname=%s\towner=%d\tcount=%d\twait_sem=%s\n", i,
-           pos->pid, pos->name, pos->owner, pos->count, "pos->wait_sem");
+    if (pos)
+      printf("#%d: pid=%d\tname=%s\towner=%d\tcount=%d\twait_sem=%s\n", i,
+             pos->pid, pos->name, pos->owner, pos->count, "pos->wait_sem");
+    else
+      printf("#%d: empty\n", i);
   }
 }
 

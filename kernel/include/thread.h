@@ -42,4 +42,7 @@ struct task {
 
 const char* task_states_str[MAX_TASK_STATES];
 
+void kmt_print_all_tasks();
+void kmt_print_cpu_tasks();
+
 #endif

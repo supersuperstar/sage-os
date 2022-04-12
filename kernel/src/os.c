@@ -38,10 +38,10 @@ static void os_init() {
  */
 static void os_run() {
   info("CPU started");
-  iset(true);
+  if (!ienabled()) iset(true);
   yield();
-  while (1)
-    ;
+  // while (1)
+  //   ;
 }
 
 /**
@@ -52,9 +52,9 @@ static void os_run() {
  * @return Context*
  */
 static Context *os_trap(Event ev, Context *context) {
-  if (spin_holding(&ir_lock)) {
-    panic("trap on trap");
-  }
+  // if (spin_holding(&ir_lock)) {
+  //   panic("trap on trap");
+  // }
   Context *next = NULL;
   spin_lock(&ir_lock);
   assert(root_irq_handler.next);
