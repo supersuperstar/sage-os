@@ -4,6 +4,8 @@
 
 目前测试框架更名为 `test`，并且做了许多简化和使用改进。现在不再是每个测试一个子目录，而是所有测试都在这个目录中。
 
+**注意（2022/04/11更新）原有一键测试命令 `make run` 现更名为 `make test`，`make run` 现用于运行单一测试！
+
 注意：原有的 `tests` 文件夹已经删除，请不要再对它进行操作！
 
 测试框架支持以下功能：
@@ -24,7 +26,7 @@
 
 ### 行为说明
 
-下面以 `make run` 为例，说明当你运行回归测试时发生了什么：
+下面以 `make test` 为例，说明当你运行回归测试时发生了什么：
 
 1. GNU make 程序读取 `test/Makefile` 文件并执行 `run` target
 2. 将会扫描 `units` 下的每一个 .c 文件，并为它生成对应的 `Makefile.xxx`
@@ -38,12 +40,11 @@
 
 ### 编写单元测试
 
-你可以在 `units` 目录下编写单元测试：
+`units` 下可以有两种文件：
+- `test_` 开头的 c 程序将被视作自动化测试，要求不能陷入死循环
+- 其他程序将用于运行和展示，可以死循环
 
-- 新建 `xxx.c` 文件，这里的文件名 `xxx` 就是单元测试的名称
-- 编写单元测试时，使用 `check` 函数判断 condition
-
-你可以参考 `add.c` 文件，使用数组对多种输入输出进行判断。
+你可以参考 `test_add.c` 文件，使用数组对多种输入输出进行判断。
 
 在编写时，如果你的测试比较庞大，建议使用 `logger` 而不是 `printf` 打印结果。
 
@@ -53,7 +54,7 @@
 
 可配置的环境变量有：
 
-- `ARCH`: 当前支持 `native` 和 `x86_64-qemu`, 若 ARCH 不指定，则默认为 `native`.
+- `ARCH`: 当前支持 `native` 和 `x86_64-qemu`, 若 ARCH 不指定，则默认为 `x86_64-qemu`.
 - `smp`: 处理器数量，默认为 1
 - `CFLAGS_EXTRA`: gcc 编译时的额外选项，默认为空。例如 `"-DSIMULATE_PMM"` （已默认加上 `-DTEST`）
 
@@ -62,20 +63,18 @@
 **运行全部测试：**
 
 ```shell
-make run ARCH=x86_64-qemu
+make test
 ```
 
 如果出现错误，可以查看 `out` 文件夹内的输出内容。
 
-**编译单个测试：**
+**运行单个测试：**
 
 ```shell
-make build ARCH=x86_64-qemu target=xxx
+make run target=xxx
 ```
 
 必须要指定 `target=xxx`，其中 `xxx` 是在 `units` 目录下的文件名（没有 .c 后缀）。
-
-如果你想运行单个测试，在编译后直接运行 `build` 目录对应的可执行文件即可。
 
 **调试单个测试：**
 
@@ -86,7 +85,7 @@ make build ARCH=x86_64-qemu target=xxx
 如果你要调试QEMU，运行如下命令：
 
 ```shell
-make debug ARCH=x86_64-qemu target=xxx
+make debug target=xxx
 ```
 
 并在对应单元测试文件运行调试配置 `unit test (QEMU)` 即可。
