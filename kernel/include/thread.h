@@ -37,7 +37,7 @@ struct task {
   char stack[STACK_SIZE];         // user stack
   char fenceB[STACK_FENCE_SIZE];  // 32 bytes fence
   Context* context;               // process user context
-  struct list_head list;
+  struct task* next;
 };
 
 const char* task_states_str[MAX_TASK_STATES];

@@ -62,7 +62,7 @@ void kmt_init() {
   memset(root_task.stack, FILL_STACK, sizeof(root_task.stack));
   memset(root_task.fenceB, FILL_FENCE, sizeof(root_task.fenceB));
   CHECK_FENCE(&root_task);
-  INIT_LIST_HEAD(&root_task.list);
+  root_task.next = NULL;
 
   os->on_irq(INT32_MIN, EVENT_NULL, kmt_context_save);
   os->on_irq(0, EVENT_ERROR, kmt_error);
@@ -92,6 +92,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
   task->count    = 0;
   task->wait_sem = NULL;
   task->killed   = 0;
+  task->next     = NULL;
 
   memset(task->fenceA, FILL_FENCE, sizeof(task->fenceA));
   memset(task->stack, FILL_STACK, sizeof(task->stack));
@@ -100,13 +101,16 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
   Area stack = {(void *)task->stack, (void *)task->stack + sizeof(task->stack)};
   task->context = kcontext(stack, entry, arg);
   CHECK_FENCE(task);
+  task->next = NULL;
 
   bool holding = spin_holding(&ir_lock);
   if (!holding) spin_lock(&ir_lock);
-  // LIST_INIT_HEAD(task->list);
-  list_add_tail(&task->list, &root_task.list);
-  if (!holding) spin_unlock(&ir_lock);
+  task_t *tp = &root_task;
+  while (tp->next)
+    tp = tp->next;
+  tp->next = task;
 
+  if (!holding) spin_unlock(&ir_lock);
   return task->pid;
 }
 
@@ -170,34 +174,39 @@ Context *kmt_schedule(Event ev, Context *context) {
 
   // free killed process
   if (cur && cur->killed) {
-    list_del(&cur->list);
+    task_t *tp = &root_task;
+    while (tp->next != cur)
+      tp = tp->next;
+    tp->next = cur->next;
     pmm->free(cur);
   }
 
   // pick the next task to run
   Context *ret = NULL;
-  task_t *pos  = NULL;
-  list_for_each_entry(pos, &root_task.list, list) {
-    if (pos->owner != -1 && pos->owner != cpu_current()) continue;
-    if (pos->state == ST_E || pos->state == ST_W) {
+  task_t *tp   = NULL;
+
+  for (tp = root_task.next; tp; tp = tp->next) {
+    // CHECK_FENCE(tp);
+    if (tp->owner != -1 && tp->owner != cpu_current()) continue;
+    if (tp->state == ST_E || tp->state == ST_W) {
       break;
     }
   }
 
   // switch context
-  if (pos != NULL && pos != &root_task) {
-    pos->owner = cpu_current();
-    CHECK_FENCE(pos);
-    pos->state   = ST_R;
-    ret          = pos->context;
-    pos->context = NULL;
-    pos->count   = (pos->count + 1) % 1024;
+  if (tp != NULL) {
+    tp->owner = cpu_current();
+    CHECK_FENCE(tp);
+    tp->state   = ST_R;
+    ret         = tp->context;
+    tp->context = NULL;
+    tp->count   = (tp->count + 1) % 1024;
 
     // TODO: more checks here
-    kmt_set_task(pos);
+    kmt_set_task(tp);
 
-    info("schedule: run next pid=%d, name=%s, count=%d", pos->pid, pos->name,
-         pos->count);
+    info("schedule: run next pid=%d, name=%s, count=%d", tp->pid, tp->name,
+         tp->count);
   } else {
     // if no task to run
     warn("schedule: no task to run");
@@ -271,10 +280,9 @@ void kmt_set_task(task_t *task) {
  */
 void kmt_print_all_tasks() {
   printf("\n[all tasks]:\n");
-  task_t *pos;
-  list_for_each_entry(pos, &root_task.list, list) {
-    printf("pid=%d\tname=%s\towner=%d\tcount=%d\twait_sem=%s\n", pos->pid,
-           pos->name, pos->owner, pos->count, "pos->wait_sem");
+  for (task_t *tp = &root_task; tp != NULL; tp = tp->next) {
+    printf("pid=%d\tname=%s\towner=%d\tstate=%d\tcount=%d\twait_sem=%s\n",
+           tp->pid, tp->name, tp->owner, tp->state, tp->count, "pos->wait_sem");
   }
 }
 
@@ -287,8 +295,10 @@ void kmt_print_cpu_tasks() {
   for (int i = 0; i < cpu_count(); i++) {
     task_t *pos = cpu_tasks[i];
     if (pos)
-      printf("#%d: pid=%d\tname=%s\towner=%d\tcount=%d\twait_sem=%s\n", i,
-             pos->pid, pos->name, pos->owner, pos->count, "pos->wait_sem");
+      printf(
+          "#%d: pid=%d\tname=%s\towner=%d\tstate=%d\tcount=%d\twait_sem=%s\n",
+          i, pos->pid, pos->name, pos->owner, pos->state, pos->count,
+          "pos->wait_sem");
     else
       printf("#%d: empty\n", i);
   }
