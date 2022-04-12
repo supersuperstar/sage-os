@@ -2,7 +2,7 @@
 #define __SPINLOCK_H__
 #define MAX_CPU 8
 
-#include <kernel.h>
+#include <common.h>
 
 struct spinlock {
   bool lock_flag;    // check the lock locked , 1 means locked

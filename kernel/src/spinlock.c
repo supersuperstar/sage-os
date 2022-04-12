@@ -21,7 +21,7 @@ void spin_init(spinlock_t *lk, const char *name) {
  */
 void spin_lock(spinlock_t *lk) {
   spin_pushcli();  // interrupt disable
-  // assert(!spin_holding(lk), "Acquiring lock %s when holding it.", lk->name);
+  assert(!spin_holding(lk));
   //  assert there is lock(a) and lock(a) in code
   while (atomic_xchg((int *)&lk->lock_flag, 1)) {
     ;
@@ -39,8 +39,7 @@ void spin_lock(spinlock_t *lk) {
  * @param lk address of spinlock example
  */
 void spin_unlock(spinlock_t *lk) {
-  // assert(spin_holding(lk), "Releasing lock %s not holded by cpu %d.",
-  // lk->name,cpu_current());
+  assert(spin_holding(lk));
   //  assert no lock but unlock
   lk->hold_cpuid = -1;
   __sync_synchronize();  // memory barrier
@@ -52,6 +51,13 @@ void spin_unlock(spinlock_t *lk) {
   spin_popcli();  // interrupt able
 }
 
+/**
+ * @brief check current cpu has the lock
+ *
+ * @param lk address of spinlock example
+ * @return true
+ * @return false
+ */
 bool spin_holding(spinlock_t *lk) {
   bool res = 0;
   spin_pushcli();
@@ -60,6 +66,10 @@ bool spin_holding(spinlock_t *lk) {
   return res;
 }
 
+/**
+ * @brief interrupt disable
+ *
+ */
 void spin_pushcli() {
   iset(false);
 
@@ -69,9 +79,13 @@ void spin_pushcli() {
   ncli[cpu_current()] += 1;
 }
 
+/**
+ * @brief interrupt able
+ *
+ */
 void spin_popcli() {
   ncli[cpu_current()] -= 1;
-  // assert(ncli[cpu_current()] >= 0, "Cli level is negative.");
+  assert(ncli[cpu_current()] >= 0);
 
   if (ncli[cpu_current()] == 0 && efif[cpu_current()]) {
     iset(true);
