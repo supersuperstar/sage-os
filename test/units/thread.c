@@ -7,25 +7,25 @@
 task_t *task_consumer, *task_producer;
 
 int cnt = 0;
-spinlock_t *cnt_lock;
+spinlock_t cnt_lock;
 
 void consumer(void *arg) {
   while (1) {
-    spin_lock(cnt_lock);
+    spin_lock(&cnt_lock);
     if (cnt) {
       cnt--;
       printf(")");
     }
-    spin_unlock(cnt_lock);
+    spin_unlock(&cnt_lock);
   }
 }
 
 void producer(void *arg) {
   while (1) {
-    spin_lock(cnt_lock);
+    spin_lock(&cnt_lock);
     cnt++;
     printf("(");
-    spin_unlock(cnt_lock);
+    spin_unlock(&cnt_lock);
   }
 }
 
