@@ -136,9 +136,8 @@ void *memset(void *s, int c, size_t n) {
     while (n-- > 0)
     {
         *s1++ = c;
-        return s;
     }
-    return NULL;
+    return s;
 }
 
 /**
