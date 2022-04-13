@@ -52,7 +52,7 @@ static void os_run() {
  * @return Context*
  */
 static Context *os_trap(Event ev, Context *context) {
-  assert_msg(spin_holding(&ir_lock), "trap on trap! ev=%d %s", ev.event,
+  assert_msg(!spin_holding(&ir_lock), "trap on trap! ev=%d %s", ev.event,
              ev.msg);
   success("os_trap: ev=%d %s", ev.event, ev.msg);
   Context *next = NULL;
