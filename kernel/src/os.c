@@ -6,9 +6,19 @@ static void os_init() {
 
 static void os_run() {
 #ifndef TEST
-  for (const char *s = "Hello World from CPU #*\n"; *s; s++) {
+  for (const char* s = "Hello World from CPU #*\n"; *s; s++) {
     putch(*s == '*' ? '0' + cpu_current() : *s);
   }
+
+#ifdef DEBUG
+  void* alloc_addr[15];
+  for (int i = 0; i < 15; i++) {
+    alloc_addr[i] = pmm->alloc(sizeof(int) * 1024);
+  }
+  for (int i = 0; i < 15; i++) {
+    pmm->free(alloc_addr[i]);
+  }
+#endif
   while (1)
     ;
 #else  // for unit test
