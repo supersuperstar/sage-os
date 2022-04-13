@@ -4,8 +4,8 @@
 #include <stdarg.h>
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
-#define OUTBUF_SIZE 65536
-#define VBUF_SIZE   64
+#define OUTBUF_SIZE  65536
+#define VBUF_SIZE    64
 #define FORMAT_ERROR ("[NOTICE:not implemented]")
 char outbuf[OUTBUF_SIZE];  // out buf,for stdout
 char vbuf[VBUF_SIZE];      // num buf,store %d arg
@@ -177,11 +177,12 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
     pad       = ' ';  // padding char
     space     = 0;    // space
     precision = 0;    // precision,default length is 6
+    legal     = 1;
     /*flags*/
     while (1) {
-      if (*pfmt == ' ')
+      if (*pfmt == ' ') {
         space = 1;
-      else if (*pfmt == '0') {
+      } else if (*pfmt == '0') {
         pad = '0';
       } else if (*pfmt == '#')
         wellnumber = 1;
@@ -251,7 +252,7 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
           break;
         default:
           legal  = 0;
-          len    = 25;
+          len    = 24;
           argbuf = FORMAT_ERROR;
           break;
       }
@@ -315,8 +316,6 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
           pout += len;
           n -= len;
         }
-        *pout = '\0';
-        return ret;
       }
     }
   }
