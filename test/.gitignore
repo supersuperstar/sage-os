@@ -1,0 +1,5 @@
+Makefile.*
+.result
+.tmp
+build
+out
