@@ -157,6 +157,11 @@ Context *kmt_context_save(Event ev, Context *context) {
  * @return Context* always NULL
  */
 Context *kmt_yield(Event ev, Context *context) {
+  assert(spin_holding(&ir_lock));
+  task_t *cur = kmt_get_task();
+  if (cur && cur->wait_sem) {
+    cur->state = ST_S;
+  }
   return NULL;
 }
 
