@@ -7,6 +7,11 @@
 #define FILL_STACK 0xfd
 #define FILL_FENCE 0xcd
 
+#define STACK_SIZE       8192
+#define STACK_FENCE_SIZE 32
+
+#define MAX_TASK_STATES 8
+
 enum task_states {
   ST_U,  // Unused
   ST_E,  // Embryo
@@ -19,24 +24,25 @@ enum task_states {
 };
 
 struct task {
-  uint32_t pid;
-  const char* name;
-  void (*entry)(void*);
-  void* arg;
-  enum task_states state;
-  sem_t* wait_sem;
-  bool killed;
-  uint32_t owner;
-  uint32_t count;
-
-  char fenceA[32];
-  char stack[8192];
-  char fenceB[32];
-  Context* context;
-
-  struct list_head list;
+  uint32_t pid;                   // process id
+  const char* name;               // process name for debug
+  void (*entry)(void*);           // entry func to run
+  void* arg;                      // args of entry func
+  enum task_states state;         // process state
+  sem_t* wait_sem;                // whether is waiting a semaphore
+  bool killed;                    // whether process is killed
+  int32_t owner;                  // cpu which owns this process
+  uint32_t count;                 // a counter to avoid deadlock
+  char fenceA[STACK_FENCE_SIZE];  // 32 bytes fence
+  char stack[STACK_SIZE];         // user stack
+  char fenceB[STACK_FENCE_SIZE];  // 32 bytes fence
+  Context* context;               // process user context
+  struct task* next;
 };
 
-const char* task_states_trans[];
+const char* task_states_str[MAX_TASK_STATES];
+
+void kmt_print_all_tasks();
+void kmt_print_cpu_tasks();
 
 #endif
