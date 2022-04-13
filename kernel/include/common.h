@@ -8,11 +8,12 @@
 static inline int power2ify(uint64_t size) {
   assert((int)size > 0);
   int order = 0;
+  size--;
   do {
     size >>= 1;
     order++;
   } while (size);
-  return order - 1;
+  return order;
 }
 
 #endif
