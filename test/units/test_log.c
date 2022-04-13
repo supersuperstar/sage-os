@@ -2,6 +2,7 @@
 #include <logger.h>
 
 int main(int argc, char const *argv[]) {
+  printf("log mask: %d\n", LOG_MASK);
   success("succeed!");
   info("info!");
   warn("warn!");

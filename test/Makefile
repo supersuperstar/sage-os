@@ -9,6 +9,12 @@ ifeq ($(smp),)
 export smp	   := 1
 endif
 
+ifeq ($(LOG_MASK),)
+export LOG_MASK := 14
+endif
+
+CFLAGS_EXTRA += "-DLOG_MASK=$(LOG_MASK)"
+
 .PHONY: all run debug clean latest $(ALL)
 
 RESULT = .result
