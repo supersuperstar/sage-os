@@ -253,6 +253,7 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
         default:
           legal  = 0;
           len    = 24;
+          *argbuf = va_arg(ap, int);
           argbuf = FORMAT_ERROR;
           break;
       }
