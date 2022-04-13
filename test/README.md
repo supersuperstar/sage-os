@@ -50,13 +50,19 @@
 
 ### 环境变量
 
-你可以直接执行 `export` 定义环境变量，也可以在 make 命令中加入环境变量。前者有时会更方便。
+你可以直接执行 `export` 定义环境变量，也可以在 make 命令中加入环境变量。建议使用前者，例如：
+
+```shell
+export smp=4
+export LOG_MASK=15
+```
 
 可配置的环境变量有：
 
 - `ARCH`: 当前支持 `native` 和 `x86_64-qemu`, 若 ARCH 不指定，则默认为 `x86_64-qemu`.
-- `smp`: 处理器数量，默认为 1
-- `CFLAGS_EXTRA`: gcc 编译时的额外选项，默认为空。例如 `"-DSIMULATE_PMM"` （已默认加上 `-DTEST`）
+- `smp`: 处理器数量，默认为 2
+- `CFLAGS_EXTRA`: gcc 编译时的额外选项，默认为空。例如 `"-DSIMULATE_PMM"` （已默认加上 `-DTEST` 和 `-DLOG_MASK=xxx`）
+- `LOG_MASK`: logger 输出mask, 详见 logger.h. 默认输出 error(8), warn(4), info(2), 也就是说默认值为14. 如果你要输出success(1)，设置为15即可
 
 ### 运行测试
 

@@ -251,10 +251,10 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
           argbuf   = vbuf;
           break;
         default:
-          legal  = 0;
-          len    = 24;
+          legal   = 0;
+          len     = 24;
           *argbuf = va_arg(ap, int);
-          argbuf = FORMAT_ERROR;
+          argbuf  = FORMAT_ERROR;
           break;
       }
       /*can hold the length of buf*/
