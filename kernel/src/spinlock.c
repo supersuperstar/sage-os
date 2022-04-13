@@ -11,7 +11,7 @@ int ncli[MAX_CPU] = {};
 void spin_init(spinlock_t *lk, const char *name) {
   lk->lock_flag  = false;
   lk->name       = name;
-  lk->hold_cpuid = cpu_current();
+  lk->hold_cpuid = -1;
 }
 
 /**
@@ -26,11 +26,10 @@ void spin_lock(spinlock_t *lk) {
   while (atomic_xchg((int *)&lk->lock_flag, 1)) {
     ;
   }
+  lk->hold_cpuid = cpu_current();
   // warning: this func unable before gdb version year 2008
   // to force the CPU to operate the after code after the before code
   __sync_synchronize();  // memory barrier
-
-  lk->hold_cpuid = cpu_current();
 }
 
 /**
@@ -71,10 +70,10 @@ bool spin_holding(spinlock_t *lk) {
  *
  */
 void spin_pushcli() {
+  bool i = ienabled();
   iset(false);
-
   if (ncli[cpu_current()] == 0) {
-    efif[cpu_current()] = ienabled();
+    efif[cpu_current()] = i;
   }
   ncli[cpu_current()] += 1;
 }
