@@ -6,13 +6,11 @@ struct pmm_pool global_mm_pool;
 
 static void* kalloc(size_t size) {
   assert((int)size > 0);
-  int npage         = (size - 1) / SZ_PAGE + 1;
-  int acquire_order = power2ify(npage);
-  log_detail(LOG_INFO, "acquire order: %d", acquire_order);
+  int npage               = (size - 1) / SZ_PAGE + 1;
+  int acquire_order       = power2ify(npage);
   struct chunk* page_addr = chunk_alloc(&global_mm_pool, acquire_order);
   if (page_addr != NULL) {
-    log_detail(LOG_INFO, "allocate addr: 0x%x",
-               chunk2virt(&global_mm_pool, page_addr));
+    success("allocate addr: 0x%x", chunk2virt(&global_mm_pool, page_addr));
     return chunk2virt(&global_mm_pool, page_addr);
   }
   warn("fail to alloc addr");
@@ -30,7 +28,7 @@ static void* kalloc_safe(size_t size) {
 static void kfree(void* ptr) {
   struct chunk* chunk = virt2chunk(&global_mm_pool, ptr);
   chunk_free(&global_mm_pool, chunk);
-  info_detail("free successfully, address: 0x%x", ptr);
+  success("free successfully, address: 0x%x", ptr);
 }
 
 static void kfree_safe(void* ptr) {
@@ -42,7 +40,7 @@ static void kfree_safe(void* ptr) {
 
 static void pmm_init() {
   uintptr_t pmsize = ((uintptr_t)heap.end - (uintptr_t)heap.start);
-  printf("Got %d MiB heap: [%p, %p)\n", pmsize >> 20, heap.start, heap.end);
+  info("Got %d MiB heap: [%p, %p)\n", pmsize >> 20, heap.start, heap.end);
 
   void* pg_start = NULL;
   void* pi_start = NULL;
@@ -53,11 +51,8 @@ static void pmm_init() {
   pi_start = (bool*)(pg_start + nr_page * SZ_PAGE);
   // global_mm_pool = pi_start;
   // pi_start       = (struct pmm_pool*)pi_start + 1;
-  log_detail(
-      LOG_INFO,
-      "page start addr: 0x%x, page indicator addr: 0x%x, available page: %d",
-      pg_start, pi_start, nr_page);
-  log_detail(LOG_INFO, "begin to init buddy system");
+  info("page start addr: 0x%x, page indicator addr: 0x%x, available page: %d",
+       pg_start, pi_start, nr_page);
   buddy_init(&global_mm_pool, pi_start, pg_start, nr_page);
 }
 
