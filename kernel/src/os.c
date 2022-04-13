@@ -29,7 +29,7 @@ static void os_init() {
 
   spin_init(&ir_lock, "ir_lock");
 
-  // TODO: create init thread here
+  // should create initial threads here, after call os_init()
 }
 
 /**
