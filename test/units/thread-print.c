@@ -10,7 +10,6 @@
 
 task_t *tasks[MAX_TASK];
 char names[10][MAX_TASK];
-int ids[MAX_TASK];
 
 int cnt = MAX_TASK;  // current running thread count
 spinlock_t cnt_lock, print_lock;
@@ -35,6 +34,7 @@ void func(void *arg) {
   kmt_print_all_tasks();
   kmt_print_cpu_tasks();
   spin_unlock(&print_lock);
+
   int remain = 0;
   spin_lock(&cnt_lock);
   remain = --cnt;
@@ -43,6 +43,7 @@ void func(void *arg) {
     kmt->teardown(self);
     yield();
   }
+  _log_mask = LOG_INFO | LOG_WARN | LOG_ERROR;
   while (1)
     ;
 }
@@ -51,7 +52,6 @@ static void create_threads() {
   for (int i = 0; i < MAX_TASK; i++) {
     tasks[i] = pmm->alloc(sizeof(task_t));
     sprintf(names[i], "T%02d\0", i);
-    ids[i] = i;
     kmt->create(tasks[i], names[i], func, tasks[i]);
   }
 }
@@ -59,7 +59,7 @@ static void create_threads() {
 int main() {
   ioe_init();
 
-  _log_mask = LOG_INFO | LOG_WARN | LOG_ERROR;
+  _log_mask = LOG_INFO | LOG_WARN | LOG_ERROR | LOG_SUCCESS;
 
   cte_init(os->trap);
   os->init();
