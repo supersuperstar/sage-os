@@ -5,10 +5,14 @@
 #include <spinlock.h>
 #include <thread.h>
 
+/**
+ * Semphore for SOS
+ */
+
 struct semaphore {
-  spinlock_t lock;
-  const char *name;
-  volatile int value;
+  spinlock_t lock;     // spinlock of semaphore example
+  const char *name;    // name of exmaple
+  volatile int value;  // cnt of exmaple
 };
 
 void sem_init(sem_t *sem, const char *name, int value);
