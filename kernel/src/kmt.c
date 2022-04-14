@@ -188,7 +188,8 @@ Context *kmt_schedule(Event ev, Context *context) {
   // pick the next task to run
   Context *ret = NULL;
   task_t *tp   = NULL;
-
+  task_t *next = NULL;
+  
   for (tp = root_task.next; tp; tp = tp->next) {
     // CHECK_FENCE(tp);
     if (tp->owner != -1 && tp->owner != cpu_current()) continue;
