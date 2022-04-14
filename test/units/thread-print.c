@@ -5,62 +5,62 @@
 #include <thread.h>
 #include <logger.h>
 
-#define MAX_TASK      8
-#define RUNNING_COUNT 3
+#define MAX_TASK      4
+#define RUNNING_COUNT 2
 
-task_t tasks[MAX_TASK];
+task_t *tasks[MAX_TASK];
 char names[10][MAX_TASK];
-int ids[MAX_TASK];
 
-int cnt = 0;  // current running thread count
+int cnt = MAX_TASK;  // current running thread count
 spinlock_t cnt_lock, print_lock;
 
 void func(void *arg) {
-  int id = *(int *)arg;
-
-  spin_lock(&cnt_lock);
-  cnt++;
-  spin_unlock(&cnt_lock);
+  task_t *self = (task_t *)arg;
 
   for (int i = 0; i < RUNNING_COUNT; i++) {
     // print something
     spin_lock(&print_lock);
-    warn("T%02d running %d times", id, i + 1);
+    warn("%s running %d times, count=%d", self->name, i, self->count);
     kmt_print_cpu_tasks();
     printf("\n");
     spin_unlock(&print_lock);
-    // go to kernel; current cpu re-schedule task
+    // give up cpu to reschedule
     yield();
   }
 
   // if finished
   spin_lock(&print_lock);
-  warn("T%03d exit!", id);
+  warn("%s exit!", self->name);
   kmt_print_all_tasks();
   kmt_print_cpu_tasks();
   spin_unlock(&print_lock);
 
-  // hold cpu
   int remain = 0;
   spin_lock(&cnt_lock);
   remain = --cnt;
   spin_unlock(&cnt_lock);
-  if (remain < cpu_count())
-    while (1)
-      ;
-  yield();
+  if (remain >= cpu_count()) {
+    kmt->teardown(self);
+    yield();
+  }
+  _log_mask = LOG_INFO | LOG_WARN | LOG_ERROR;
+  while (1)
+    ;
 }
 
 static void create_threads() {
   for (int i = 0; i < MAX_TASK; i++) {
+    tasks[i] = pmm->alloc(sizeof(task_t));
     sprintf(names[i], "T%02d\0", i);
-    ids[i] = i;
-    kmt->create(&tasks[i], names[i], func, &ids[i]);
+    kmt->create(tasks[i], names[i], func, tasks[i]);
   }
 }
 
 int main() {
   ioe_init();
+
+  _log_mask = LOG_INFO | LOG_WARN | LOG_ERROR | LOG_SUCCESS;
+
   cte_init(os->trap);
   os->init();
 

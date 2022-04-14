@@ -26,7 +26,12 @@ const char fence_val[32] = {
     FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE, FILL_FENCE,
     FILL_FENCE, FILL_FENCE};
 
+// use to lock whole os_trap
 extern spinlock_t ir_lock;
+
+// use to lock task_list
+spinlock_t task_list_lock = {
+    .lock_flag = false, .name = "task_list_lock", .hold_cpuid = -1};
 
 // special root point, do not execute
 // all tasks are in root_task.list
@@ -109,14 +114,14 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
   CHECK_FENCE(task);
   task->next = NULL;
 
-  bool holding = spin_holding(&ir_lock);
-  if (!holding) spin_lock(&ir_lock);
+  assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
+  spin_lock(&task_list_lock);
   task_t *tp = &root_task;
   while (tp->next)
     tp = tp->next;
   tp->next = task;
+  spin_unlock(&task_list_lock);
 
-  if (!holding) spin_unlock(&ir_lock);
   return task->pid;
 }
 
@@ -127,7 +132,9 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
  */
 void kmt_teardown(task_t *task) {
   assert_msg(!spin_holding(&ir_lock), "do not allow kmt_teardown in trap");
+  spin_lock(&task_list_lock);
   task->killed = 1;
+  spin_unlock(&task_list_lock);
 }
 
 /**
@@ -143,8 +150,10 @@ Context *kmt_context_save(Event ev, Context *context) {
   if (cur) {
     assert_msg(!cur->context, "current task's context not null");
     // TODO: more checks for context
+    spin_lock(&task_list_lock);
     cur->state   = ST_W;
     cur->context = context;
+    spin_unlock(&task_list_lock);
   } else {
     // if no current task (initial), save to null_context
     assert_msg(!null_contexts[cpu_current()], "repeatedly save null context");
@@ -177,6 +186,8 @@ Context *kmt_schedule(Event ev, Context *context) {
   task_t *cur = kmt_get_task();
 
   // free killed process
+  assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
+  spin_lock(&task_list_lock);
   if (cur && cur->killed) {
     task_t *tp = &root_task;
     while (tp->next != cur)
@@ -209,8 +220,8 @@ Context *kmt_schedule(Event ev, Context *context) {
     // TODO: more checks here
     kmt_set_task(tp);
 
-    info("schedule: run next pid=%d, name=%s, count=%d, event=%d %s", tp->pid,
-         tp->name, tp->count, ev.event, ev.msg);
+    success("schedule: run next pid=%d, name=%s, count=%d, event=%d %s",
+            tp->pid, tp->name, tp->count, ev.event, ev.msg);
   } else {
     // if no task to run
     warn("schedule: no task to run! event=%d %s", ev.event, ev.msg);
@@ -221,6 +232,8 @@ Context *kmt_schedule(Event ev, Context *context) {
     null_contexts[cpu_current()] = NULL;
     kmt_set_task(NULL);
   }
+
+  spin_unlock(&task_list_lock);
 
   if (ret == NULL) {
     error_detail("schedule: switch to null context! event=%d %s", ev.event,
@@ -285,12 +298,15 @@ void kmt_set_task(task_t *task) {
  *        notice: do not garantee concurrency safety
  */
 void kmt_print_all_tasks() {
+  bool holding = spin_holding(&task_list_lock);
+  if (!holding) spin_lock(&task_list_lock);
   printf("\n[all tasks]:\n");
   for (task_t *tp = &root_task; tp != NULL; tp = tp->next) {
     printf("pid=%d, name=%s, owner=%d, state=%s, count=%d, wait_sem=%s\n",
            tp->pid, tp->name, tp->owner, task_states_str[tp->state], tp->count,
            "pos->wait_sem");
   }
+  if (!holding) spin_unlock(&task_list_lock);
 }
 
 /**
@@ -298,16 +314,20 @@ void kmt_print_all_tasks() {
  *        notice: do not garantee concurrency safety
  */
 void kmt_print_cpu_tasks() {
+  bool holding = spin_holding(&task_list_lock);
+  if (!holding) spin_lock(&task_list_lock);
   printf("\n[cpu tasks]:\n");
   for (int i = 0; i < cpu_count(); i++) {
     task_t *tp = cpu_tasks[i];
     if (tp)
-      printf("pid=%d, name=%s, owner=%d, state=%s, count=%d, wait_sem=%s\n",
-             tp->pid, tp->name, tp->owner, task_states_str[tp->state],
-             tp->count, "pos->wait_sem");
+      printf(
+          "#%d: pid=%d, name=%s, owner=%d, state=%s, count=%d, wait_sem=%s\n",
+          i, tp->pid, tp->name, tp->owner, task_states_str[tp->state],
+          tp->count, "pos->wait_sem");
     else
       printf("#%d: empty\n", i);
   }
+  if (!holding) spin_unlock(&task_list_lock);
 }
 
 MODULE_DEF(kmt) = {
