@@ -4,12 +4,24 @@ extern spinlock_t ir_lock;
 extern task_t **cpu_tasks;
 extern task_t root_task;
 
+/**
+ * @brief init a semaphore
+ *
+ * @param sem    // a semaphore example
+ * @param name   // initial name of example
+ * @param value  // initial value of example
+ */
 void sem_init(sem_t *sem, const char *name, int value) {
   spin_init(&sem->lock, name);
   sem->name  = name;
   sem->value = value;
 }
 
+/**
+ * @brief release semaphore(Mutex) and sleep task holding the sem
+ *
+ * @param sem a semaphore example
+ */
 void sem_wait(sem_t *sem) {
   assert_msg(!spin_holding(&ir_lock), "do not allow sem_wait in trap");
   spin_lock(&sem->lock);
@@ -22,16 +34,22 @@ void sem_wait(sem_t *sem) {
     task_t *cur = kmt->get_task();
     assert(cur);
     cur->wait_sem = sem;
+    // interrupt
     spin_unlock(&task_list_lock);
     yield();
     spin_lock(&sem->lock);
   }
 
-  __sync_synchronize();
+  __sync_synchronize();  // memory barrier
   --sem->value;
   spin_unlock(&sem->lock);
 }
 
+/**
+ * @brief wake up a task form tasks waiting for the semaphore example
+ *
+ * @param sem the semaphore example
+ */
 void sem_signal(sem_t *sem) {
   spin_lock(&sem->lock);
   ++sem->value;
