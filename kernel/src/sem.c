@@ -7,9 +7,9 @@ extern task_t root_task;
 /**
  * @brief init a semaphore
  *
- * @param sem    // a semaphore example
- * @param name   // initial name of example
- * @param value  // initial value of example
+ * @param sem    // a semaphore instance
+ * @param name   // initial name of instance
+ * @param value  // initial value of instance
  */
 void sem_init(sem_t *sem, const char *name, int value) {
   spin_init(&sem->lock, name);
@@ -20,7 +20,7 @@ void sem_init(sem_t *sem, const char *name, int value) {
 /**
  * @brief release semaphore(Mutex) and sleep task holding the sem
  *
- * @param sem a semaphore example
+ * @param sem a semaphore instance
  */
 void sem_wait(sem_t *sem) {
   assert_msg(!spin_holding(&ir_lock), "do not allow sem_wait in trap");
@@ -46,9 +46,9 @@ void sem_wait(sem_t *sem) {
 }
 
 /**
- * @brief wake up a task form tasks waiting for the semaphore example
+ * @brief wake up a task form tasks waiting for the semaphore instance
  *
- * @param sem the semaphore example
+ * @param sem the semaphore instance
  */
 void sem_signal(sem_t *sem) {
   spin_lock(&sem->lock);

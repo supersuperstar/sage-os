@@ -10,9 +10,9 @@
  */
 
 struct semaphore {
-  spinlock_t lock;     // spinlock of semaphore example
-  const char *name;    // name of exmaple
-  volatile int value;  // cnt of exmaple
+  spinlock_t lock;     // spinlock of semaphore instance
+  const char *name;    // name of semaphore instance
+  volatile int value;  // cnt of semaphore instance
 };
 
 void sem_init(sem_t *sem, const char *name, int value);
