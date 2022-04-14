@@ -20,19 +20,13 @@ Task *currents[MAX_CPU];
 
 // user-defined tasks
 
-spinlock_t testLocked;
-void lock() {
-  spin_lock(&testLocked);
-}
-void unlock() {
-  spin_unlock(&testLocked);
-}
+spinlock_t lock;
 
 void func(void *arg) {
   while (1) {
-    lock();
+    spin_lock(&lock);
     printf("Thread-%s on CPU #%d\n", arg, cpu_current());
-    unlock();
+    spin_unlock(&lock);
     for (int volatile i = 0; i < 100000; i++)
       ;
   }
@@ -73,6 +67,6 @@ int main() {
     task->next    = &tasks[(i + 1) % LENGTH(tasks)];
   }
 
-  spin_init(&testLocked, "nametest");
+  spin_init(&lock, "nametest");
   mpe_init(mp_entry);
 }

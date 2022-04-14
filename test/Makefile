@@ -6,8 +6,14 @@ export ARCH    := x86_64-qemu
 endif
 
 ifeq ($(smp),)
-export smp	   := 1
+export smp	   := 2
 endif
+
+ifeq ($(LOG_MASK),)
+export LOG_MASK := 14
+endif
+
+CFLAGS_EXTRA += "-DLOG_MASK=$(LOG_MASK)"
 
 .PHONY: all run debug clean latest $(ALL)
 
