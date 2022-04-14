@@ -37,19 +37,12 @@ static void os_init() {
  *
  */
 static void os_run() {
-<<<<<<< HEAD
-#ifndef TEST
-  for (const char* s = "Hello World from CPU #*\n"; *s; s++) {
-    putch(*s == '*' ? '0' + cpu_current() : *s);
-  }
-=======
   info("CPU started");
   if (!ienabled()) iset(true);
   yield();
   // while (1)
   //   ;
 }
->>>>>>> upstream/dev
 
 /**
  * @brief System trap entry

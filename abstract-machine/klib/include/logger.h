@@ -83,8 +83,6 @@ extern const char* type_str[10];
 #define info_detail(format, ...)  log_detail(LOG_INFO, format, ##__VA_ARGS__)
 #define warn_detail(format, ...)  log_detail(LOG_WARN, format, ##__VA_ARGS__)
 #define error_detail(format, ...) log_detail(LOG_ERROR, format, ##__VA_ARGS__)
-<<<<<<< HEAD
-=======
 
 #define assert_msg_block(cond, format, ...) \
   if (!(cond)) { \
@@ -101,7 +99,6 @@ extern const char* type_str[10];
            "\n", \
            cpu_current(), __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
   assert((cond));
->>>>>>> upstream/dev
 
 /**
  * @brief Control whether enable function trace
