@@ -40,8 +40,8 @@ static void os_run() {
   info("CPU started");
   if (!ienabled()) iset(true);
   yield();
-  // while (1)
-  //   ;
+  while (1)
+    ;
 }
 
 /**
