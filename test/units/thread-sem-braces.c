@@ -7,10 +7,12 @@
 
 #define MAX_COUNT 100
 
+// notice: run with export smp=2
 task_t *task_consumer, *task_producer;
 
 int cnt = 0, tot = 0;
 sem_t cnt_lock;
+spinlock_t print_lock;
 
 void consumer(void *arg) {
   while (1) {
@@ -18,7 +20,9 @@ void consumer(void *arg) {
     if (cnt) {
       cnt--;
       tot++;
+      spin_lock(&print_lock);
       printf(")");
+      spin_unlock(&print_lock);
       if (cnt == 0 && tot > MAX_COUNT) {
         sem_signal(&cnt_lock);
         break;
@@ -26,7 +30,10 @@ void consumer(void *arg) {
     }
     sem_signal(&cnt_lock);
   }
-  info("\nconsumer finish\n");
+  spin_lock(&print_lock);
+  printf("C");
+  spin_unlock(&print_lock);
+  _log_mask = LOG_ERROR | LOG_WARN;
   while (1)
     ;
 }
@@ -40,10 +47,14 @@ void producer(void *arg) {
     }
     cnt++;
     tot++;
+    spin_lock(&print_lock);
     printf("(");
+    spin_unlock(&print_lock);
     sem_signal(&cnt_lock);
   }
-  info("\nproducer finish\n");
+  spin_lock(&print_lock);
+  printf("P");
+  spin_unlock(&print_lock);
   while (1)
     ;
 }
@@ -57,8 +68,13 @@ static void create_threads() {
 
 int main() {
   ioe_init();
+
+  _log_mask = LOG_ERROR | LOG_WARN | LOG_INFO;
+
   cte_init(os->trap);
   os->init();
+
+  sem_init(&cnt_lock, "cnt_lock", 1);
   create_threads();
   kmt_print_all_tasks();
   kmt_print_cpu_tasks();
