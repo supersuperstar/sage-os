@@ -108,4 +108,5 @@ typedef struct {
   uint8_t *buf;
 } sd_t;
 
+int cprintf(char *tty_name, const char *fmt, ...);
 #endif

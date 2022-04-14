@@ -27,6 +27,9 @@ static void os_init() {
   kmt->init();
   info("kmt initialized");
 
+  dev->init();
+  info("device initialized");
+
   spin_init(&ir_lock, "ir_lock");
 
   // should create initial threads here, after call os_init()
@@ -91,7 +94,10 @@ static void os_on_irq(int seq, int event, handler_t handler) {
   IRQ_handler *p = &root_irq_handler;
   while (p->next && p->next->seq <= seq)
     p = p->next;
-  p->next = new_irq_handler;
+  IRQ_handler *tmp      = p->next;
+  p->next               = new_irq_handler;
+  new_irq_handler->next = tmp;
+
   // spin_unlock(&irq_handler_lock);
 }
 
