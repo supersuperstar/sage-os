@@ -11,10 +11,14 @@
 task_t *tasks[MAX_TASK];
 char names[10][MAX_TASK];
 
+int cnt = MAX_TASK;  // current running thread count
+spinlock_t cnt_lock, print_lock;
+
 void func(void *arg) {
   task_t *self = (task_t *)arg;
+
   for (int i = 0; i < RUNNING_COUNT; i++) {
-    // every thread run once, and then yield
+    // print something
     spin_lock(&print_lock);
     warn("%s running %d times, count=%d", self->name, i, self->count);
     kmt_print_cpu_tasks();
@@ -23,6 +27,8 @@ void func(void *arg) {
     // give up cpu to reschedule
     yield();
   }
+
+  // if finished
   spin_lock(&print_lock);
   warn("%s exit!", self->name);
   kmt_print_all_tasks();
@@ -57,6 +63,10 @@ int main() {
 
   cte_init(os->trap);
   os->init();
+
+  spin_init(&print_lock, "print_lock");
+  spin_init(&cnt_lock, "cnt_lock");
+
   create_threads();
   kmt_print_all_tasks();
   kmt_print_cpu_tasks();
