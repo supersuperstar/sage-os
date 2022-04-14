@@ -191,17 +191,38 @@ Context *kmt_schedule(Event ev, Context *context) {
   }
 
   // pick the next task to run
-  Context *ret = NULL;
-  task_t *tp   = NULL;
-  task_t *next = NULL;
+  Context *ret                = NULL;
+  task_t *tp                  = NULL;
+  task_t *next                = NULL;
+  enum schedule_policy policy = FCFS;
   
   for (tp = root_task.next; tp; tp = tp->next) {
     // CHECK_FENCE(tp);
     if (tp->owner != -1 && tp->owner != cpu_current()) continue;
     if (tp->state == ST_E || tp->state == ST_W) {
-      break;
+      if (policy == FCFS) {
+        next = tp;
+        break;
+      }
+      switch (policy) {
+        case Priority:
+          if (strcmp(tp->name, next->name) == -1) {
+            next = tp;
+          }
+          break;
+        case RR:
+          if (tp->count < next->count) {
+            next = tp;
+          }
+          break;
+        case MQ:
+          break;
+        default:
+          break;
+      }
     }
   }
+  tp = next;
 
   // switch context
   if (tp != NULL) {

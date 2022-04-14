@@ -24,6 +24,13 @@ enum task_states {
   ST_X   // Special
 };
 
+enum schedule_policy {
+  FCFS=0,
+  Priority,
+  RR,
+  MQ
+};
+
 struct task {
   uint32_t pid;                   // process id
   const char* name;               // process name for debug
