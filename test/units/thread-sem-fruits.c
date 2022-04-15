@@ -1,3 +1,13 @@
+/**
+ * @file thread-sem-fruits.c
+ * @author moeakwak (moeakwak@gmail.com)
+ * @brief a semaphore concurrency demo, using multi processors
+ * @version 0.2
+ * @date 2022-04-15
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
 #include <am.h>
 #include <klib.h>
 #include <klib-macros.h>
@@ -124,8 +134,7 @@ int main() {
   sem_init(&orange, "orange", 0);
 
   create_threads();
-  kmt_print_all_tasks();
-  kmt_print_cpu_tasks();
+  kmt_print_all_tasks(LOG_INFO);
   mpe_init(os->run);
   return 1;
 }

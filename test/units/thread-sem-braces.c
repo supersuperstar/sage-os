@@ -1,3 +1,13 @@
+/**
+ * @file thread-sem-braces.c
+ * @author moeakwak (moeakwak@gmail.com)
+ * @brief producer-consumer demo with semaphore
+ * @version 0.1
+ * @date 2022-04-15
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
 #include <am.h>
 #include <klib.h>
 #include <klib-macros.h>
@@ -84,8 +94,8 @@ int main() {
 
   create_threads();
 
-  kmt_print_all_tasks();
-  kmt_print_cpu_tasks();
+  kmt_print_all_tasks(LOG_INFO);
+  kmt_print_cpu_tasks(LOG_INFO);
   mpe_init(os->run);
   return 1;
 }
