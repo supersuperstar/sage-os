@@ -10,8 +10,8 @@ Context *kmt_yield(Event ev, Context *context);
 Context *kmt_error(Event ev, Context *context);
 Context *kmt_timer(Event ev, Context *context);
 Context *kmt_schedule(Event ev, Context *context);
-void kmt_print_all_tasks();
-void kmt_print_cpu_tasks();
+void kmt_print_all_tasks(int mask);
+void kmt_print_cpu_tasks(int mask);
 
 uint32_t next_pid = 1;  // next pid to allocate
 
@@ -300,10 +300,12 @@ void kmt_print_all_tasks(int mask) {
   if (!(_log_mask & mask)) return;
   bool holding = spin_holding(&task_list_lock);
   if (!holding) spin_lock(&task_list_lock);
-  printf("\n%s [all tasks]:\n", logger_type_str[mask]);
+  printf("%s [all tasks]:\n", logger_type_str[mask]);
   for (task_t *tp = &root_task; tp != NULL; tp = tp->next) {
-    printf("pid=%d\tname=%s\towner=%d\tstate=%d\tcount=%d\twait_sem=%s\n",
-           tp->pid, tp->name, tp->owner, tp->state, tp->count,
+    printf("pid " FONT_BOLD "%d" FONT_NORMAL " <" FONT_BOLD "%s" FONT_NORMAL
+           ">:\tcpu=" FONT_BOLD "%d" FONT_NORMAL ",\tstate=" FONT_BOLD
+           "%s" FONT_NORMAL ",\twait_sem=" FONT_BOLD "%s" FONT_NORMAL "\n",
+           tp->pid, tp->name, tp->owner, task_states_str[tp->state],
            tp->wait_sem ? tp->wait_sem->name : "null");
   }
   if (!holding) spin_unlock(&task_list_lock);
@@ -317,14 +319,13 @@ void kmt_print_cpu_tasks(int mask) {
   if (!(_log_mask & mask)) return;
   bool holding = spin_holding(&task_list_lock);
   if (!holding) spin_lock(&task_list_lock);
-  printf("\n%s [cpu tasks]:\n", logger_type_str[mask]);
+  printf("%s [cpu tasks]:\n", logger_type_str[mask]);
   for (int i = 0; i < cpu_count(); i++) {
     task_t *tp = cpu_tasks[i];
     if (tp)
-      printf(
-          "#%d: pid=%d, name=%s, owner=%d, state=%s, count=%d, wait_sem=%s\n",
-          i, tp->pid, tp->name, tp->owner, task_states_str[tp->state],
-          tp->count, tp->wait_sem ? tp->wait_sem->name : "null");
+      printf("CPU %d pid %d <%s>:\t\tstate=%s, count=%d, wait_sem=%s\n", i,
+             tp->pid, tp->name, task_states_str[tp->state], tp->count,
+             tp->wait_sem ? tp->wait_sem->name : "null");
     else
       printf("#%d: empty\n", i);
   }

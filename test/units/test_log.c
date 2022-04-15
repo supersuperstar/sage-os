@@ -2,7 +2,11 @@
 #include <logger.h>
 
 void simple_test_log() {
-  printf("mask: %d", _log_mask);
+  _log_mask = LOG_ERROR | LOG_WARN | LOG_SUCCESS | LOG_INFO;
+  printf("log_mask: %d", _log_mask);
+  printf("\n*******************************\n");
+  printf("    Display log_mask: %02d  \n", _log_mask);
+  printf("*******************************\n");
   success("succeed!");
   info("info!");
   warn("warn!");
@@ -12,7 +16,7 @@ void simple_test_log() {
   info_detail("info!");
   warn_detail("warn!");
   error_detail("error!");
-  _log_mask = 13;
+  _log_mask = LOG_ERROR | LOG_WARN | LOG_SUCCESS;
   printf("reset log_mask to %d, remove info\n", _log_mask);
   success("succeed!");
   info("info!");
@@ -21,5 +25,6 @@ void simple_test_log() {
 }
 
 int main(int argc, char const *argv[]) {
-    return 0;
+  simple_test_log();
+  return 0;
 }
