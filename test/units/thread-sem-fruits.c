@@ -4,6 +4,7 @@
 #include <sem.h>
 #include <thread.h>
 #include <logger.h>
+#include <devices.h>
 
 #define MAX_OFFER 5
 
@@ -25,6 +26,8 @@ void dad(void *arg) {
     sem_wait(&plate);
     spin_lock(&print_lock);
     printf("CPU %d: *** Dad: offer apple %d ***\n", cpu_current(), ++cnt);
+    cprintf("tty1", "CPU %d: *** Dad: offer apple %d ***\n", cpu_current(),
+            cnt);
     if (cnt == MAX_OFFER) {
       printf("!!! Dad: exit !!\n");
     }
@@ -45,6 +48,8 @@ void mom(void *arg) {
     sem_wait(&plate);
     spin_lock(&print_lock);
     printf("CPU %d: *** Mom: offer orange %d ***\n", cpu_current(), ++cnt);
+    cprintf("tty1", "CPU %d: *** Mom: offer orange %d ***\n", cpu_current(),
+            cnt);
     if (cnt == MAX_OFFER) {
       printf("!!! Mom: exit !!\n");
     }
@@ -65,6 +70,8 @@ void son(void *arg) {
     sem_wait(&orange);
     spin_lock(&print_lock);
     printf("CPU %d: *** Son: take orange %d ***\n", cpu_current(), ++cnt);
+    cprintf("tty1", "CPU %d: *** Son: take orange %d ***\n", cpu_current(),
+            cnt);
     spin_unlock(&print_lock);
     sem_signal(&plate);
     delay(10);
@@ -78,6 +85,8 @@ void daughter(void *arg) {
     sem_wait(&apple);
     spin_lock(&print_lock);
     printf("CPU %d: *** Daughter: take apple %d ***\n", cpu_current(), ++cnt);
+    cprintf("tty1", "CPU %d: *** Daughter: take apple %d ***\n", cpu_current(),
+            cnt);
     spin_unlock(&print_lock);
     sem_signal(&plate);
     delay(3);
@@ -91,7 +100,7 @@ static void create_threads() {
   task_daughter = pmm->alloc(sizeof(task_t));
   kmt->create(task_dad, "task_dad", dad, NULL);
   kmt->create(task_mom, "task_mom", mom, NULL);
-  kmt->create(task_son, "task_mom", son, NULL);
+  kmt->create(task_son, "task_son", son, NULL);
   kmt->create(task_daughter, "task_daughter", daughter, NULL);
 }
 
