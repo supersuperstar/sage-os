@@ -1,5 +1,4 @@
 /**
- * @file thread-sem-fruits.c
  * @author moeakwak (moeakwak@gmail.com)
  * @brief a semaphore concurrency demo, using multi processors
  * @version 0.2
@@ -24,7 +23,7 @@
 task_t *task_dad, *task_mom, *task_son, *task_daughter;
 
 sem_t plate, apple, orange;  // initial value: 1, 0, 0
-spinlock_t print_lock;
+sem_t sem_print;
 
 void delay(int x) {
   for (long i = 0; i < x * 100000000; i++)
@@ -37,19 +36,20 @@ void dad(void *arg) {
   int cnt      = 0;
   while (1) {
     sem_wait(&plate);
-    spin_lock(&print_lock);
+    sem_wait(&sem_print);
     cprintf("tty1", "CPU %d: *** Dad: offer %d apple, total offer: %d ***\n",
             cpu_current(), DAD_OFFER, (++cnt) * DAD_OFFER);
+    printf("********* dad run %d *********\n", cnt);
+    kmt_print_all_tasks(LOG_INFO);
     if (cnt == MAX_OFFER_TIMES) {
       cprintf("tty1", "!!! Dad: exit !!\n");
       printf("!!! Dad: exit !!\n");
-      kmt_print_all_tasks(LOG_INFO);
     }
-    spin_unlock(&print_lock);
+    sem_signal(&sem_print);
     for (int i = 0; i < DAD_OFFER; i++)
       sem_signal(&apple);
     if (cnt == MAX_OFFER_TIMES) {
-      _log_mask = LOG_ERROR;
+      // _log_mask = LOG_ERROR;
       kmt->teardown(self);
       while (1)
         ;
@@ -64,19 +64,20 @@ void mom(void *arg) {
   int cnt      = 0;
   while (1) {
     sem_wait(&plate);
-    spin_lock(&print_lock);
+    sem_wait(&sem_print);
     cprintf("tty1", "CPU %d: *** Mom: offer %d oranges, total offer: %d ***\n",
             cpu_current(), MOM_OFFER, (++cnt) * MOM_OFFER);
+    printf("********* mom run %d *********\n", cnt);
+    kmt_print_all_tasks(LOG_INFO);
     if (cnt == MAX_OFFER_TIMES) {
       cprintf("tty1", "!!! Mom: exit !!\n");
       printf("!!! Mom: exit !!\n");
-      kmt_print_all_tasks(LOG_INFO);
     }
-    spin_unlock(&print_lock);
+    sem_signal(&sem_print);
     for (int i = 0; i < MOM_OFFER; i++)
       sem_signal(&orange);
     if (cnt == MAX_OFFER_TIMES) {
-      _log_mask = LOG_ERROR;
+      // _log_mask = LOG_ERROR;
       kmt->teardown(self);
       while (1)
         ;
@@ -90,10 +91,12 @@ void son(void *arg) {
   int cnt = 0;
   while (1) {
     sem_wait(&orange);
-    spin_lock(&print_lock);
+    sem_wait(&sem_print);
     cprintf("tty1", "CPU %d: *** Son: eat 1 orange, total: %d ***\n",
             cpu_current(), ++cnt);
-    spin_unlock(&print_lock);
+    printf("********* son run %d *********\n", cnt);
+    kmt_print_all_tasks(LOG_INFO);
+    sem_signal(&sem_print);
     sem_signal(&plate);
     delay(10);
   }
@@ -104,10 +107,12 @@ void daughter(void *arg) {
   int cnt = 0;
   while (1) {
     sem_wait(&apple);
-    spin_lock(&print_lock);
+    sem_wait(&sem_print);
     cprintf("tty1", "CPU %d: *** Daughter: eat 1 apple, total: %d ***\n",
             cpu_current(), ++cnt);
-    spin_unlock(&print_lock);
+    printf("********* daughter run %d *********\n", cnt);
+    kmt_print_all_tasks(LOG_INFO);
+    sem_signal(&sem_print);
     sem_signal(&plate);
     delay(3);
   }
@@ -118,17 +123,16 @@ static void create_threads() {
   task_mom      = pmm->alloc(sizeof(task_t));
   task_son      = pmm->alloc(sizeof(task_t));
   task_daughter = pmm->alloc(sizeof(task_t));
-  kmt->create(task_dad, "task_dad", dad, task_dad);
-  kmt->create(task_mom, "task_mom", mom, task_mom);
-  kmt->create(task_son, "task_son", son, task_son);
-  kmt->create(task_daughter, "task_daughter", daughter, task_daughter);
+  kmt->create(task_dad, "dad     ", dad, task_dad);
+  kmt->create(task_mom, "mom     ", mom, task_mom);
+  kmt->create(task_son, "son     ", son, task_son);
+  kmt->create(task_daughter, "daughter", daughter, task_daughter);
 }
 
 int main() {
   ioe_init();
 
-  // _log_mask = LOG_ERROR | LOG_WARN | LOG_INFO | LOG_SUCCESS;
-  _log_mask = LOG_ERROR | LOG_INFO;
+  _log_mask = LOG_ERROR | LOG_WARN | LOG_INFO | LOG_SUCCESS;
 
   cte_init(os->trap);
   os->init();
@@ -136,9 +140,14 @@ int main() {
   sem_init(&plate, "plate", 1);
   sem_init(&apple, "apple", 0);
   sem_init(&orange, "orange", 0);
+  sem_init(&sem_print, "sem_print", 1);
 
   create_threads();
+
   kmt_print_all_tasks(LOG_INFO);
+
+  _log_mask = LOG_ERROR | LOG_INFO;
+
   mpe_init(os->run);
   return 1;
 }
