@@ -51,7 +51,7 @@ int _log_mask;
   (LOG_INFO | LOG_WARN | LOG_ERROR)  // defalt print INFO and above
 #endif
 
-extern const char* type_str[10];
+extern const char* logger_type_str[10];
 
 #ifdef NODEBUG
 
@@ -62,14 +62,15 @@ extern const char* type_str[10];
 
 #define log(type, format, ...) \
   if (type & _log_mask) { \
-    printf("#%d %s: " format "\n", cpu_current(), type_str[type], \
+    printf("#%d %s: " format "\n", cpu_current(), logger_type_str[type], \
            ##__VA_ARGS__); \
   }
 
 #define log_detail(type, format, ...) \
   if (type & _log_mask) { \
-    printf("#%d %s (%s:%d, %s):\n" format "\n", cpu_current(), type_str[type], \
-           __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    printf("#%d %s (%s:%d, %s):\n" format "\n", cpu_current(), \
+           logger_type_str[type], __FILE__, __LINE__, __func__, \
+           ##__VA_ARGS__); \
   }
 
 #endif
