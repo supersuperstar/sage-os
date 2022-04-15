@@ -10,6 +10,8 @@
 
 task_t *tasks[MAX_TASK];
 char names[10][MAX_TASK];
+spinlock_t print_lock, cnt_lock;
+int cnt = 0;
 
 void func(void *arg) {
   task_t *self = (task_t *)arg;
@@ -45,7 +47,7 @@ void func(void *arg) {
 static void create_threads() {
   for (int i = 0; i < MAX_TASK; i++) {
     tasks[i] = pmm->alloc(sizeof(task_t));
-    sprintf(names[i], "T%02d\0", i);
+    sprintf(names[i], "T%02d\0", MAX_TASK-i);
     kmt->create(tasks[i], names[i], func, tasks[i]);
   }
 }
@@ -57,6 +59,8 @@ int main() {
 
   cte_init(os->trap);
   os->init();
+  spin_init(&print_lock, "print_lock");
+  spin_init(&cnt_lock, "cnt_lock");
   create_threads();
   kmt_print_all_tasks();
   kmt_print_cpu_tasks();

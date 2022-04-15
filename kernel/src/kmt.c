@@ -15,6 +15,9 @@ void kmt_print_cpu_tasks();
 
 uint32_t next_pid = 1;  // next pid to allocate
 
+enum schedule_policy policy  = FCFS;
+const char *current_policy[] = {"FCFS", "Priority", "RR", "MQ"};
+
 const char *task_states_str[] = {"Unused",   "Embryo",  "To sleep", "Sleeping",
                                  "Waken up", "Running", "Zombie",   "Special"};
 
@@ -188,30 +191,35 @@ Context *kmt_schedule(Event ev, Context *context) {
       tp = tp->next;
     tp->next = cur->next;
     pmm->free(cur);
+  } else if (policy == RR) {//move cur to list tail
+    task_t *tp = &root_task;
+    while (tp->next != cur)
+      tp = tp->next;
+    tp->next = cur->next;
+    
+    tp       = &root_task;
+    while (tp->next != NULL)
+      tp = tp->next;
+    tp->next  = cur;
+    cur->next = NULL;
   }
 
   // pick the next task to run
-  Context *ret                = NULL;
-  task_t *tp                  = NULL;
-  task_t *next                = NULL;
-  enum schedule_policy policy = FCFS;
-  
+  Context *ret = NULL;
+  task_t *tp   = NULL;
+  task_t *next = NULL;
+
   for (tp = root_task.next; tp; tp = tp->next) {
     // CHECK_FENCE(tp);
     if (tp->owner != -1 && tp->owner != cpu_current()) continue;
     if (tp->state == ST_E || tp->state == ST_W) {
-      if (policy == FCFS) {
+      if (policy == FCFS || policy == RR) {
         next = tp;
         break;
       }
       switch (policy) {
         case Priority:
           if (strcmp(tp->name, next->name) == -1) {
-            next = tp;
-          }
-          break;
-        case RR:
-          if (tp->count < next->count) {
             next = tp;
           }
           break;
@@ -236,8 +244,9 @@ Context *kmt_schedule(Event ev, Context *context) {
     // TODO: more checks here
     kmt_set_task(tp);
 
-    success("schedule: run next pid=%d, name=%s, count=%d, event=%d %s",
-            tp->pid, tp->name, tp->count, ev.event, ev.msg);
+    success("schedule[%s]: run next pid=%d, name=%s, count=%d, event=%d %s",
+            current_policy[policy], tp->pid, tp->name, tp->count, ev.event,
+            ev.msg);
   } else {
     // if no task to run
     warn("schedule: no task to run");
@@ -333,10 +342,10 @@ void kmt_print_cpu_tasks() {
   for (int i = 0; i < cpu_count(); i++) {
     task_t *tp = cpu_tasks[i];
     if (tp)
-      printf(
-          "#%d: pid=%d, name=%s, owner=%d, state=%s, count=%d, wait_sem=%s\n",
-          i, tp->pid, tp->name, tp->owner, task_states_str[tp->state],
-          tp->count, "pos->wait_sem");
+      printf("#%d: pid=%d, name=%s, owner=%d, state=%s, count=%d, wait_sem=%s "
+             ",policy=%s\n",
+             i, tp->pid, tp->name, tp->owner, task_states_str[tp->state],
+             tp->count, "pos->wait_sem", current_policy[policy]);
     else
       printf("#%d: empty\n", i);
   }
