@@ -21,12 +21,16 @@ static void tty_reader(void *arg) {
 }
 
 void run() {
+  iset(true);
+  kmt->create(pmm->alloc(sizeof(task_t)), "my_tty_reader1", tty_reader, "tty1");
+  kmt->create(pmm->alloc(sizeof(task_t)), "my_tty_reader2", tty_reader, "tty2");
+  while (1)
+    ;
 }
 
 int main() {
   ioe_init();
   cte_init(os->trap);
-  dev->init();
   os->init();
   mpe_init(run);
   return 0;
