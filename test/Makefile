@@ -72,7 +72,7 @@ build: latest
 	@make -s -f Makefile.$(target) ARCH=$(ARCH)
 
 ### run single test unit
-run: build latest
+run: clean build latest
 	@if [ "$(ARCH)" = "x86_64-qemu" ]; then \
 		qemu-system-x86_64 \
 			  -serial mon:stdio \
@@ -84,7 +84,7 @@ run: build latest
 	fi
 
 ### debug single test unit
-debug: build latest
+debug: clean build latest
 	@if [ "$(ARCH)" = "x86_64-qemu" ]; then \
 		qemu-system-x86_64 \
 			  -serial mon:stdio \

@@ -108,4 +108,10 @@ typedef struct {
   uint8_t *buf;
 } sd_t;
 
+// ---------------
+
+#define CPRINTF_MAX_LINE_CHARS 100
+
+int cprintf(char *tty_name, const char *fmt, ...);
+
 #endif
