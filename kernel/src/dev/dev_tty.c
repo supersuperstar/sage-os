@@ -339,10 +339,10 @@ void dev_tty_task(void *arg) {
 int cprintf(char *tty_name, const char *fmt, ...) {
   device_t *tty = dev->lookup(tty_name);
   int ret       = 0;
-  char out[30]  = {};
+  char out[100] = {};
   va_list list;
   va_start(list, fmt);
-  ret = vsnprintf(out, 30, fmt, list);
+  ret = vsnprintf(out, 100, fmt, list);
   va_end(list);
   tty->ops->write(tty, 0, out, strlen(out));
   return ret;
