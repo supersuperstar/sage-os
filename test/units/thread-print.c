@@ -10,6 +10,8 @@
 
 task_t *tasks[MAX_TASK];
 char names[10][MAX_TASK];
+spinlock_t print_lock, cnt_lock;
+int cnt = 100;
 
 void func(void *arg) {
   task_t *self = (task_t *)arg;
@@ -57,6 +59,10 @@ int main() {
 
   cte_init(os->trap);
   os->init();
+
+  spin_init(&print_lock, "print_lock");
+  spin_init(&cnt_lock, "cnt_lock");
+
   create_threads();
   kmt_print_all_tasks();
   kmt_print_cpu_tasks();
