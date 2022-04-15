@@ -9,7 +9,7 @@
  */
 static void tty_reader(void *arg) {
   device_t *tty = dev->lookup(arg);
-  char cmd[128], resp[128], ps[16];
+  char cmd[128] = {}, resp[128] = {}, ps[16] = {};
   snprintf(ps, 16, "(%s) $ ", arg);
   while (1) {
     tty->ops->write(tty, 0, ps, strlen(ps));
@@ -21,13 +21,17 @@ static void tty_reader(void *arg) {
 }
 
 void run() {
+  iset(true);
+  while (1)
+    ;
 }
 
 int main() {
   ioe_init();
   cte_init(os->trap);
-  dev->init();
   os->init();
+  kmt->create(pmm->alloc(sizeof(task_t)), "tty_reader", tty_reader, "tty1");
+  kmt->create(pmm->alloc(sizeof(task_t)), "tty_reader", tty_reader, "tty2");
   mpe_init(run);
   return 0;
 }
