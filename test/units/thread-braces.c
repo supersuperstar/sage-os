@@ -20,21 +20,20 @@ void consumer(void *arg) {
       cnt--;
       tot++;
       spin_lock(&print_lock);
-      printf(")");
-      cprintf("tty2", ")");
+      // printf(")");
+      cprintf("tty1", ")");
       spin_unlock(&print_lock);
-      if (cnt == 0 && tot > MAX_COUNT) {
-        spin_unlock(&cnt_lock);
-        break;
-      }
+      // if (cnt == 0 && tot > MAX_COUNT) {
+      //   spin_unlock(&cnt_lock);
+      //   break;
+      // }
     }
     spin_unlock(&cnt_lock);
   }
-  spin_lock(&print_lock);
-  printf("C");
-  cprintf("tty2", "C");
-  spin_unlock(&print_lock);
-  _log_mask = LOG_ERROR | LOG_WARN;
+  // spin_lock(&print_lock);
+  // printf("C");
+  // cprintf("tty1", "C");
+  // spin_unlock(&print_lock);
   while (1)
     ;
 }
@@ -54,8 +53,9 @@ void producer(void *arg) {
     spin_unlock(&print_lock);
     spin_unlock(&cnt_lock);
   }
+  _log_mask = LOG_ERROR | LOG_WARN;
   spin_lock(&print_lock);
-  printf("P");
+  printf("Producer finished");
   cprintf("tty1", "P");
   spin_unlock(&print_lock);
   while (1)

@@ -97,15 +97,15 @@ static void tty_render(tty_t *tty) {
       if (*d) {
         int draw = (ch == tty->cursor && show_cursor) ? 0xdb : ch->ch;
         *sp++    = (struct sprite){.x       = x * 8,
-                                   .y       = y * 16,
-                                   .z       = 0,
-                                   .display = tty->display,
-                                   .texture = draw * 2 + 1};
+                                .y       = y * 16,
+                                .z       = 0,
+                                .display = tty->display,
+                                .texture = draw * 2 + 1};
         *sp++    = (struct sprite){.x       = x * 8,
-                                   .y       = y * 16 + 8,
-                                   .z       = 0,
-                                   .display = tty->display,
-                                   .texture = draw * 2 + 2};
+                                .y       = y * 16 + 8,
+                                .z       = 0,
+                                .display = tty->display,
+                                .texture = draw * 2 + 2};
       }
       ch++;
       d++;
@@ -349,12 +349,12 @@ void dev_tty_task(void *arg) {
 }
 
 int cprintf(char *tty_name, const char *fmt, ...) {
-  device_t *tty = dev->lookup(tty_name);
-  int ret       = 0;
-  char out[100] = {};
+  device_t *tty                    = dev->lookup(tty_name);
+  int ret                          = 0;
+  char out[CPRINTF_MAX_LINE_CHARS] = {};
   va_list list;
   va_start(list, fmt);
-  ret = vsnprintf(out, 100, fmt, list);
+  ret = vsnprintf(out, CPRINTF_MAX_LINE_CHARS, fmt, list);
   va_end(list);
   tty->ops->write(tty, 0, out, strlen(out));
   return ret;
