@@ -3,6 +3,7 @@
 
 #include <common.h>
 #include <list.h>
+#include <spinlock.h>
 
 #define FILL_STACK 0xfd
 #define FILL_FENCE 0xcd
@@ -42,7 +43,9 @@ struct task {
 
 const char* task_states_str[MAX_TASK_STATES];
 
-void kmt_print_all_tasks();
-void kmt_print_cpu_tasks();
+spinlock_t task_list_lock;
+
+void kmt_print_all_tasks(int mask);
+void kmt_print_cpu_tasks(int mask);
 
 #endif
