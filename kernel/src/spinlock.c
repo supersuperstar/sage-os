@@ -5,7 +5,7 @@ int ncli[MAX_CPU] = {};
 /**
  * @brief create spinlock
  *
- * @param lk address of spinlock example
+ * @param lk address of spinlock instance
  * @param name name of spinlock
  */
 void spin_init(spinlock_t *lk, const char *name) {
@@ -17,7 +17,7 @@ void spin_init(spinlock_t *lk, const char *name) {
 /**
  * @brief acquire spinlock to current cpu
  *
- * @param lk address of spinlock example
+ * @param lk address of spinlock instance
  */
 void spin_lock(spinlock_t *lk) {
   spin_pushcli();  // interrupt disable
@@ -35,7 +35,7 @@ void spin_lock(spinlock_t *lk) {
 /**
  * @brief release spinlock from current cpu
  *
- * @param lk address of spinlock example
+ * @param lk address of spinlock instance
  */
 void spin_unlock(spinlock_t *lk) {
   assert(spin_holding(lk));
@@ -53,7 +53,7 @@ void spin_unlock(spinlock_t *lk) {
 /**
  * @brief check current cpu has the lock
  *
- * @param lk address of spinlock example
+ * @param lk address of spinlock instance
  * @return true
  * @return false
  */

@@ -39,13 +39,17 @@ struct task {
   char fenceB[STACK_FENCE_SIZE];  // 32 bytes fence
   Context* context;               // process user context
   struct task* next;
+
+  AddrSpace* as;
 };
 
 const char* task_states_str[MAX_TASK_STATES];
 
 spinlock_t task_list_lock;
 
-void kmt_print_all_tasks();
-void kmt_print_cpu_tasks();
+task_t* cpu_tasks[];
+
+void kmt_print_all_tasks(int mask);
+void kmt_print_cpu_tasks(int mask);
 
 #endif

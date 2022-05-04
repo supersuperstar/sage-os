@@ -11,8 +11,10 @@
 task_t *tasks[MAX_TASK];
 char names[10][MAX_TASK];
 
+
 int cnt = MAX_TASK;  // current running thread count
 spinlock_t cnt_lock, print_lock;
+
 
 void func(void *arg) {
   task_t *self = (task_t *)arg;
@@ -21,7 +23,7 @@ void func(void *arg) {
     // print something
     spin_lock(&print_lock);
     warn("%s running %d times, count=%d", self->name, i, self->count);
-    kmt_print_cpu_tasks();
+    kmt_print_cpu_tasks(LOG_INFO);
     printf("\n");
     spin_unlock(&print_lock);
     // give up cpu to reschedule
@@ -31,8 +33,8 @@ void func(void *arg) {
   // if finished
   spin_lock(&print_lock);
   warn("%s exit!", self->name);
-  kmt_print_all_tasks();
-  kmt_print_cpu_tasks();
+  kmt_print_all_tasks(LOG_INFO);
+  kmt_print_cpu_tasks(LOG_INFO);
   spin_unlock(&print_lock);
 
   int remain = 0;
@@ -68,8 +70,8 @@ int main() {
   spin_init(&cnt_lock, "cnt_lock");
 
   create_threads();
-  kmt_print_all_tasks();
-  kmt_print_cpu_tasks();
+  kmt_print_all_tasks(LOG_INFO);
+  kmt_print_cpu_tasks(LOG_INFO);
   mpe_init(os->run);
   return 1;
 }

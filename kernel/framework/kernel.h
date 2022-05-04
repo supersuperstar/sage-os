@@ -24,6 +24,7 @@ MODULE(pmm) {
   void (*init)();
   void *(*alloc)(size_t size);
   void (*free)(void *ptr);
+  void *(*pgalloc)();
 };
 
 typedef struct task task_t;
@@ -49,6 +50,19 @@ typedef struct device device_t;
 MODULE(dev) {
   void (*init)();
   device_t *(*lookup)(const char *name);
+};
+
+MODULE(uproc) {
+  void (*init)();
+  int (*kputc)(task_t *task, char ch);
+  int (*fork)(task_t *task);
+  int (*wait)(task_t *task, int *status);
+  int (*exit)(task_t *task, int status);
+  int (*kill)(task_t *task, int pid);
+  void *(*mmap)(task_t *task, void *addr, int length, int prot, int flags);
+  int (*getpid)(task_t *task);
+  int (*sleep)(task_t *task, int seconds);
+  int64_t (*uptime)(task_t *task);
 };
 
 #endif
