@@ -17,6 +17,10 @@ static void* kalloc(size_t size) {
   return NULL;
 }
 
+static void* pgalloc() {
+  return kalloc(SZ_PAGE);
+}
+
 static void* kalloc_safe(size_t size) {
   bool i = ienabled();
   iset(false);
@@ -46,7 +50,7 @@ static void pmm_init() {
   void* pi_start = NULL;
   int nr_page;
   nr_page =
-      (uint64_t)(heap.end - heap.start) / (SZ_PAGE + sizeof(struct chunk));
+      (uintptr_t)(heap.end - heap.start) / (SZ_PAGE + sizeof(struct chunk));
   pg_start = heap.start;
   pi_start = (bool*)(pg_start + nr_page * SZ_PAGE);
   // global_mm_pool = pi_start;
@@ -57,7 +61,8 @@ static void pmm_init() {
 }
 
 MODULE_DEF(pmm) = {
-    .init  = pmm_init,
-    .alloc = kalloc_safe,
-    .free  = kfree_safe,
+    .init    = pmm_init,
+    .alloc   = kalloc_safe,
+    .free    = kfree_safe,
+    .pgalloc = pgalloc,
 };

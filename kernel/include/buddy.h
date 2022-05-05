@@ -39,7 +39,7 @@ struct chunk {
  *
  */
 struct pmm_pool {
-  uint64_t begin_addr;
+  uintptr_t begin_addr;
   uint64_t page_num;
   uint64_t size;
   struct chunk* chunk_metadata;

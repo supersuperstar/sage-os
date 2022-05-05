@@ -41,6 +41,14 @@ static void os_init() {
  */
 static void os_run() {
   info("CPU started");
+  // void *addr[100];
+  // for (int i = 0; i < 100; i++) {
+  //   addr[i] = pmm->pgalloc();
+  //   // printf("alloc addr : 0x%x\n", addr[i]);
+  // }
+  // for (int i = 0; i < 100; i++) {
+  //   pmm->free(addr[i]);
+  // }
   if (!ienabled()) iset(true);
   yield();
   while (1)
