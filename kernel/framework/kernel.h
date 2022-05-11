@@ -54,15 +54,31 @@ MODULE(dev) {
 
 MODULE(uproc) {
   void (*init)();
-  int (*kputc)(task_t *task, char ch);
-  int (*fork)(task_t *task);
-  int (*wait)(task_t *task, int *status);
-  int (*exit)(task_t *task, int status);
-  int (*kill)(task_t *task, int pid);
-  void *(*mmap)(task_t *task, void *addr, int length, int prot, int flags);
-  int (*getpid)(task_t *task);
-  int (*sleep)(task_t *task, int seconds);
-  int64_t (*uptime)(task_t *task);
+  int (*kputc)(task_t * task, char ch);
+  int (*fork)(task_t * task);
+  int (*wait)(task_t * task, int *status);
+  int (*exit)(task_t * task, int status);
+  int (*kill)(task_t * task, int pid);
+  void *(*mmap)(task_t * task, void *addr, int length, int prot, int flags);
+  int (*getpid)(task_t * task);
+  int (*sleep)(task_t * task, int seconds);
+  int64_t (*uptime)(task_t * task);
+};
+
+struct ufs_stat;
+MODULE(vfs) {
+  void (*init)();
+  int (*write)(int fd, void *buf, int count);
+  int (*read)(int fd, void *buf, int count);
+  int (*close)(int fd);
+  int (*open)(const char *pathname, int flags);
+  int (*lseek)(int fd, int offset, int whence);
+  int (*link)(const char *oldpath, const char *newpath);
+  int (*unlink)(const char *pathname);
+  int (*fstat)(int fd, struct ufs_stat *buf);
+  int (*mkdir)(const char *pathname);
+  int (*chdir)(const char *path);
+  int (*dup)(int fd);
 };
 
 #endif
