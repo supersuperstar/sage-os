@@ -27,12 +27,12 @@ enum task_states {
 struct task {
   uint32_t pid;                   // process id
   const char* name;               // process name for debug
-  void (*entry)(void*);           // entry func to run
+  void (*entry)(void*);           // kernel thread entry
   void* arg;                      // args of entry func
   enum task_states state;         // process state
-  sem_t* wait_sem;                // whether is waiting a semaphore
+  sem_t* wait_sem;                // semaphore that the thread waiting for
   bool killed;                    // whether process is killed
-  int32_t owner;                  // cpu which owns this process
+  int32_t owner;                  // which cpu running this process now
   uint32_t count;                 // a counter to avoid deadlock
   char fenceA[STACK_FENCE_SIZE];  // 32 bytes fence
   char stack[STACK_SIZE];         // user stack
@@ -47,7 +47,7 @@ const char* task_states_str[MAX_TASK_STATES];
 
 spinlock_t task_list_lock;
 
-task_t* cpu_tasks[];
+// task_t* cpu_tasks[];
 
 void kmt_print_all_tasks(int mask);
 void kmt_print_cpu_tasks(int mask);
