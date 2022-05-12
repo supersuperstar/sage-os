@@ -45,10 +45,9 @@ struct task {
 
 const char* task_states_str[MAX_TASK_STATES];
 
-// task_t root_task;
+task_t root_task;
+task_t* cpu_tasks[MAX_CPU];
 spinlock_t task_list_lock;
-
-// task_t* cpu_tasks[];
 
 void kmt_print_all_tasks(int mask);
 void kmt_print_cpu_tasks(int mask);

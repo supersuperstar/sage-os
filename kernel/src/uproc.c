@@ -4,9 +4,6 @@
 
 #include "initcode.inc"
 
-extern task_t **cpu_tasks;
-extern task_t root_task;
-
 // extern int sys_kputc(char ch);
 
 void uproc_pgmap(task_t *proc, void *vaddr, void *paddr, int prot);
@@ -26,7 +23,7 @@ Context *uproc_pagefault(Event ev, Context *context);
 void uproc_pgmap(task_t *proc, void *vaddr, void *paddr, int prot) {
   // TODO: need to record mapped pages for proc?
   uintptr_t va = (uintptr_t)vaddr;
-  info("map va:%06x%06x -> pa0x%x", va >> 24, va & ((1L << 24) - 1), paddr);
+  info("map va:0x%06x%06x -> pa:0x%x", va >> 24, va & ((1L << 24) - 1), paddr);
   // function map already has checks
   map(&proc->as, vaddr, paddr, prot);
 }

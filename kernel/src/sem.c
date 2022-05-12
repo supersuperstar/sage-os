@@ -1,8 +1,7 @@
 #include <sem.h>
+#include <thread.h>
 
 extern spinlock_t ir_lock;
-extern task_t **cpu_tasks;
-extern task_t root_task;
 
 /**
  * @brief init a semaphore

@@ -49,8 +49,10 @@ task_t *cpu_tasks[MAX_CPU] = {};
  * @param task
  */
 #define CHECK_FENCE(task) \
-  assert(memcmp(fence_val, (task)->fenceA, sizeof(fence_val)) == 0); \
-  assert(memcmp(fence_val, (task)->fenceB, sizeof(fence_val)) == 0)
+  ({ \
+    assert(memcmp(fence_val, (task)->fenceB, sizeof(fence_val)) == 0); \
+    assert(memcmp(fence_val, (task)->fenceA, sizeof(fence_val)) == 0); \
+  })
 
 uint32_t kmt_next_pid() {
   assert(next_pid < 1 << 15);
@@ -228,8 +230,8 @@ Context *kmt_schedule(Event ev, Context *context) {
     // TODO: more checks here
     kmt_set_task(tp);
 
-    info("schedule: run next pid=%d, name=%s, count=%d, event=%d %s", tp->pid,
-         tp->name, tp->count, ev.event, ev.msg);
+    success("schedule: run next pid=%d, name=%s, count=%d, event=%d %s",
+            tp->pid, tp->name, tp->count, ev.event, ev.msg);
   } else {
     // if no task to run
     warn("schedule: no task to run");
