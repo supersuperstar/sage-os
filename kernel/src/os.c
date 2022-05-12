@@ -27,12 +27,11 @@ static void os_init() {
   kmt->init();
   info("kmt initialized");
 
-  dev->init();
-  info("device initialized");
+  // dev->init();
+  // info("device initialized");
 
   spin_init(&ir_lock, "ir_lock");
 
-  uproc->init();
   // should create initial threads here, after call os_init()
 }
 

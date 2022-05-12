@@ -40,16 +40,18 @@ struct task {
   Context* context;               // process user context
   struct task* next;
 
-  AddrSpace* as;
+  AddrSpace as;
 };
 
 const char* task_states_str[MAX_TASK_STATES];
 
+// task_t root_task;
 spinlock_t task_list_lock;
 
 // task_t* cpu_tasks[];
 
 void kmt_print_all_tasks(int mask);
 void kmt_print_cpu_tasks(int mask);
+uint32_t kmt_next_pid();
 
 #endif

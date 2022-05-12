@@ -52,13 +52,19 @@ task_t *cpu_tasks[MAX_CPU] = {};
   assert(memcmp(fence_val, (task)->fenceA, sizeof(fence_val)) == 0); \
   assert(memcmp(fence_val, (task)->fenceB, sizeof(fence_val)) == 0)
 
+uint32_t kmt_next_pid() {
+  assert(next_pid < 1 << 15);
+  // TODO: reuse next pid
+  return next_pid++;
+}
+
 /**
  * @brief initialize kmt module
  *
  */
 void kmt_init() {
   // create root_task
-  root_task.pid   = next_pid++;
+  root_task.pid   = kmt_next_pid();
   root_task.name  = "Root Task";
   root_task.state = ST_X;
   root_task.count = 0;
@@ -79,7 +85,7 @@ void kmt_init() {
 /**
  * @brief create thread
  *
- * @param task task ptr of thread
+ * @param task task ptr of thread (should be allocated)
  * @param name thread name
  * @param entry thread user code function entry
  * @param arg args pass to entry
@@ -87,8 +93,9 @@ void kmt_init() {
  */
 int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
                void *arg) {
-  assert(task != NULL && name != NULL && entry != NULL);
-  task->pid      = next_pid++;
+  assert_msg(task != NULL && name != NULL && entry != NULL,
+             "null arguments in kmt_create");
+  task->pid      = kmt_next_pid();
   task->name     = name;
   task->entry    = entry;
   task->arg      = arg;
@@ -221,8 +228,8 @@ Context *kmt_schedule(Event ev, Context *context) {
     // TODO: more checks here
     kmt_set_task(tp);
 
-    success("schedule: run next pid=%d, name=%s, count=%d, event=%d %s",
-            tp->pid, tp->name, tp->count, ev.event, ev.msg);
+    info("schedule: run next pid=%d, name=%s, count=%d, event=%d %s", tp->pid,
+         tp->name, tp->count, ev.event, ev.msg);
   } else {
     // if no task to run
     warn("schedule: no task to run");

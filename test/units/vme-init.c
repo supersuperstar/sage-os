@@ -1,18 +1,15 @@
-#include <am.h>
+#include <kernel.h>
 #include <klib.h>
-#include <klib-macros.h>
-#include <spinlock.h>
-#include <thread.h>
+#include <am.h>
 #include <logger.h>
-#include <devices.h>
 
 int main() {
+  _log_mask = LOG_ERROR | LOG_INFO;
   ioe_init();
-
-  _log_mask = LOG_ERROR | LOG_WARN | LOG_INFO | LOG_SUCCESS;
-
   cte_init(os->trap);
   os->init();
+  vme_init(pmm->pgalloc, pmm->free);
+  uproc->init();
   mpe_init(os->run);
   return 1;
 }
