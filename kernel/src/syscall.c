@@ -11,3 +11,7 @@ int sys_wait();
 int sys_exit(int status);
 int sys_kill(int pid);
 void *sys_mmap(void *addr, int length, int prot, int flags);
+int sys_brk(int n);
+
+int sys_brk(int n) {
+}
