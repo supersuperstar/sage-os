@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "../kernel/framework/syscall.h"
+#include "../kernel/framework/syscall_defs.h"
 #include "../kernel/framework/user.h"
 
 static inline long syscall(int num, long x1, long x2, long x3, long x4) {
@@ -15,6 +15,12 @@ static inline long syscall(int num, long x1, long x2, long x3, long x4) {
                : "memory");
   return a0;
 }
+
+#define kputstr(s) \
+  ({ \
+    for (const char *p = s; *p; p++) \
+      kputc(*p); \
+  })
 
 static inline int kputc(char ch) {
   return syscall(SYS_kputc, ch, 0, 0, 0);
