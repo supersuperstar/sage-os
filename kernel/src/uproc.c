@@ -126,41 +126,41 @@ Context *uproc_pagefault(Event ev, Context *context) {
 Context *uproc_syscall(Event ev, Context *context) {
   task_t *proc     = cpu_tasks[cpu_current()];
   uint64_t args[4] = {context->rdi, context->rsi, context->rdx, context->rcx};
-  uint64_t rax     = 0;
+  uint64_t retval  = 0;
   int sys_id       = context->rax;
   switch (sys_id) {
     case SYS_kputc:
-      rax = sys_kputc(proc, args[0]);
+      retval = sys_kputc(proc, args[0]);
       break;
     case SYS_fork:
-      rax = sys_fork(proc);
+      retval = sys_fork(proc);
       break;
     case SYS_exit:
-      rax = sys_exit(proc, args[0]);
+      retval = sys_exit(proc, args[0]);
       break;
     case SYS_wait:
-      rax = sys_wait(proc, (int *)args[0]);
+      retval = sys_wait(proc, (int *)args[0]);
       break;
     case SYS_kill:
-      rax = sys_kill(proc, args[0]);
+      retval = sys_kill(proc, args[0]);
       break;
     case SYS_getpid:
-      rax = sys_getpid(proc);
+      retval = sys_getpid(proc);
       break;
     case SYS_mmap:
       sys_mmap(proc, (void *)args[0], args[1], args[2], args[3]);
       break;
     case SYS_sleep:
-      rax = sys_sleep(proc, args[0]);
+      retval = sys_sleep(proc, args[0]);
       break;
     case SYS_uptime:
-      rax = sys_uptime(proc);
+      retval = sys_uptime(proc);
       break;
     default:
       assert_msg(false, "syscall not implemented: %d", sys_id);
       break;
   }
-  if (sys_id != SYS_mmap) context->rax = rax;
+  if (sys_id != SYS_mmap) context->rax = retval;
   return NULL;
 }
 
