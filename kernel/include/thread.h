@@ -33,7 +33,7 @@ struct task {
   sem_t* wait_sem;                // semaphore that the thread waiting for
   bool killed;                    // whether process is killed
   int32_t owner;                  // which cpu running this process now
-  uint32_t count;                 // a counter to avoid deadlock
+  int32_t count;                  // a counter to avoid deadlock
   char fenceA[STACK_FENCE_SIZE];  // 32 bytes fence
   char stack[STACK_SIZE];         // user stack
   char fenceB[STACK_FENCE_SIZE];  // 32 bytes fence

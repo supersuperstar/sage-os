@@ -262,6 +262,18 @@ Context *kmt_schedule(Event ev, Context *context) {
  * @return Context* always NULL
  */
 Context *kmt_timer(Event ev, Context *context) {
+  // wake up sleep process
+  assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
+  spin_lock(&task_list_lock);
+  task_t *tp = NULL;
+  for (tp = root_task.next; tp; tp = tp->next) {
+    tp->count++;
+    if (tp->count >= (1 << 15)) tp->count = 0;
+    if (tp->state == ST_S && tp->count >= 0 && tp->wait_sem == NULL) {
+      tp->state = ST_W;
+    }
+  }
+  spin_unlock(&task_list_lock);
   return NULL;
 }
 

@@ -1,12 +1,20 @@
 #include "ulib.h"
 
+void print_time() {
+  int64_t t   = uptime();  // ms
+  char st[10] = {(t / 1000) % 10 + '0', (t / 100) % 10 + '0',
+                 (t / 10) % 10 + '0', t % 10 + '0', '\0'};
+  kputstr(st);
+}
+
 int main() {
   // Example:
   // printf("pid = %d\n", getpid());
+
   while (1) {
-    kputstr("hello from initcode\n");
-    for (int i = 0; i < 10000000; i++)
-      ;
+    print_time();
+    kputstr(" hello from initcode!\n");
+    sleep(1);
   }
   return 0;
 }
