@@ -65,12 +65,9 @@ int uproc_create(task_t *proc, const char *name) {
   // ucontext entry: start addr of proc
   proc->context = ucontext(as, kstack, as->area.start);
 
-  // copy init code
-  void *paddr = pmm->pgalloc();
-  void *vaddr = as->area.start;
-  memcpy(paddr, _init, _init_len);
-  uproc_pgmap(&proc->as, vaddr, paddr, MMAP_READ | MMAP_WRITE);
-  proc->size = SZ_PAGE;
+  // init the user vm area
+  inituvm(&proc, _init, _init_len);
+  proc->pmsize = SZ_PAGE;
 
   // add to task list
   assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
@@ -171,7 +168,7 @@ int sys_fork(task_t *proc) {
   subproc->context->rax  = 0;
 
   // copy pages
-  copyuvm(&subproc->as, &proc->as, proc->size);
+  copyuvm(&subproc->as, &proc->as, proc->pmsize);
 
   return subproc->pid;
 }
@@ -211,14 +208,14 @@ int64_t sys_uptime(task_t *proc) {
 }
 int sys_sbrk(int n) {
   int sz;
-  sz = cpu_tasks[cpu_current()]->size;
+  sz = cpu_tasks[cpu_current()]->pmsize;
   if (growuproc(n) < 0) return -1;
   return sz;
 }
 int growuproc(int n) {
   int sz;
   task_t *task = cpu_tasks[cpu_current()];
-  sz           = task->size;
+  sz           = task->pmsize;
   if (n > 0) {
     sz = allocuvm(&task->as, sz, sz + n);
     if (sz == 0) return -1;
@@ -226,7 +223,7 @@ int growuproc(int n) {
     sz = deallocuvm(&task->as, sz, sz + n);
     if (sz == 0) return -1;
   }
-  task->size = sz;
+  task->pmsize = sz;
   return 0;
 }
 

@@ -24,8 +24,8 @@ void inituvm(AddrSpace* as, char* init, int sz) {
   char* mem;
   mem = pmm->pgalloc();
   memset(mem, 0, sizeof(mem));
-  uproc_pgmap(as, 0, mem, MMAP_READ | MMAP_WRITE);
   memcpy(mem, init, sz);
+  uproc_pgmap(as, as->area.start, mem, MMAP_READ | MMAP_WRITE);
 }
 
 int allocuvm(AddrSpace* as, int newsz, int oldsz) {
