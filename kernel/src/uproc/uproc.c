@@ -27,15 +27,21 @@ int growuproc(int n);
  *
  */
 void uproc_init() {
+  // create first proc
   task_t *initproc = pmm->alloc(sizeof(task_t));
   uproc_create(initproc, "initcode");
+
+  // init the user vm area
+  inituvm(&initproc->as, _init, _init_len);
+  initproc->pmsize = SZ_PAGE;
+
   os->on_irq(0, EVENT_SYSCALL, uproc_syscall);
   os->on_irq(0, EVENT_PAGEFAULT, uproc_pagefault);
 }
 
 /**
  * @brief create a user process.
- *        Notice: copy _init in one page
+ *        Notice: Do not copy _init
  *
  * @param proc PCB
  * @param name process name
@@ -65,9 +71,8 @@ int uproc_create(task_t *proc, const char *name) {
   // ucontext entry: start addr of proc
   proc->context = ucontext(as, kstack, as->area.start);
 
-  // init the user vm area
-  inituvm(as, _init, _init_len);
-  proc->pmsize = SZ_PAGE;
+  // Notice: do not inituvm here, move to uproc_init
+  proc->pmsize = 0;
 
   // add to task list
   assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
@@ -91,7 +96,8 @@ int uproc_create(task_t *proc, const char *name) {
 Context *uproc_pagefault(Event ev, Context *context) {
   // ev.ref: the failed virtual addr, 48bit unsigned long
   uintptr_t ref = (uintptr_t)ev.ref;
-  info("pagefault: %06x%06x", ref >> 24, (uint32_t)ref & ((1L << 24) - 1));
+  info("pid=%d pagefault: %06x%06x", cpu_tasks[cpu_current()]->pid, ref >> 24,
+       (uint32_t)ref & ((1L << 24) - 1));
   AddrSpace *as = &cpu_tasks[cpu_current()]->as;
   void *paddr   = pmm->pgalloc();
   // vaddr:  the start addr of that page
@@ -155,6 +161,8 @@ int sys_kputc(task_t *proc, char ch) {
 }
 
 int sys_fork(task_t *proc) {
+  info("pid=%d syscall fork", proc->pid);
+
   task_t *subproc = pmm->alloc(sizeof(task_t));
   // TODO: change subproc's name
   uproc_create(subproc, proc->name);
@@ -169,6 +177,7 @@ int sys_fork(task_t *proc) {
 
   // copy pages
   copyuvm(&subproc->as, &proc->as, proc->pmsize);
+  subproc->pmsize = proc->pmsize;
 
   return subproc->pid;
 }

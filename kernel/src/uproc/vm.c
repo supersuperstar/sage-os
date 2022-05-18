@@ -14,7 +14,8 @@
 void uproc_pgmap(AddrSpace* as, void* vaddr, void* paddr, int prot) {
   // TODO: need to record mapped pages for proc?
   uintptr_t va = (uintptr_t)vaddr;
-  info("map va:0x%06x%06x -> pa:0x%x", va >> 24, va & ((1L << 24) - 1), paddr);
+  info("AS %x map va:0x%06x%06x -> pa:0x%x", as->ptr, va >> 24,
+       va & ((1L << 24) - 1), paddr);
   // function map already has checks
   map(as, vaddr, paddr, prot);
 }
