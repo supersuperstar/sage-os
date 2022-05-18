@@ -30,6 +30,8 @@ static void os_init() {
   dev->init();
   info("device initialized");
 
+  fs->init();
+
   spin_init(&ir_lock, "ir_lock");
 
   // should create initial threads here, after call os_init()
