@@ -47,7 +47,6 @@ int allocuvm(AddrSpace* as, int newsz, int oldsz) {
 }
 
 void copyuvm(AddrSpace* dst, AddrSpace* src, int sz) {
-  protect(dst);
   intptr_t i;
   char* a;
   for (i = 0; i < sz; i += SZ_PAGE) {
