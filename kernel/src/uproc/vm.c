@@ -19,7 +19,7 @@ void uproc_pgmap(AddrSpace* as, void* vaddr, void* paddr, int prot) {
   map(as, vaddr, paddr, prot);
 }
 
-void inituvm(AddrSpace* as, char* init, int sz) {
+void inituvm(AddrSpace* as, unsigned char* init, int sz) {
   assert_msg(sz <= SZ_PAGE, "initcode size greater than 4KB");
   char* mem;
   mem = pmm->pgalloc();

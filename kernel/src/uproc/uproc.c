@@ -66,7 +66,7 @@ int uproc_create(task_t *proc, const char *name) {
   proc->context = ucontext(as, kstack, as->area.start);
 
   // init the user vm area
-  inituvm(&proc, _init, _init_len);
+  inituvm(as, _init, _init_len);
   proc->pmsize = SZ_PAGE;
 
   // add to task list
