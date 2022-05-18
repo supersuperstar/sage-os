@@ -169,7 +169,7 @@ int sys_fork(task_t *proc) {
 
   // do not copy parent's rsp0, cr3
   uintptr_t rsp0 = subproc->context->rsp0;
-  void *cr3      = subproc->context->cr3;
+  void *cr3      = subproc->context->cr3; 
   memcpy(subproc->context, proc->context, sizeof(Context));
   subproc->context->rsp0 = rsp0;
   subproc->context->cr3  = cr3;
@@ -178,6 +178,7 @@ int sys_fork(task_t *proc) {
   // copy pages
   copyuvm(&subproc->as, &proc->as, proc->pmsize);
   subproc->pmsize = proc->pmsize;
+  subproc->parent = proc;
 
   return subproc->pid;
 }
@@ -188,8 +189,42 @@ int sys_exit(task_t *proc, int status) {
 }
 
 int sys_wait(task_t *proc, int *status) {
-  panic("not implemented");
-  return 1;
+  task_t *p;
+  int havekids, pid;  
+  assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
+  
+  for(;;){
+    kmt->spin_lock(&task_list_lock);
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(p = root_task.next; p != NULL; p = p->next){
+      if(p->parent != proc)
+        continue;
+      havekids = 1;
+      if(p->state == ST_Z){
+        // Found one.
+        pid = p->pid;
+        pmm->free(p->stack);
+        unprotect(&p->as);
+        p->pid = 0;
+        p->parent = 0;
+        p->killed = 0;
+        p->state = ST_U;
+        kmt->spin_unlock(&task_list_lock);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || proc->killed){
+      kmt->spin_unlock(&task_list_lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    kmt->spin_unlock(&task_list_lock);
+    sleep(proc, 1);  //DOC: wait-sleep
+  }
 }
 
 int sys_kill(task_t *proc, int pid) {
