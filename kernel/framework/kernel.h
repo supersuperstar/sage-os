@@ -82,7 +82,7 @@ MODULE(vfs) {
 };
 
 MODULE(fs) {
-  
-}
+  void (*init)();
+};
 
 #endif

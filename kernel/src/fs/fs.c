@@ -75,7 +75,9 @@ void fs_init() {
   sb.ninodes    = NBLOCK;
   sb.inodestart = OFFSET_INODE(0) / BSIZE;
   sb.bmapstart  = OFFSET_BITMAP(0) / BSIZE;
-  sb.size       = ((OFFSET_ALLBITMAP / BSIZE) + NBLOCK) * BSIZE;
+  // WARNING: overflow here
+  // sb.size       = ((OFFSET_ALLBITMAP / BSIZE) + NBLOCK) * BSIZE;
+  sb.size = 0;
 }
 
 void fs_readinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
@@ -92,3 +94,7 @@ void fs_writeinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
   dev->ops->write(dev, OFFSET_INODE(inode_no), &(inode->type),
                   sizeof(dinode_t));
 }
+
+MODULE_DEF(fs) = {
+    .init = fs_init,
+};
