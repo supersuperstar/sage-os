@@ -41,6 +41,7 @@ struct task {
   struct task* next;
 
   AddrSpace as;
+  int pmsize;  // proc memory size
 };
 
 const char* task_states_str[MAX_TASK_STATES];

@@ -1,12 +1,13 @@
 #include <kernel.h>
 #include <syscall_defs.h>
 #include <thread.h>
+#include <vm.h>
+#include <common.h>
 
 #include "initcode.inc"
 
 void uproc_init();
 int uproc_create(task_t *proc, const char *name);
-void uproc_pgmap(task_t *proc, void *vaddr, void *paddr, int prot);
 Context *uproc_pagefault(Event ev, Context *context);
 Context *uproc_syscall(Event ev, Context *context);
 int sys_kputc(task_t *proc, char ch);
@@ -18,6 +19,8 @@ void *sys_mmap(task_t *proc, void *addr, int length, int prot, int flags);
 int sys_getpid(task_t *proc);
 int sys_sleep(task_t *proc, int seconds);
 int64_t sys_uptime(task_t *proc);
+int sys_sbrk(int n);
+int growuproc(int n);
 
 /**
  * @brief initialize uproc
@@ -62,11 +65,9 @@ int uproc_create(task_t *proc, const char *name) {
   // ucontext entry: start addr of proc
   proc->context = ucontext(as, kstack, as->area.start);
 
-  // copy init code
-  void *paddr = pmm->pgalloc();
-  void *vaddr = as->area.start;
-  memcpy(paddr, _init, _init_len);
-  uproc_pgmap(proc, vaddr, paddr, MMAP_READ | MMAP_WRITE);
+  // init the user vm area
+  inituvm(&proc, _init, _init_len);
+  proc->pmsize = SZ_PAGE;
 
   // add to task list
   assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
@@ -78,22 +79,6 @@ int uproc_create(task_t *proc, const char *name) {
   kmt->spin_unlock(&task_list_lock);
 
   return proc->pid;
-}
-
-/**
- * @brief map one physical page to one virtual page.
- *
- * @param proc PCB
- * @param vaddr virtual page addr
- * @param paddr physical page addr
- * @param prot protection bit
- */
-void uproc_pgmap(task_t *proc, void *vaddr, void *paddr, int prot) {
-  // TODO: need to record mapped pages for proc?
-  uintptr_t va = (uintptr_t)vaddr;
-  info("map va:0x%06x%06x -> pa:0x%x", va >> 24, va & ((1L << 24) - 1), paddr);
-  // function map already has checks
-  map(&proc->as, vaddr, paddr, prot);
 }
 
 /**
@@ -111,7 +96,7 @@ Context *uproc_pagefault(Event ev, Context *context) {
   void *paddr   = pmm->pgalloc();
   // vaddr:  the start addr of that page
   uintptr_t vaddr = ref & ~(as->pgsize - 1L);
-  uproc_pgmap(cpu_tasks[cpu_current()], (void *)vaddr, paddr,
+  uproc_pgmap(&cpu_tasks[cpu_current()]->as, (void *)vaddr, paddr,
               MMAP_READ | MMAP_WRITE);
   return NULL;
 }
@@ -182,7 +167,8 @@ int sys_fork(task_t *proc) {
   subproc->context->cr3  = cr3;
   subproc->context->rax  = 0;
 
-  // TODO: copy pages
+  // copy pages
+  copyuvm(&subproc->as, &proc->as, proc->pmsize);
 
   return subproc->pid;
 }
@@ -203,8 +189,7 @@ int sys_kill(task_t *proc, int pid) {
 }
 
 int sys_getpid(task_t *proc) {
-  panic("not implemented");
-  return 1;
+  return proc->pid;
 }
 
 void *sys_mmap(task_t *proc, void *addr, int length, int prot, int flags) {
@@ -220,6 +205,26 @@ int sys_sleep(task_t *proc, int seconds) {
 
 int64_t sys_uptime(task_t *proc) {
   return io_read(AM_TIMER_UPTIME).us / 1000;
+}
+int sys_sbrk(int n) {
+  int sz;
+  sz = cpu_tasks[cpu_current()]->pmsize;
+  if (growuproc(n) < 0) return -1;
+  return sz;
+}
+int growuproc(int n) {
+  int sz;
+  task_t *task = cpu_tasks[cpu_current()];
+  sz           = task->pmsize;
+  if (n > 0) {
+    sz = allocuvm(&task->as, sz, sz + n);
+    if (sz == 0) return -1;
+  } else if (n < 0) {
+    sz = deallocuvm(&task->as, sz, sz + n);
+    if (sz == 0) return -1;
+  }
+  task->pmsize = sz;
+  return 0;
 }
 
 MODULE_DEF(uproc) = {
