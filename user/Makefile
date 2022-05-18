@@ -15,7 +15,7 @@ _init: $(SRCS) ulib.h Makefile
 	$(CROSS_COMPILE)gcc $(CFLAGS) -c $(SRCS)
 	$(CROSS_COMPILE)ld $(LDFLAGS) -o $@ -e _start $(OBJS)
 	$(CROSS_COMPILE)objcopy -S -j .text* -j.rodata* -j .data* -j .bss* --set-section-flags .bss=alloc,contents -O binary $@
-	xxd -i $@ > ../kernel/src/initcode.inc
+	xxd -i $@ > ../kernel/src/uproc/initcode.inc
 
 clean:
 	rm -f *.o _*

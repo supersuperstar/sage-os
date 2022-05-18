@@ -1,5 +1,5 @@
 #include <devices.h>
-#include <vfs.h>
+#include <fs.h>
 #include <file.h>
 
 #define D "sda"
@@ -10,6 +10,7 @@ spinlock_t fslock = {.lock_flag = false, .name = "fslock", .hold_cpuid = -1};
 int fs_readblk(device_t* dev, uint32_t blk_no, block_t* buf) {
   buf->blk_no = blk_no;
   dev->ops->read(dev, OFFSET_BLOCK(blk_no), buf->data, BSIZE);
+  return 0;
 }
 
 // Write block
@@ -39,7 +40,7 @@ uint32_t fs_allocblk(device_t* dev) {
           block.data[j] |= (1 << k);        // bit is used
           dev->ops->write(dev, OFFSET_BITMAP(i), block.data, BSIZE);
           uint32_t blk_no = (i + j) * 8;
-          d_zeroblk(dev, blk_no);
+          fs_zeroblk(dev, blk_no);
           return blk_no;
         }
       }

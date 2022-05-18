@@ -4,9 +4,6 @@
 #include <list.h>
 
 #define BUDDY_MAX_ORDER 24
-#define KB              1024
-#define SZ_PAGE         (4 * KB)
-
 /**
  * @brief page metadata
  */
