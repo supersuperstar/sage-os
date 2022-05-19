@@ -184,11 +184,48 @@ int sys_fork(task_t *proc) {
 }
 
 int sys_exit(task_t *proc, int status) {
-  panic("not implemented");
+  task_t *p;
+  kmt->spin_lock(&task_list_lock);
+  for(p = root_task.next; p != NULL; p = p->next){
+    if(proc->parent == p) {
+      if (p->state == ST_S && p->wait_subproc_status != NULL)
+      {
+        p->state = ST_W;
+        *(p->wait_subproc_status) = status;
+      }
+      break;
+    }
+  }
+  kmt->spin_unlock(&task_list_lock);
+  proc->killed = 1;
   return 1;
 }
 
 int sys_wait(task_t *proc, int *status) {
+  task_t *p;
+  int havekids, pid;  
+  havekids = 0;
+  assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
+  kmt->spin_lock(&task_list_lock);
+  for(p = root_task.next; p != NULL; p = p->next){
+    if(p->parent != proc)
+      continue;
+    havekids = 1;
+  }
+  // No point waiting if we don't have any children.
+  if(!havekids || proc->killed){
+    kmt->spin_unlock(&task_list_lock);
+    return -1;
+  }
+
+  proc->wait_subproc_status = status;
+  proc->state = ST_S;
+  kmt->spin_unlock(&task_list_lock);
+
+  return 0;
+}
+
+int sys_old_wait(task_t *proc, int *status) {
   task_t *p;
   int havekids, pid;  
   assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
@@ -226,6 +263,8 @@ int sys_wait(task_t *proc, int *status) {
     sleep(proc, 1);  //DOC: wait-sleep
   }
 }
+
+
 
 int sys_kill(task_t *proc, int pid) {
   panic("not implemented");
