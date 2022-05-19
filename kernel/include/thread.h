@@ -39,7 +39,8 @@ struct task {
   char fenceB[STACK_FENCE_SIZE];  // 32 bytes fence
   Context* context;               // process user context
   struct task* next;
-  struct task* parent;
+  struct task* parent; 
+  int* wait_subproc_status;
 
   AddrSpace as;
   int pmsize;  // proc memory size
