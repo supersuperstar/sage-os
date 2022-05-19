@@ -3,6 +3,13 @@
 #include <buddy.h>
 #include <user.h>
 
+void uproc_pgmap(AddrSpace* as, void* vaddr, void* paddr, int prot);
+void uporc_pgunmap(AddrSpace* as, void* vaddr);
+void inituvm(AddrSpace* as, unsigned char* init, int sz);
+int allocuvm(AddrSpace* as, int newsz, int oldsz);
+void copyuvm(AddrSpace* dst, AddrSpace* src, int sz);
+int deallocuvm(AddrSpace* as, int newsz, int oldsz);
+
 /**
  * @brief map one physical page to one virtual page.
  *
@@ -13,11 +20,27 @@
  */
 void uproc_pgmap(AddrSpace* as, void* vaddr, void* paddr, int prot) {
   // TODO: need to record mapped pages for proc?
+  if (prot == MMAP_NONE) {
+    error("Try to unmap a vaddr in mapping function");
+    return;
+  }
   uintptr_t va = (uintptr_t)vaddr;
   info("AS %x map va:0x%06x%06x -> pa:0x%x", as->ptr, va >> 24,
        va & ((1L << 24) - 1), paddr);
   // function map already has checks
   map(as, vaddr, paddr, prot);
+}
+
+/**
+ * @brief unmap one virtual page
+ *
+ * @param as
+ * @param vaddr
+ */
+void uporc_pgunmap(AddrSpace* as, void* vaddr) {
+  uintptr_t va = (uintptr_t)vaddr;
+  info("AS %x unmap va:0x%06x%06x", as->ptr, va >> 24, va & ((1L << 24) - 1));
+  map(as, vaddr, 0, MMAP_NONE);
 }
 
 void inituvm(AddrSpace* as, unsigned char* init, int sz) {

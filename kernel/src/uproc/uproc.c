@@ -71,6 +71,13 @@ int uproc_create(task_t *proc, const char *name) {
   // ucontext entry: start addr of proc
   proc->context = ucontext(as, kstack, as->area.start);
 
+  // map stack
+  intptr_t i;
+  for (i = 0; i < STACK_SIZE; i += (as->pgsize)) {
+    uproc_pgmap(as, as->area.end - STACK_SIZE + i,
+                (void *)((intptr_t)kstack.start + i), MMAP_WRITE | MMAP_READ);
+  }
+
   // Notice: do not inituvm here, move to uproc_init
   proc->pmsize = 0;
 
@@ -170,6 +177,7 @@ int sys_fork(task_t *proc) {
   // do not copy parent's rsp0, cr3
   uintptr_t rsp0 = subproc->context->rsp0;
   void *cr3      = subproc->context->cr3;
+  // memcpy(subproc->stack, proc->stack, STACK_SIZE);
   memcpy(subproc->context, proc->context, sizeof(Context));
   subproc->context->rsp0 = rsp0;
   subproc->context->cr3  = cr3;
