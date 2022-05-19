@@ -7,10 +7,9 @@ superblock_t sb;
 spinlock_t fslock = {.lock_flag = false, .name = "fslock", .hold_cpuid = -1};
 
 // Read block
-int fs_readblk(device_t* dev, uint32_t blk_no, block_t* buf) {
+void fs_readblk(device_t* dev, uint32_t blk_no, block_t* buf) {
   buf->blk_no = blk_no;
   dev->ops->read(dev, OFFSET_BLOCK(blk_no), buf->data, BSIZE);
-  return 0;
 }
 
 // Write block
@@ -75,9 +74,8 @@ void fs_init() {
   sb.ninodes    = NBLOCK;
   sb.inodestart = OFFSET_INODE(0) / BSIZE;
   sb.bmapstart  = OFFSET_BITMAP(0) / BSIZE;
-  // WARNING: overflow here
-  // sb.size       = ((OFFSET_ALLBITMAP / BSIZE) + NBLOCK) * BSIZE;
-  sb.size = 0;
+  sb.size       = ((OFFSET_ALLBITMAP / BSIZE) + NBLOCK) * BSIZE;
+  fs_createsb(dev->lookup(D),&sb);
 }
 
 void fs_readinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
@@ -87,7 +85,6 @@ void fs_readinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
   inode->dev   = dev;
   inode->inum  = inode_no;
   inode->ref   = 0;
-  inode->valid = 0;
 }
 
 void fs_writeinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
@@ -96,5 +93,12 @@ void fs_writeinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
 }
 
 MODULE_DEF(fs) = {
-    .init = fs_init,
+  .init=fs_init,
+  .readblk=fs_readblk,
+  .writeblk=fs_writeblk,
+  .zeroblk=fs_zeroblk,
+  .allocblk=fs_allocblk,
+  .freeblk=fs_freeblk,
+  .readinode=fs_readinode,
+  .writeinode=fs_writeinode
 };
