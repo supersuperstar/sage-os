@@ -230,8 +230,8 @@ Context *kmt_schedule(Event ev, Context *context) {
     // TODO: more checks here
     kmt_set_task(tp);
 
-    success("schedule: run next pid=%d, name=%s, count=%d, event=%d %s",
-            tp->pid, tp->name, tp->count, ev.event, ev.msg);
+    // success("schedule: run next pid=%d, name=%s, count=%d, event=%d %s",
+    //         tp->pid, tp->name, tp->count, ev.event, ev.msg);
   } else {
     // if no task to run
     warn("schedule: no task to run");
