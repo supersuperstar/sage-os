@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <syscall_defs.h>
+#include <syscalls.h>
 #include <thread.h>
 #include <vm.h>
 #include <common.h>
@@ -10,16 +11,6 @@ void uproc_init();
 int uproc_create(task_t *proc, const char *name);
 Context *uproc_pagefault(Event ev, Context *context);
 Context *uproc_syscall(Event ev, Context *context);
-int sys_kputc(task_t *proc, char ch);
-int sys_fork(task_t *proc);
-int sys_wait(task_t *proc, int *status);
-int sys_exit(task_t *proc, int status);
-int sys_kill(task_t *proc, int pid);
-void *sys_mmap(task_t *proc, void *addr, int length, int prot, int flags);
-int sys_getpid(task_t *proc);
-int sys_sleep(task_t *proc, int seconds);
-int64_t sys_uptime(task_t *proc);
-int sys_sbrk(int n);
 int growuproc(int n);
 
 /**
@@ -35,7 +26,6 @@ void uproc_init() {
   inituvm(&initproc->as, _init, _init_len);
   initproc->pmsize = SZ_PAGE;
 
-  os->on_irq(0, EVENT_SYSCALL, uproc_syscall);
   os->on_irq(0, EVENT_PAGEFAULT, uproc_pagefault);
 }
 
@@ -107,54 +97,6 @@ Context *uproc_pagefault(Event ev, Context *context) {
   return NULL;
 }
 
-/**
- * @brief EVENT_SYSCALL handler on trap
- *
- * @param ev
- * @param context
- * @return Context*
- */
-Context *uproc_syscall(Event ev, Context *context) {
-  task_t *proc     = cpu_tasks[cpu_current()];
-  uint64_t args[4] = {context->rdi, context->rsi, context->rdx, context->rcx};
-  uint64_t retval  = 0;
-  int sys_id       = context->rax;
-  switch (sys_id) {
-    case SYS_kputc:
-      retval = sys_kputc(proc, args[0]);
-      break;
-    case SYS_fork:
-      retval = sys_fork(proc);
-      break;
-    case SYS_exit:
-      retval = sys_exit(proc, args[0]);
-      break;
-    case SYS_wait:
-      retval = sys_wait(proc, (int *)args[0]);
-      break;
-    case SYS_kill:
-      retval = sys_kill(proc, args[0]);
-      break;
-    case SYS_getpid:
-      retval = sys_getpid(proc);
-      break;
-    case SYS_mmap:
-      sys_mmap(proc, (void *)args[0], args[1], args[2], args[3]);
-      break;
-    case SYS_sleep:
-      retval = sys_sleep(proc, args[0]);
-      break;
-    case SYS_uptime:
-      retval = sys_uptime(proc);
-      break;
-    default:
-      assert_msg(false, "syscall not implemented: %d", sys_id);
-      break;
-  }
-  if (sys_id != SYS_mmap) context->rax = retval;
-  return NULL;
-}
-
 int sys_kputc(task_t *proc, char ch) {
   putch(ch);
   return 0;
@@ -169,7 +111,7 @@ int sys_fork(task_t *proc) {
 
   // do not copy parent's rsp0, cr3
   uintptr_t rsp0 = subproc->context->rsp0;
-  void *cr3      = subproc->context->cr3; 
+  void *cr3      = subproc->context->cr3;
   memcpy(subproc->context, proc->context, sizeof(Context));
   subproc->context->rsp0 = rsp0;
   subproc->context->cr3  = cr3;
@@ -225,47 +167,6 @@ int sys_wait(task_t *proc, int *status) {
   return 0;
 }
 
-int sys_old_wait(task_t *proc, int *status) {
-  task_t *p;
-  int havekids, pid;  
-  assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
-  
-  for(;;){
-    kmt->spin_lock(&task_list_lock);
-    // Scan through table looking for exited children.
-    havekids = 0;
-    for(p = root_task.next; p != NULL; p = p->next){
-      if(p->parent != proc)
-        continue;
-      havekids = 1;
-      if(p->state == ST_Z){
-        // Found one.
-        pid = p->pid;
-        pmm->free(p->stack);
-        unprotect(&p->as);
-        p->pid = 0;
-        p->parent = 0;
-        p->killed = 0;
-        p->state = ST_U;
-        kmt->spin_unlock(&task_list_lock);
-        return pid;
-      }
-    }
-
-    // No point waiting if we don't have any children.
-    if(!havekids || proc->killed){
-      kmt->spin_unlock(&task_list_lock);
-      return -1;
-    }
-
-    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    kmt->spin_unlock(&task_list_lock);
-    sleep(proc, 1);  //DOC: wait-sleep
-  }
-}
-
-
-
 int sys_kill(task_t *proc, int pid) {
   panic("not implemented");
   return 1;
@@ -289,12 +190,7 @@ int sys_sleep(task_t *proc, int seconds) {
 int64_t sys_uptime(task_t *proc) {
   return io_read(AM_TIMER_UPTIME).us / 1000;
 }
-int sys_sbrk(int n) {
-  int sz;
-  sz = cpu_tasks[cpu_current()]->pmsize;
-  if (growuproc(n) < 0) return -1;
-  return sz;
-}
+
 int growuproc(int n) {
   int sz;
   task_t *task = cpu_tasks[cpu_current()];
@@ -308,6 +204,13 @@ int growuproc(int n) {
   }
   task->pmsize = sz;
   return 0;
+}
+
+int sys_sbrk(int n) {
+  int sz;
+  sz = cpu_tasks[cpu_current()]->pmsize;
+  if (growuproc(n) < 0) return -1;
+  return sz;
 }
 
 MODULE_DEF(uproc) = {
