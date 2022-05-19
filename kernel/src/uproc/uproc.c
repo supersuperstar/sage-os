@@ -71,12 +71,13 @@ int uproc_create(task_t *proc, const char *name) {
   // ucontext entry: start addr of proc
   proc->context = ucontext(as, kstack, as->area.start);
 
-  // map stack
-  intptr_t i;
-  for (i = 0; i < STACK_SIZE; i += (as->pgsize)) {
-    uproc_pgmap(as, as->area.end - STACK_SIZE + i,
-                (void *)((intptr_t)kstack.start + i), MMAP_WRITE | MMAP_READ);
-  }
+  // // map stack
+  // intptr_t i;
+  // for (i = 0; i < STACK_SIZE; i += (as->pgsize)) {
+  //   uproc_pgmap(as, as->area.end - STACK_SIZE + i,
+  //               (void *)((intptr_t)kstack.start + i), MMAP_WRITE |
+  //               MMAP_READ);
+  // }
 
   // Notice: do not inituvm here, move to uproc_init
   proc->pmsize = 0;
@@ -126,6 +127,7 @@ Context *uproc_syscall(Event ev, Context *context) {
   uint64_t args[4] = {context->rdi, context->rsi, context->rdx, context->rcx};
   uint64_t retval  = 0;
   int sys_id       = context->rax;
+  info("syscall eax: %d", sys_id);
   switch (sys_id) {
     case SYS_kputc:
       retval = sys_kputc(proc, args[0]);
