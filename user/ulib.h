@@ -57,3 +57,43 @@ static inline int sleep(int seconds) {
 static inline int64_t uptime() {
   return syscall(SYS_uptime, 0, 0, 0, 0);
 }
+
+static inline int open(const char *pathname, int flags) {
+  return syscall(SYS_open, (uint64_t)pathname, flags, 0, 0);
+}
+
+static inline int close(int fd) {
+  return syscall(SYS_close, fd, 0, 0, 0);
+}
+
+static inline int read(int fd, void *buf, size_t nbyte) {
+  return syscall(SYS_read, fd, (uint64_t)buf, nbyte, 0);
+}
+
+static inline int write(int fd, void *buf, size_t nbyte) {
+  return syscall(SYS_write, fd, (uint64_t)buf, nbyte, 0);
+}
+
+static inline int link(const char *oldpath, const char *newpath) {
+  return syscall(SYS_link, (uint64_t)oldpath, (uint64_t)newpath, 0, 0);
+}
+
+static inline int unlink(const char *pathname) {
+  return syscall(SYS_unlink, (uint64_t)pathname, 0, 0, 0);
+}
+
+static inline int fstat(int fd, struct ufs_stat *buf) {
+  return syscall(SYS_fstat, fd, (uint64_t)buf, 0, 0);
+}
+
+static inline int mkdir(const char *pathname) {
+  return syscall(SYS_mkdir, (uint64_t)pathname, 0, 0, 0);
+}
+
+static inline int chdir(const char *path) {
+  return syscall(SYS_chdir, (uint64_t)path, 0, 0, 0);
+}
+
+static inline int dup(int fd) {
+  return syscall(SYS_dup, fd, 0, 0, 0);
+}

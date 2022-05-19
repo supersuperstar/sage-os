@@ -19,10 +19,5 @@ int main() {
     sleep(1);
     kputstr("this is a subproc\n");
   }
-  // while (1) {
-  //   print_time();
-  //   kputstr(" hello from initcode!\n");
-  //   sleep(1);
-  // }
   return 0;
 }

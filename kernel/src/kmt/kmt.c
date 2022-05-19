@@ -2,6 +2,7 @@
 #include <sem.h>
 #include <spinlock.h>
 #include <thread.h>
+#include <syscalls.h>
 
 task_t *kmt_get_task();
 void kmt_set_task(task_t *task);
@@ -81,6 +82,7 @@ void kmt_init() {
   os->on_irq(0, EVENT_ERROR, kmt_error);
   os->on_irq(0, EVENT_IRQ_TIMER, kmt_timer);
   os->on_irq(0, EVENT_YIELD, kmt_yield);
+  os->on_irq(0, EVENT_SYSCALL, syscall_handler);
   os->on_irq(INT32_MAX, EVENT_NULL, kmt_schedule);
 }
 
