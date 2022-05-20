@@ -4,6 +4,7 @@
 #include <thread.h>
 #include <vm.h>
 #include <common.h>
+#include <list.h>
 
 #include "initcode.inc"
 
@@ -23,7 +24,7 @@ void uproc_init() {
   uproc_create(initproc, "initcode");
 
   // init the user vm area
-  inituvm(&initproc->as, _init, _init_len);
+  inituvm(initproc, _init, _init_len);
   initproc->pmsize = SZ_PAGE;
 
   os->on_irq(0, EVENT_PAGEFAULT, uproc_pagefault);
@@ -57,9 +58,18 @@ int uproc_create(task_t *proc, const char *name) {
                  (void *)proc->stack + sizeof(proc->stack)};
   protect(&proc->as);
   AddrSpace *as = &proc->as;
+  INIT_LIST_HEAD(&proc->pg_map);
 
   // ucontext entry: start addr of proc
   proc->context = ucontext(as, kstack, as->area.start);
+
+  // // map stack
+  // intptr_t i;
+  // for (i = 0; i < STACK_SIZE; i += (as->pgsize)) {
+  //   uproc_pgmap(as, as->area.end - STACK_SIZE + i,
+  //               (void *)((intptr_t)kstack.start + i), MMAP_WRITE |
+  //               MMAP_READ);
+  // }
 
   // Notice: do not inituvm here, move to uproc_init
   proc->pmsize = 0;
@@ -92,7 +102,7 @@ Context *uproc_pagefault(Event ev, Context *context) {
   void *paddr   = pmm->pgalloc();
   // vaddr:  the start addr of that page
   uintptr_t vaddr = ref & ~(as->pgsize - 1L);
-  uproc_pgmap(&cpu_tasks[cpu_current()]->as, (void *)vaddr, paddr,
+  uproc_pgmap(cpu_tasks[cpu_current()], (void *)vaddr, paddr,
               MMAP_READ | MMAP_WRITE);
   return NULL;
 }
@@ -112,13 +122,14 @@ int sys_fork(task_t *proc) {
   // do not copy parent's rsp0, cr3
   uintptr_t rsp0 = subproc->context->rsp0;
   void *cr3      = subproc->context->cr3;
+  // memcpy(subproc->stack, proc->stack, STACK_SIZE);
   memcpy(subproc->context, proc->context, sizeof(Context));
   subproc->context->rsp0 = rsp0;
   subproc->context->cr3  = cr3;
   subproc->context->rax  = 0;
 
   // copy pages
-  copyuvm(&subproc->as, &proc->as, proc->pmsize);
+  copyuvm(subproc, proc, proc->pmsize);
   subproc->pmsize = proc->pmsize;
   subproc->parent = proc;
 
@@ -128,11 +139,10 @@ int sys_fork(task_t *proc) {
 int sys_exit(task_t *proc, int status) {
   task_t *p;
   kmt->spin_lock(&task_list_lock);
-  for(p = root_task.next; p != NULL; p = p->next){
-    if(proc->parent == p) {
-      if (p->state == ST_S && p->wait_subproc_status != NULL)
-      {
-        p->state = ST_W;
+  for (p = root_task.next; p != NULL; p = p->next) {
+    if (proc->parent == p) {
+      if (p->state == ST_S && p->wait_subproc_status != NULL) {
+        p->state                  = ST_W;
         *(p->wait_subproc_status) = status;
       }
       break;
@@ -145,23 +155,22 @@ int sys_exit(task_t *proc, int status) {
 
 int sys_wait(task_t *proc, int *status) {
   task_t *p;
-  int havekids, pid;  
+  int havekids, pid;
   havekids = 0;
   assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
   kmt->spin_lock(&task_list_lock);
-  for(p = root_task.next; p != NULL; p = p->next){
-    if(p->parent != proc)
-      continue;
+  for (p = root_task.next; p != NULL; p = p->next) {
+    if (p->parent != proc) continue;
     havekids = 1;
   }
   // No point waiting if we don't have any children.
-  if(!havekids || proc->killed){
+  if (!havekids || proc->killed) {
     kmt->spin_unlock(&task_list_lock);
     return -1;
   }
 
   proc->wait_subproc_status = status;
-  proc->state = ST_S;
+  proc->state               = ST_S;
   kmt->spin_unlock(&task_list_lock);
 
   return 0;
@@ -196,10 +205,10 @@ int growuproc(int n) {
   task_t *task = cpu_tasks[cpu_current()];
   sz           = task->pmsize;
   if (n > 0) {
-    sz = allocuvm(&task->as, sz, sz + n);
+    sz = allocuvm(task, sz, sz + n);
     if (sz == 0) return -1;
   } else if (n < 0) {
-    sz = deallocuvm(&task->as, sz, sz + n);
+    sz = deallocuvm(task, sz, sz + n);
     if (sz == 0) return -1;
   }
   task->pmsize = sz;

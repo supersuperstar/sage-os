@@ -13,6 +13,8 @@
 
 #define MAX_TASK_STATES 8
 
+#define MAX_MAP_NUM 64
+
 enum task_states {
   ST_U,  // Unused
   ST_E,  // Embryo
@@ -23,6 +25,14 @@ enum task_states {
   ST_Z,  // Zombie
   ST_X   // Special
 };
+
+struct mapnode {
+  void *va, *pa;
+
+  struct list_head list;
+};
+
+typedef struct mapnode mapnode_t;
 
 struct task {
   uint32_t pid;                   // process id
@@ -44,6 +54,7 @@ struct task {
 
   AddrSpace as;
   int pmsize;  // proc memory size
+  struct list_head pg_map;
 };
 
 const char* task_states_str[MAX_TASK_STATES];
