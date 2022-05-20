@@ -75,16 +75,16 @@ void fs_init() {
   sb.inodestart = OFFSET_INODE(0) / BSIZE;
   sb.bmapstart  = OFFSET_BITMAP(0) / BSIZE;
   sb.size       = ((OFFSET_ALLBITMAP / BSIZE) + NBLOCK) * BSIZE;
-  fs_createsb(dev->lookup(D),&sb);
+  fs_createsb(dev->lookup(D), &sb);
 }
 
 void fs_readinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
   dinode_t dinode;
   dev->ops->read(dev, OFFSET_INODE(inode_no), &dinode, sizeof(dinode_t));
   memcpy(&inode->type, &dinode, sizeof(dinode_t));
-  inode->dev   = dev;
-  inode->inum  = inode_no;
-  inode->ref   = 0;
+  inode->dev  = dev;
+  inode->inum = inode_no;
+  inode->ref  = 0;
 }
 
 void fs_writeinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
@@ -92,13 +92,11 @@ void fs_writeinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
                   sizeof(dinode_t));
 }
 
-MODULE_DEF(fs) = {
-  .init=fs_init,
-  .readblk=fs_readblk,
-  .writeblk=fs_writeblk,
-  .zeroblk=fs_zeroblk,
-  .allocblk=fs_allocblk,
-  .freeblk=fs_freeblk,
-  .readinode=fs_readinode,
-  .writeinode=fs_writeinode
-};
+MODULE_DEF(fs) = {.init       = fs_init,
+                  .readblk    = fs_readblk,
+                  .writeblk   = fs_writeblk,
+                  .zeroblk    = fs_zeroblk,
+                  .allocblk   = fs_allocblk,
+                  .freeblk    = fs_freeblk,
+                  .readinode  = fs_readinode,
+                  .writeinode = fs_writeinode};
