@@ -142,8 +142,9 @@ int sys_exit(task_t *proc, int status) {
   for (p = root_task.next; p != NULL; p = p->next) {
     if (proc->parent == p) {
       if (p->state == ST_S && p->wait_subproc_status != NULL) {
-        p->state                  = ST_W;
-        *(p->wait_subproc_status) = status;
+        p->state = ST_W;
+        // ERROR: cannot assign value crossing vm
+        // *(p->wait_subproc_status) = status;
       }
       break;
     }
@@ -154,10 +155,11 @@ int sys_exit(task_t *proc, int status) {
 }
 
 int sys_wait(task_t *proc, int *status) {
-  task_t *p;
-  int havekids, pid;
-  havekids = 0;
+  assert_msg(status != NULL, "NULL pointer status in sys_wait");
+
+  int havekids = 0;
   assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
+  task_t *p;
   kmt->spin_lock(&task_list_lock);
   for (p = root_task.next; p != NULL; p = p->next) {
     if (p->parent != proc) continue;

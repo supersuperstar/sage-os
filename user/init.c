@@ -10,16 +10,16 @@ void print_time() {
 
 int main() {
   // test fork
-  int pid = fork();
-  if (pid != 0) {
-    kputstr("this is a proc!!!\n");
-    while (1)
-      sleep(0);
-  } else {
-    sleep(1);
-    kputstr("this is a subproc\n");
-    // while (1)
-    //   sleep(0);
+  int pid;
+  for (int i = 0; i < 2; i++) {
+    kputstr("main for loop\n");
+    if ((pid = fork()) != 0) {
+      sleep(1);
+    } else {
+      kputstr("subproc!\n");
+    }
   }
+  while (1)
+    sleep(1000);
   return 0;
 }

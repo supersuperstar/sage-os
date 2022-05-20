@@ -109,6 +109,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
   task->wait_sem = NULL;
   task->killed   = 0;
   task->next     = NULL;
+  task->as.ptr   = NULL;
 
   memset(task->fenceA, FILL_FENCE, sizeof(task->fenceA));
   memset(task->stack, FILL_STACK, sizeof(task->stack));
@@ -205,6 +206,10 @@ Context *kmt_schedule(Event ev, Context *context) {
     while (tp->next != cur)
       tp = tp->next;
     tp->next = cur->next;
+    if (cur->as.ptr != NULL) {
+      unprotect(&cur->as);
+      // TODO: free uvm
+    }
     pmm->free(cur);
   }
 
