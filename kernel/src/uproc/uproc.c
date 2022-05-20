@@ -107,58 +107,6 @@ Context *uproc_pagefault(Event ev, Context *context) {
   return NULL;
 }
 
-<<<<<<< HEAD
-/**
- * @brief EVENT_SYSCALL handler on trap
- *
- * @param ev
- * @param context
- * @return Context*
- */
-Context *uproc_syscall(Event ev, Context *context) {
-  task_t *proc     = cpu_tasks[cpu_current()];
-  uint64_t args[4] = {context->rdi, context->rsi, context->rdx, context->rcx};
-  uint64_t retval  = 0;
-  int sys_id       = context->rax;
-  // info("syscall eax: %d", sys_id);
-  switch (sys_id) {
-    case SYS_kputc:
-      retval = sys_kputc(proc, args[0]);
-      break;
-    case SYS_fork:
-      retval = sys_fork(proc);
-      break;
-    case SYS_exit:
-      retval = sys_exit(proc, args[0]);
-      break;
-    case SYS_wait:
-      retval = sys_wait(proc, (int *)args[0]);
-      break;
-    case SYS_kill:
-      retval = sys_kill(proc, args[0]);
-      break;
-    case SYS_getpid:
-      retval = sys_getpid(proc);
-      break;
-    case SYS_mmap:
-      sys_mmap(proc, (void *)args[0], args[1], args[2], args[3]);
-      break;
-    case SYS_sleep:
-      retval = sys_sleep(proc, args[0]);
-      break;
-    case SYS_uptime:
-      retval = sys_uptime(proc);
-      break;
-    default:
-      assert_msg(false, "syscall not implemented: %d", sys_id);
-      break;
-  }
-  if (sys_id != SYS_mmap) context->rax = retval;
-  return NULL;
-}
-
-=======
->>>>>>> 60d7521fe564535efbb0a1286e23897ff64e7a91
 int sys_kputc(task_t *proc, char ch) {
   putch(ch);
   return 0;
@@ -191,11 +139,10 @@ int sys_fork(task_t *proc) {
 int sys_exit(task_t *proc, int status) {
   task_t *p;
   kmt->spin_lock(&task_list_lock);
-  for(p = root_task.next; p != NULL; p = p->next){
-    if(proc->parent == p) {
-      if (p->state == ST_S && p->wait_subproc_status != NULL)
-      {
-        p->state = ST_W;
+  for (p = root_task.next; p != NULL; p = p->next) {
+    if (proc->parent == p) {
+      if (p->state == ST_S && p->wait_subproc_status != NULL) {
+        p->state                  = ST_W;
         *(p->wait_subproc_status) = status;
       }
       break;
@@ -208,23 +155,22 @@ int sys_exit(task_t *proc, int status) {
 
 int sys_wait(task_t *proc, int *status) {
   task_t *p;
-  int havekids, pid;  
+  int havekids, pid;
   havekids = 0;
   assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
   kmt->spin_lock(&task_list_lock);
-  for(p = root_task.next; p != NULL; p = p->next){
-    if(p->parent != proc)
-      continue;
+  for (p = root_task.next; p != NULL; p = p->next) {
+    if (p->parent != proc) continue;
     havekids = 1;
   }
   // No point waiting if we don't have any children.
-  if(!havekids || proc->killed){
+  if (!havekids || proc->killed) {
     kmt->spin_unlock(&task_list_lock);
     return -1;
   }
 
   proc->wait_subproc_status = status;
-  proc->state = ST_S;
+  proc->state               = ST_S;
   kmt->spin_unlock(&task_list_lock);
 
   return 0;
