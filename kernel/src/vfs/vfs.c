@@ -3,9 +3,18 @@
 #include <syscall_defs.h>
 #include <syscalls.h>
 #include <thread.h>
+#include <fs.h>
+#include <file.h>
+
+inode_t *itable;
 
 void vfs_init() {
-  info("vfs initialized");
+  int i;
+  itable = pmm->alloc(sizeof(inode_t) * NBLOCK);
+  // read all inode into memory
+  for (i = 0; i < NBLOCK; i++) {
+    fs->readinode(dev->lookup("sda"), i, itable + i);
+  }
 }
 
 int sys_open(task_t *proc, const char *pathname, int flags) {
@@ -58,6 +67,15 @@ int sys_dup(task_t *proc, int fd) {
   return 1;
 }
 
-MODULE_DEF(vfs) = {
-    .init = vfs_init,
-};
+MODULE_DEF(vfs) = {.init   = vfs_init,
+                   .write  = write,
+                   .read   = read,
+                   .close  = close,
+                   .open   = open,
+                   .lseek  = lseek,
+                   .link   = link,
+                   .unlink = unlink,
+                   .fstat  = fstat,
+                   .mkdir  = mkdir,
+                   .chdir  = chdir,
+                   .dup    = dup};

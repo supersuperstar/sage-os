@@ -81,8 +81,18 @@ MODULE(vfs) {
   int (*dup)(int fd);
 };
 
+
+typedef struct inode inode_t;
+typedef struct block block_t;
 MODULE(fs) {
   void (*init)();
+  void (*readblk)(device_t* dev, uint32_t blk_no, block_t* buf);
+  void (*writeblk)(device_t* dev, uint32_t blk_no, block_t* buf);
+  void (*zeroblk)(device_t* dev, uint32_t blk_no);
+  uint32_t (*allocblk)(device_t* dev);
+  void (*freeblk)(device_t* dev, uint32_t blk_no);
+  void (*readinode)(device_t* dev, uint32_t inode_no, inode_t* inode);
+  void (*writeinode)(device_t* dev, uint32_t inode_no, inode_t* inode);
 };
 
 #endif
