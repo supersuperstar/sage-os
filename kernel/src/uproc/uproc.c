@@ -3,6 +3,7 @@
 #include <thread.h>
 #include <vm.h>
 #include <common.h>
+#include <list.h>
 
 #include "initcode.inc"
 
@@ -32,7 +33,7 @@ void uproc_init() {
   uproc_create(initproc, "initcode");
 
   // init the user vm area
-  inituvm(&initproc->as, _init, _init_len);
+  inituvm(initproc, _init, _init_len);
   initproc->pmsize = SZ_PAGE;
 
   os->on_irq(0, EVENT_SYSCALL, uproc_syscall);
@@ -67,6 +68,7 @@ int uproc_create(task_t *proc, const char *name) {
                  (void *)proc->stack + sizeof(proc->stack)};
   protect(&proc->as);
   AddrSpace *as = &proc->as;
+  INIT_LIST_HEAD(&proc->pg_map);
 
   // ucontext entry: start addr of proc
   proc->context = ucontext(as, kstack, as->area.start);
@@ -110,7 +112,7 @@ Context *uproc_pagefault(Event ev, Context *context) {
   void *paddr   = pmm->pgalloc();
   // vaddr:  the start addr of that page
   uintptr_t vaddr = ref & ~(as->pgsize - 1L);
-  uproc_pgmap(&cpu_tasks[cpu_current()]->as, (void *)vaddr, paddr,
+  uproc_pgmap(cpu_tasks[cpu_current()], (void *)vaddr, paddr,
               MMAP_READ | MMAP_WRITE);
   return NULL;
 }
@@ -127,7 +129,7 @@ Context *uproc_syscall(Event ev, Context *context) {
   uint64_t args[4] = {context->rdi, context->rsi, context->rdx, context->rcx};
   uint64_t retval  = 0;
   int sys_id       = context->rax;
-  info("syscall eax: %d", sys_id);
+  // info("syscall eax: %d", sys_id);
   switch (sys_id) {
     case SYS_kputc:
       retval = sys_kputc(proc, args[0]);
@@ -186,7 +188,7 @@ int sys_fork(task_t *proc) {
   subproc->context->rax  = 0;
 
   // copy pages
-  copyuvm(&subproc->as, &proc->as, proc->pmsize);
+  copyuvm(subproc, proc, proc->pmsize);
   subproc->pmsize = proc->pmsize;
 
   return subproc->pid;
@@ -236,10 +238,10 @@ int growuproc(int n) {
   task_t *task = cpu_tasks[cpu_current()];
   sz           = task->pmsize;
   if (n > 0) {
-    sz = allocuvm(&task->as, sz, sz + n);
+    sz = allocuvm(task, sz, sz + n);
     if (sz == 0) return -1;
   } else if (n < 0) {
-    sz = deallocuvm(&task->as, sz, sz + n);
+    sz = deallocuvm(task, sz, sz + n);
     if (sz == 0) return -1;
   }
   task->pmsize = sz;

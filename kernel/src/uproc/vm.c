@@ -3,12 +3,12 @@
 #include <buddy.h>
 #include <user.h>
 
-void uproc_pgmap(AddrSpace* as, void* vaddr, void* paddr, int prot);
-void uporc_pgunmap(AddrSpace* as, void* vaddr);
-void inituvm(AddrSpace* as, unsigned char* init, int sz);
-int allocuvm(AddrSpace* as, int newsz, int oldsz);
-void copyuvm(AddrSpace* dst, AddrSpace* src, int sz);
-int deallocuvm(AddrSpace* as, int newsz, int oldsz);
+void uproc_pgmap(task_t* proc, void* vaddr, void* paddr, int prot);
+void uporc_pgunmap(task_t* proc, void* vaddr);
+void inituvm(task_t* proc, unsigned char* init, int sz);
+int allocuvm(task_t* proc, int newsz, int oldsz);
+void copyuvm(task_t* proc, task_t* src, int sz);
+int deallocuvm(task_t* proc, int newsz, int oldsz);
 
 /**
  * @brief map one physical page to one virtual page.
@@ -18,13 +18,24 @@ int deallocuvm(AddrSpace* as, int newsz, int oldsz);
  * @param paddr physical page addr
  * @param prot protection bit
  */
-void uproc_pgmap(AddrSpace* as, void* vaddr, void* paddr, int prot) {
-  // TODO: need to record mapped pages for proc?
+void uproc_pgmap(task_t* proc, void* vaddr, void* paddr, int prot) {
   if (prot == MMAP_NONE) {
     error("Try to unmap a vaddr in mapping function");
     return;
   }
-  uintptr_t va = (uintptr_t)vaddr;
+  uintptr_t va   = (uintptr_t)vaddr;
+  mapnode_t* pos = NULL;
+  list_for_each_entry(pos, &proc->pg_map, list) {
+    if ((intptr_t)pos->va == va) {
+      error("try to map mapping va");
+    }
+  }
+  // need to introduce slab system, otherwise the waste of space is huge.
+  mapnode_t* node = pmm->alloc(sizeof(mapnode_t));
+  node->pa        = paddr;
+  node->va        = vaddr;
+  list_add(&node->list, &proc->pg_map);
+  AddrSpace* as = &proc->as;
   info("AS %x map va:0x%06x%06x -> pa:0x%x", as->ptr, va >> 24,
        va & ((1L << 24) - 1), paddr);
   // function map already has checks
@@ -37,22 +48,36 @@ void uproc_pgmap(AddrSpace* as, void* vaddr, void* paddr, int prot) {
  * @param as
  * @param vaddr
  */
-void uporc_pgunmap(AddrSpace* as, void* vaddr) {
-  uintptr_t va = (uintptr_t)vaddr;
+void uporc_pgunmap(task_t* proc, void* vaddr) {
+  uintptr_t va   = (uintptr_t)vaddr;
+  mapnode_t* pos = NULL;
+  int flag       = 0;
+  list_for_each_entry(pos, &proc->pg_map, list) {
+    if ((intptr_t)pos->va == (intptr_t)vaddr) {
+      flag = 1;
+      break;
+    }
+  }
+  if (!flag) {
+    panic("try to unmap a empty page frame");
+  }
+  AddrSpace* as = &proc->as;
   info("AS %x unmap va:0x%06x%06x", as->ptr, va >> 24, va & ((1L << 24) - 1));
   map(as, vaddr, 0, MMAP_NONE);
 }
 
-void inituvm(AddrSpace* as, unsigned char* init, int sz) {
+void inituvm(task_t* proc, unsigned char* init, int sz) {
+  AddrSpace* as = &proc->as;
   assert_msg(sz <= SZ_PAGE, "initcode size greater than 4KB");
   char* mem;
   mem = pmm->pgalloc();
   memset(mem, 0, sizeof(mem));
   memcpy(mem, init, sz);
-  uproc_pgmap(as, as->area.start, mem, MMAP_READ | MMAP_WRITE);
+  uproc_pgmap(proc, as->area.start, mem, MMAP_READ | MMAP_WRITE);
 }
 
-int allocuvm(AddrSpace* as, int newsz, int oldsz) {
+int allocuvm(task_t* proc, int newsz, int oldsz) {
+  // AddrSpace* as = &proc->as;
   assert(newsz >= oldsz);
 
   uintptr_t a = ROUNDUP(oldsz, SZ_PAGE);
@@ -60,27 +85,27 @@ int allocuvm(AddrSpace* as, int newsz, int oldsz) {
   for (; a < newsz; a += SZ_PAGE) {
     mem = pmm->pgalloc();
     if (mem == 0) {
-      // ERROR
-      // TODO:
+      panic("memory overflowed");
     }
     memset(mem, 0, SZ_PAGE);
-    uproc_pgmap(as, (void*)a, mem, MMAP_READ | MMAP_WRITE);
+    uproc_pgmap(proc, (void*)a, mem, MMAP_READ | MMAP_WRITE);
   }
   return newsz;
 }
 
-void copyuvm(AddrSpace* dst, AddrSpace* src, int sz) {
-  intptr_t i;
+void copyuvm(task_t* proc, task_t* src, int sz) {
+  // intptr_t i;
   char* a;
-  for (i = 0; i < sz; i += SZ_PAGE) {
+  mapnode_t* pos = NULL;
+  list_for_each_entry(pos, &src->pg_map, list) {
     a = pmm->pgalloc();
-    memcpy(a, (char*)(dst->area.start + i), SZ_PAGE);
-    uproc_pgmap(dst, (void*)(dst->area.start + i), a,
+    memcpy(a, (char*)pos->pa, SZ_PAGE);
+    uproc_pgmap(proc, pos->va, a,
                 MMAP_READ | MMAP_WRITE);  // only read & write
   }
 }
 
-int deallocuvm(AddrSpace* as, int newsz, int oldsz) {
+int deallocuvm(task_t* proc, int newsz, int oldsz) {
   assert(newsz <= oldsz);
   panic("not implemented");
 }

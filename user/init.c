@@ -18,9 +18,8 @@ int main() {
   } else {
     sleep(1);
     kputstr("this is a subproc\n");
-    exit(0);
     // while (1)
     //   sleep(0);
   }
-  return 1;
+  return 0;
 }
