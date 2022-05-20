@@ -3,9 +3,18 @@
 #include <syscall_defs.h>
 #include <syscalls.h>
 #include <thread.h>
+#include <fs.h>
+#include <file.h>
+
+inode_t *itable;
 
 void vfs_init() {
-  info("vfs initialized");
+  int i;
+  itable = pmm->alloc(sizeof(inode_t) * NBLOCK);
+  // read all inode into memory
+  for (i = 0; i < NBLOCK; i++) {
+    fs->readinode(dev->lookup("sda"), i, itable + i);
+  }
 }
 
 int sys_open(task_t *proc, const char *pathname, int flags) {
@@ -38,7 +47,7 @@ int sys_unlink(task_t *proc, const char *pathname) {
   return 1;
 }
 
-int sys_fstat(task_t *proc, int fd, struct ufs_stat *buf) {
+int sys_fstat(task_t *proc, int fd, stat_t *buf) {
   assert_msg(false, "sys_fstat not implemented");
   return 1;
 }
@@ -58,6 +67,14 @@ int sys_dup(task_t *proc, int fd) {
   return 1;
 }
 
-MODULE_DEF(vfs) = {
-    .init = vfs_init,
-};
+MODULE_DEF(vfs) = {.init   = vfs_init,
+                   .write  = sys_write,
+                   .read   = sys_read,
+                   .close  = sys_close,
+                   .open   = sys_open,
+                   .link   = sys_link,
+                   .unlink = sys_unlink,
+                   .fstat  = sys_fstat,
+                   .mkdir  = sys_mkdir,
+                   .chdir  = sys_chdir,
+                   .dup    = sys_dup};
