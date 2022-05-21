@@ -3,52 +3,74 @@
 
 filetable_t ftable;
 
+// fd 0,1,2is used,so in processes' fdtable,value start from 3
+// but in ftable it start from 0,so FILE(fd) need to minus 3
+#define FILE(fd) (ftable.files + fd - 3)
+
 void file_init() {
   spin_init(&ftable.lock, "ftable_lock");
 }
 
-file_t* file_alloc() {
+// alloc a available fd
+int file_alloc() {
   file_t* f;
+  // 0 1 2 used,so start from 3
+  int fd = 3;
   spin_lock(&ftable.lock);
   for (f = ftable.files; f < ftable.files + FILE_TABLE_SIZE; f++) {
+    // ref is 0 means no process hold this fd,can be reused.
     if (f->ref == 0) {
-      f->ref = 1;
+      f->ref  = 1;
+      f->off  = 0;
+      f->type = FD_INODE;
       spin_unlock(&ftable.lock);
-      return f;
+      return fd;
     }
+    fd++;
   }
   spin_unlock(&ftable.lock);
-  warn("[file.c/file_alloc]:no file to alloc");
-  return 0;
+  panic("[file.c/file_alloc]:no file to alloc");
 }
 
-file_t* file_dup(file_t* f) {
+// dup just let file's ref + 1,and return the smallest available fd
+int file_dup(file_t* f) {
+  if (f == NULL) panic("[file->dup]dup a null file");
   spin_lock(&ftable.lock);
+
   if (f->ref < 1) panic("[file.c/file_dup]:no ref");
   f->ref++;
+  int fd = 3;
+  for (f = ftable.files; f < ftable.files + FILE_TABLE_SIZE; f++) {
+    if (f->ref == 0) {
+      spin_unlock(&ftable.lock);
+      return fd;
+    }
+    fd++;
+  }
   spin_unlock(&ftable.lock);
-  return f;
+  return -1;
 }
 
 int file_stat(file_t* f, stat_t* st) {
+  if (f == NULL) return -1;
   if (f->type == FD_INODE) {
-    spin_lock(&ftable.lock);
     st->type      = f->iptr->type;
     st->dev       = f->iptr->dev->id;
     st->inode_num = f->iptr->inum;
     st->links     = f->iptr->nlink;
     st->size      = f->iptr->size;
-    spin_unlock(&ftable.lock);
-    return 1;
+    return 0;
   }
-  return 0;
+  return -1;
 }
 
+// close a file
 void file_close(file_t* f) {
+  if (f == NULL) panic("[file->close]f is null");
   spin_lock(&ftable.lock);
 
   if (f->ref < 1) {
-    panic("file already close!");
+    panic("[file->close]file already close!");
   }
   f->ref--;
   if (f->ref > 0) {
@@ -60,28 +82,53 @@ void file_close(file_t* f) {
   }
 }
 
-//
+// read file's inode addrs' data
 int file_read(file_t* f, char* buf, uint32_t n) {
-  int len=0;
-  if (f->readable == 0) return -1;
+  if (f == NULL || f->readable == 0) return -1;
 
+  int len = 0;
   if (f->type == FD_INODE) {
     // len=readi(f->ip,buf,f->off,n);
-    if (len > 0) f->off += len;
+    if (len > 0) {
+      spin_lock(&ftable.lock);
+      f->off += len;
+      spin_unlock(&ftable.lock);
+    }
     return len;
   }
-  panic("[file.c/file_read]read NULL");
+  return -1;
 }
 
 int file_write(file_t* f, char* buf, uint32_t n) {
-  int len=0;
+  if (f == NULL || f->writable == 0) return -1;
 
-  if (f->writable == 0) return -1;
+  int len = 0;
 
   if (f->type == FD_INODE) {
     // len=writei(f->ip,buf,f->off,n);
-    if (len > 0) f->off += len;
+    if (len > 0) {
+      spin_lock(&ftable.lock);
+      f->off += len;
+      spin_unlock(&ftable.lock);
+    }
     return len;
   }
-  panic("[file.c/file_write]write NULL");
+  return -1;
 }
+
+// get file by fd
+file_t* file_get(uint32_t fd) {
+  if (fd > FILE_TABLE_SIZE + 3) return NULL;
+  return FILE(fd);
+}
+
+// MODULE_DEF(file) = {
+//     .init  = file_init,
+//     .alloc = file_alloc,
+//     .dup   = file_dup,
+//     .stat  = file_stat,
+//     .close = file_close,
+//     .read  = file_read,
+//     .write = file_write,
+//     .get   = file_get,
+// };

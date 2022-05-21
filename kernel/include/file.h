@@ -41,10 +41,19 @@ typedef struct inode {
   // delete valid because all inodes will be in memory at boot
   // int valid;
 
-  short type;           // File type
-  short nlink;          // Number of links to inode in file system
-  uint32_t size;            // Size of file (bytes)
-  uint32_t addrs[NDIRECT+1];   // Data block addresses
+  short type;                   // File type
+  short nlink;                  // Number of links to inode in file system
+  uint32_t size;                // Size of file (bytes)
+  uint32_t addrs[NDIRECT + 1];  // Data block addresses
 } inode_t;
+
+void file_init();
+int file_alloc();
+int file_dup(file_t* f);
+int file_stat(file_t* f, stat_t* st);
+void file_close(file_t* f);
+int file_read(file_t* f, char* buf, uint32_t n);
+int file_write(file_t* f, char* buf, uint32_t n);
+file_t* file_get(uint32_t fd);
 
 #endif

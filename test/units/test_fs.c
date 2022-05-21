@@ -15,11 +15,17 @@ int main() {
   fs->init();
 
   //------------------------test  offset------------------------------------
-  printf("OFFSET_BOOT is %d\n", OFFSET_BOOT);
-  printf("OFFSET_ALLINODE is %d\n", OFFSET_ALLINODE);
-  printf("OFFSET_ALLBITMAP is %d\n", OFFSET_ALLBITMAP);
-  printf("OFFSET_BLOCK 0 is %d\n", OFFSET_BLOCK(0));
-  printf("OFFSET_BLOCK N is %d\n", OFFSET_BLOCK((NBLOCK - 1)));
+  int o1, o2, o3, o4, o5;
+  o1 = OFFSET_BOOT;
+  o2 = OFFSET_ALLINODE;
+  o3 = OFFSET_ALLBITMAP;
+  o4 = OFFSET_BLOCK(0);
+  o5 = OFFSET_BLOCK((NBLOCK - 1));
+  printf("OFFSET_BOOT is %d\n", o1);
+  printf("OFFSET_ALLINODE is %d\n", o2);
+  printf("OFFSET_ALLBITMAP is %d\n", o3);
+  printf("OFFSET_BLOCK 0 is %d\n", o4);
+  printf("OFFSET_BLOCK N is %d\n", o5);
 
   //------------------------test data block rw------------------------------
   block_t buf = {.blk_no = 0, .data = "this is a test block data"};
@@ -40,8 +46,9 @@ int main() {
   }
   fs->writeinode(dev->lookup("sda"), inode.inum, &inode);
   fs->readinode(dev->lookup("sda"), inode.inum, &inodeout);
-  printf("\ninode is:\n\tnum: %d\n\ttype: %d\n\tsize: %d\n\tnlinks: %d\n\taddrs: ",
-         inodeout.inum, inodeout.type, inodeout.size, inodeout.nlink);
+  printf(
+      "\ninode is:\n\tnum: %d\n\ttype: %d\n\tsize: %d\n\tnlinks: %d\n\taddrs: ",
+      inodeout.inum, inodeout.type, inodeout.size, inodeout.nlink);
   for (int i = 0; i <= NDIRECT; i++) {
     printf("[%d] ", inodeout.addrs[i]);
   }

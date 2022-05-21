@@ -26,7 +26,7 @@ void fs_zeroblk(device_t* dev, uint32_t blk_no) {
   dev->ops->write(dev, OFFSET_BLOCK(blk_no), zero.data, BSIZE);
 }
 
-// alloc a free block(bit map 0)
+// alloc a free block(bit map 0),return block number
 uint32_t fs_allocblk(device_t* dev) {
   uint32_t i, j, k;
   block_t block;
@@ -81,6 +81,7 @@ void fs_init() {
   fs_createsb(dev->lookup(D), &sb);
 }
 
+// read an inode
 void fs_readinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
   inode->dev  = dev;
   inode->inum = inode_no;
@@ -89,6 +90,7 @@ void fs_readinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
                  sizeof(dinode_t));
 }
 
+// write an inode
 void fs_writeinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
   // dinode_t* di = (dinode_t*)(&(inode->type));
   // printf("\nwrite dinode is "
@@ -103,11 +105,13 @@ void fs_writeinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
   // dev->ops->write(dev, OFFSET_INODE(inode_no), di, sizeof(dinode_t));
 }
 
-MODULE_DEF(fs) = {.init       = fs_init,
-                  .readblk    = fs_readblk,
-                  .writeblk   = fs_writeblk,
-                  .zeroblk    = fs_zeroblk,
-                  .allocblk   = fs_allocblk,
-                  .freeblk    = fs_freeblk,
-                  .readinode  = fs_readinode,
-                  .writeinode = fs_writeinode};
+MODULE_DEF(fs) = {
+    .init       = fs_init,
+    .readblk    = fs_readblk,
+    .writeblk   = fs_writeblk,
+    .zeroblk    = fs_zeroblk,
+    .allocblk   = fs_allocblk,
+    .freeblk    = fs_freeblk,
+    .readinode  = fs_readinode,
+    .writeinode = fs_writeinode,
+};

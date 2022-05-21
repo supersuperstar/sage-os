@@ -98,4 +98,15 @@ MODULE(fs) {
   void (*writeinode)(device_t* dev, uint32_t inode_no, inode_t* inode);
 };
 
+// MODULE(file) {
+//   void (*init)(void);
+//   int (*alloc)();
+//   int (*dup)(file_t* f);
+//   int (*stat)(file_t* f, stat_t* st);
+//   void (*close)(file_t* f);
+//   int (*read)(file_t* f, char* buf, uint32_t n);
+//   int (*write)(file_t* f, char* buf, uint32_t n);
+//   file_t* (*get)(uint32_t fd);
+// };
+
 #endif
