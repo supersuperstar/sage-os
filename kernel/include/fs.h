@@ -8,7 +8,7 @@
 #define ROUNDUP_BLK_NUM(i) \
   (((i + BSIZE - 1) / BSIZE) * \
    BSIZE)  // offset of size (i) round up to block size's times
-#define OFFSET_BOOT     (1024*1024)
+#define OFFSET_BOOT     (1024 * 1024)
 #define OFFSET_SB       512
 #define OFFSET_INODE(i) (OFFSET_BOOT + OFFSET_SB + (sizeof(dinode_t) * i))
 #define OFFSET_ALLINODE \
@@ -21,8 +21,9 @@
 #define BSIZE         512   // block size
 #define MAX_FILE_SIZE ((NDIRECT + NINDIRECT) * BSIZE)
 
-#define DINODE_TYPE_F 0                           // file
-#define DINODE_TYPE_D 1                           // directory
+#define DINODE_TYPE_N 0                           // unused
+#define DINODE_TYPE_F 1                           // file
+#define DINODE_TYPE_D 2                           // directory
 #define PATH_LENGTH   32                          // path max length
 #define NDIRECT       12                          // num of direct address
 #define NINDIRECT     (BSIZE / sizeof(uint32_t))  // 128
@@ -53,5 +54,19 @@ typedef struct dirent {
   uint16_t inum;
   char name[PATH_LENGTH];
 } dirent_t;
+
+// inode operations
+inode_t* iget(uint32_t inum);
+inode_t* ialloc(short type);
+void iupdate(inode_t* ip);
+inode_t* idup(inode_t* ip);
+void ilock(inode_t* ip);
+void iunlock(inode_t* ip);
+void itrunc(inode_t* ip);
+void iput(inode_t* ip);
+void iunlockput(inode_t* ip);
+int readi(inode_t* ip, char* dst, uint32_t off, uint32_t n);
+int writei(inode_t* ip, char* src, uint32_t off, uint32_t n);
+void inode_print(inode_t* ip);
 
 #endif

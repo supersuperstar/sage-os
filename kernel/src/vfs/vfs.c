@@ -8,16 +8,16 @@
 #include <file.h>
 #include <devices.h>
 
-inode_t *inodetable;
-#define rootinode inodetable
+// inode_t *inodetable;
+// #define rootinode inodetable
 
 void vfs_init() {
-  int i;
-  inodetable = pmm->alloc(sizeof(inode_t) * NBLOCK);
-  // read all inode into memory
-  for (i = 0; i < NBLOCK; i++) {
-    fs->readinode(dev->lookup("sda"), i, inodetable + i);
-  }
+  // int i;
+  // inodetable = pmm->alloc(sizeof(inode_t) * NBLOCK);
+  // // read all inode into memory
+  // for (i = 0; i < NBLOCK; i++) {
+  //   fs->readinode(dev->lookup("sda"), i, inodetable + i);
+  // }
 }
 
 // int sys_open(task_t *proc, const char *pathname, int flags) {

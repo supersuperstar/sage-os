@@ -78,7 +78,7 @@ void file_close(file_t* f) {
   } else {
     f->type = FD_NONE;
     spin_unlock(&ftable.lock);
-    // iput(f->iptr);
+    iput(f->iptr);
   }
 }
 
@@ -88,7 +88,7 @@ int file_read(file_t* f, char* buf, uint32_t n) {
 
   int len = 0;
   if (f->type == FD_INODE) {
-    // len=readi(f->ip,buf,f->off,n);
+    len=readi(f->iptr,buf,f->off,n);
     if (len > 0) {
       spin_lock(&ftable.lock);
       f->off += len;
@@ -105,7 +105,7 @@ int file_write(file_t* f, char* buf, uint32_t n) {
   int len = 0;
 
   if (f->type == FD_INODE) {
-    // len=writei(f->ip,buf,f->off,n);
+    len=writei(f->iptr,buf,f->off,n);
     if (len > 0) {
       spin_lock(&ftable.lock);
       f->off += len;
