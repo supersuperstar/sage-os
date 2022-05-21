@@ -23,6 +23,7 @@ int file_alloc() {
       f->ref  = 1;
       f->off  = 0;
       f->type = FD_INODE;
+      f->iptr = NULL;
       spin_unlock(&ftable.lock);
       return fd;
     }
@@ -32,13 +33,14 @@ int file_alloc() {
   panic("[file.c/file_alloc]:no file to alloc");
 }
 
-// dup just let file's ref + 1,and return the smallest available fd
+// dup just let file's and inode's ref + 1,and return the smallest available fd
 int file_dup(file_t* f) {
   if (f == NULL) panic("[file->dup]dup a null file");
   spin_lock(&ftable.lock);
 
   if (f->ref < 1) panic("[file.c/file_dup]:no ref");
   f->ref++;
+  idup(f->iptr);
   int fd = 3;
   for (f = ftable.files; f < ftable.files + FILE_TABLE_SIZE; f++) {
     if (f->ref == 0) {
@@ -88,7 +90,7 @@ int file_read(file_t* f, char* buf, uint32_t n) {
 
   int len = 0;
   if (f->type == FD_INODE) {
-    len=readi(f->iptr,buf,f->off,n);
+    len = readi(f->iptr, buf, f->off, n);
     if (len > 0) {
       spin_lock(&ftable.lock);
       f->off += len;
@@ -105,7 +107,7 @@ int file_write(file_t* f, char* buf, uint32_t n) {
   int len = 0;
 
   if (f->type == FD_INODE) {
-    len=writei(f->iptr,buf,f->off,n);
+    len = writei(f->iptr, buf, f->off, n);
     if (len > 0) {
       spin_lock(&ftable.lock);
       f->off += len;
