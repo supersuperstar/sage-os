@@ -18,6 +18,7 @@ void vfs_init() {
   // for (i = 0; i < NBLOCK; i++) {
   //   fs->readinode(dev->lookup("sda"), i, inodetable + i);
   // }
+  fs->init();
 }
 
 // int sys_open(task_t *proc, const char *pathname, int flags) {
@@ -143,13 +144,23 @@ void vfs_init() {
 int sys_open(task_t *proc, const char *pathname, int flags) {
   inode_t *inode = NULL;
 
-  if (flags == O_CREAT) {
+  if (flags & O_CREAT) {
     // inode=create(pathname,1);
     if (inode == NULL) return -1;
     //获取一个新的文件描述符并绑定到inode
-    int fd = file_alloc();
-    if (file_get(fd) != NULL) file_get(fd)->iptr = inode;
-    //从fd_table找一个空的填入fd并返回fd
+    int fd    = file_alloc();
+    file_t *f = file_get(fd);
+    if (f != NULL) f->iptr = inode;
+    if (flags & O_RDWR) {
+      f->readable = 1;
+      f->writable = 1;
+    } else if (flags & O_RDONLY) {
+      f->readable = 1;
+      f->writable = 0;
+    } else {
+      f->readable = 0;
+      f->writable = 1;
+    }  //从fd_table找一个空的填入fd并返回fd
     for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++) {
       if (proc->fdtable[i] < 0) {
         proc->fdtable[i] = fd;
@@ -165,10 +176,10 @@ int sys_open(task_t *proc, const char *pathname, int flags) {
       int fd    = file_alloc();
       file_t *f = file_get(fd);
       if (f != NULL) f->iptr = inode;
-      if (flags == O_RDWR) {
+      if (flags & O_RDWR) {
         f->readable = 1;
         f->writable = 1;
-      } else if (flags == O_RDONLY) {
+      } else if (flags & O_RDONLY) {
         f->readable = 1;
         f->writable = 0;
       } else {

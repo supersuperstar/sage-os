@@ -2,6 +2,8 @@
 #include <klib.h>
 #include <am.h>
 #include <logger.h>
+#include <file.h>
+#include <fs.h>
 
 int main() {
   _log_mask = LOG_ERROR | LOG_INFO;
@@ -11,6 +13,9 @@ int main() {
   vme_init(pmm->pgalloc, pmm->free);
   uproc->init();
   vfs->init();
+
+  task_t* task= pmm->alloc(sizeof(task_t));
+
   mpe_init(os->run);
   return 1;
 }

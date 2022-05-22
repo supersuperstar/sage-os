@@ -32,7 +32,7 @@ uint32_t fs_allocblk(device_t* dev) {
   uint32_t i, j, k;
   block_t block;
   for (i = 0; i < NBLOCK; i += BSIZE * 8) {
-    block.blk_no = ROUNDUP_BLK_NUM((OFFSET_BITMAP(i)));
+    block.blk_no = ROUNDUP_BLK_NUM((OFFSET_BITMAP(i)))/ BSIZE;
     // read bit map block
     dev->ops->read(dev, OFFSET_BITMAP(i), block.data, BSIZE);
     for (j = 0; j < BSIZE * 8 && i + j <= NBLOCK; j++) {
@@ -49,7 +49,7 @@ uint32_t fs_allocblk(device_t* dev) {
       }
     }
   }
-  panic("[fs:fs_allocblk]:no free block");
+  panic("[fs.c/fs_allocblk]:no free block");
 }
 
 // free an alloced block
@@ -125,6 +125,7 @@ void fs_init() {
   fs_initinodes(dev->lookup(D));
   fs_initblks(dev->lookup(D));
   fs_allocblk(dev->lookup(D));
+  file_init();
 }
 
 
@@ -409,7 +410,7 @@ int writei(inode_t* ip, char* src, uint32_t off, uint32_t n) {
     addr++;
     fs_writeblk(ip->dev, ip->addrs[NDIRECT], &tmp);
   } else if (startblk >= NDIRECT && endblk >= NDIRECT) {
-    printf("-----3-----\n");
+    //printf("-----3-----\n");
     block_t tmp;
     if (ip->addrs[NDIRECT] == 0) {
       ip->addrs[NDIRECT] = fs_allocblk(ip->dev);
@@ -463,7 +464,7 @@ int writei(inode_t* ip, char* src, uint32_t off, uint32_t n) {
     iupdate(ip);
   }
 
-  printf("size:%d\n", ip->size);
+  //printf("size:%d\n", ip->size);
   return n;
 }
 

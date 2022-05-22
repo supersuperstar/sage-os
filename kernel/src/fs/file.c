@@ -75,13 +75,9 @@ void file_close(file_t* f) {
     panic("[file->close]file already close!");
   }
   f->ref--;
-  if (f->ref > 0) {
-    spin_unlock(&ftable.lock);
-  } else {
-    f->type = FD_NONE;
-    spin_unlock(&ftable.lock);
-    iput(f->iptr);
-  }
+  if (f->ref == 0) f->type = FD_NONE;
+  spin_unlock(&ftable.lock);
+  iput(f->iptr);
 }
 
 // read file's inode addrs' data
