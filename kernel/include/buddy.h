@@ -4,6 +4,9 @@
 #include <list.h>
 
 #define BUDDY_MAX_ORDER 24
+
+struct pmm_pool global_mm_pool;
+
 /**
  * @brief page metadata
  */

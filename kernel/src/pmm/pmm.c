@@ -2,8 +2,6 @@
 #include <buddy.h>
 #include <logger.h>
 
-struct pmm_pool global_mm_pool;
-
 static void* kalloc(size_t size) {
   assert((int)size > 0);
   int npage               = (size - 1) / SZ_PAGE + 1;
