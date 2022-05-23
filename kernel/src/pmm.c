@@ -31,8 +31,14 @@ static void* kalloc_safe(size_t size) {
 
 static void kfree(void* ptr) {
   struct chunk* chunk = virt2chunk(&global_mm_pool, ptr);
-  chunk_free(&global_mm_pool, chunk);
-  success("free successfully, address: 0x%x", ptr);
+  if (chunk && chunk->slab){
+    printf("small:free in slab\n");
+		free_in_slab(ptr);
+  }
+  else {
+    chunk_free(&global_mm_pool, chunk);
+    success("free successfully, address: 0x%x", ptr);
+  }
 }
 
 static void kfree_safe(void* ptr) {
