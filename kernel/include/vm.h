@@ -1,6 +1,10 @@
 #ifndef __VM_H__
 #define __VM_H__
 
+#ifndef FRAME_NUM
+#define FRAME_NUM 40
+#endif
+
 #include <common.h>
 
 void inituvm(task_t* proc, unsigned char* init, int sz);

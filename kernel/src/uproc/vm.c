@@ -2,6 +2,7 @@
 #include <thread.h>
 #include <buddy.h>
 #include <user.h>
+#include <vm.h>
 
 void uproc_pgmap(task_t* proc, void* vaddr, void* paddr, int prot);
 void uporc_pgunmap(task_t* proc, void* vaddr);
@@ -9,6 +10,33 @@ void inituvm(task_t* proc, unsigned char* init, int sz);
 int allocuvm(task_t* proc, int newsz, int oldsz);
 void copyuvm(task_t* proc, task_t* src, int sz);
 int deallocuvm(task_t* proc, int newsz, int oldsz);
+
+#ifdef UNIT_VM
+struct frame {
+  intptr_t paddr;
+  struct list_head list;
+};
+
+struct frame frames[20][FRAME_NUM];
+struct list_head head[20];
+int occupied_frame[20];
+
+intptr_t pick_next_LRU(task_t* proc) {
+  if (occupied_frame[proc->pid] == 0) {
+    INIT_LIST_HEAD(&head[proc->pid]);
+  }
+  if (occupied_frame[proc->pid] < FRAME_NUM) {
+    intptr_t ptr                               = pmm->pgalloc();
+    frames[occupied_frame[proc->pid]++]->paddr = ptr;
+    return ptr;
+  } else {
+    struct frame* frame = list_entry(&head[proc->pid].prev, struct frame, list);
+    list_del(&frame->list);
+    list_add(&frame->list, &head[proc->pid]);
+    return frame->paddr;
+  }
+}
+#endif
 
 /**
  * @brief map one physical page to one virtual page.
