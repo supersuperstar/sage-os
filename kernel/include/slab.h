@@ -5,6 +5,7 @@
 /* order range: [SLAB_MIN_ORDER, SLAB_MAX_ORDER] */
 #define SLAB_MIN_ORDER (5)
 #define SLAB_MAX_ORDER (11)
+#define SLAB_SIZE (1UL << SLAB_MAX_ORDER)
 typedef unsigned long long u64;
 typedef struct slab_header slab_header_t;
 struct slab_header {
