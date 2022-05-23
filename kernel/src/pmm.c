@@ -7,7 +7,7 @@
 static void* kalloc(size_t size) {
   assert((int)size > 0);
   if (size <= SLAB_SIZE) {
-    printf("small:alloc_in_slab\n");
+    //printf("small:alloc_in_slab\n");
 		return alloc_in_slab(size);
 	}
   int npage               = (size - 1) / SZ_PAGE + 1;
@@ -32,7 +32,7 @@ static void* kalloc_safe(size_t size) {
 static void kfree(void* ptr) {
   struct chunk* chunk = virt2chunk(&global_mm_pool, ptr);
   if (chunk && chunk->slab){
-    printf("small:free in slab\n");
+    //printf("small:free in slab\n");
 		free_in_slab(ptr);
   }
   else {
@@ -64,6 +64,7 @@ static void pmm_init() {
   info("page start addr: 0x%x, page indicator addr: 0x%x, available page: %d",
        pg_start, pi_start, nr_page);
   buddy_init(&global_mm_pool, pi_start, pg_start, nr_page);
+  slab_init();
 }
 
 MODULE_DEF(pmm) = {
