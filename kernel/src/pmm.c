@@ -1,10 +1,15 @@
 #include <common.h>
 #include <buddy.h>
 #include <logger.h>
+#include <slab.h>
 
 
 static void* kalloc(size_t size) {
   assert((int)size > 0);
+  if (size <= SLAB_SIZE) {
+    printf("small:alloc_in_slab\n");
+		return alloc_in_slab(size);
+	}
   int npage               = (size - 1) / SZ_PAGE + 1;
   int acquire_order       = power2ify(npage);
   struct chunk* page_addr = chunk_alloc(&global_mm_pool, acquire_order);
