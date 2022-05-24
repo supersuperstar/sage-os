@@ -4,8 +4,8 @@
 #include <list.h>
 
 #define BUDDY_MAX_ORDER 24
-#define KB              1024
-#define SZ_PAGE         (4 * KB)
+
+struct pmm_pool global_mm_pool;
 
 /**
  * @brief page metadata
@@ -40,7 +40,7 @@ struct chunk {
  *
  */
 struct pmm_pool {
-  uint64_t begin_addr;
+  uintptr_t begin_addr;
   uint64_t page_num;
   uint64_t size;
   struct chunk* chunk_metadata;

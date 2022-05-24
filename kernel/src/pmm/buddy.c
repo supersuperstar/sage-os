@@ -26,7 +26,7 @@ void buddy_init(struct pmm_pool* mm_pool, struct chunk* start_chunk,
   struct chunk* chunk;
   int order;
   int chunk_idx;
-  mm_pool->begin_addr     = (uint64_t)start_addr;
+  mm_pool->begin_addr     = (uintptr_t)start_addr;
   mm_pool->page_num       = page_num;
   mm_pool->size           = page_num * SZ_PAGE;
   mm_pool->chunk_metadata = start_chunk;
@@ -93,13 +93,13 @@ struct chunk* chunk_merge(struct pmm_pool* mm_pool, struct chunk* chunk) {
         buddy_chunk->order != chunk->order) {
       break;
     }
+    chunk_del(mm_pool, buddy_chunk);
     if (chunk > buddy_chunk) {
       struct chunk* tmp = chunk;
       chunk             = buddy_chunk;
       buddy_chunk       = tmp;
     }
     buddy_chunk->used = true;
-    chunk_del(mm_pool, buddy_chunk);
     chunk->order++;
   }
   chunk_append(mm_pool, chunk);
@@ -114,11 +114,11 @@ struct chunk* chunk_merge(struct pmm_pool* mm_pool, struct chunk* chunk) {
  * @return struct chunk*
  */
 struct chunk* get_buddy_chunk(struct pmm_pool* mm_pool, struct chunk* chunk) {
-  int64_t chunk_addr;
-  int64_t buddy_chunk_addr;
+  intptr_t chunk_addr;
+  intptr_t buddy_chunk_addr;
   int order;
 
-  chunk_addr = (int64_t)chunk2virt(mm_pool, chunk);
+  chunk_addr = (intptr_t)chunk2virt(mm_pool, chunk);
   order      = chunk->order;
 
 #define BUDDY_PAGE_SIZE_ORDER (12)
@@ -210,7 +210,7 @@ struct chunk* chunk_split(struct pmm_pool* mm_pool, uint8_t order,
  * @return void*
  */
 void* chunk2virt(struct pmm_pool* mm_pool, struct chunk* chunk) {
-  uint64_t addr;
+  uintptr_t addr;
   addr = (chunk - mm_pool->chunk_metadata) * SZ_PAGE + mm_pool->begin_addr;
   return (void*)addr;
 }
@@ -225,6 +225,6 @@ void* chunk2virt(struct pmm_pool* mm_pool, struct chunk* chunk) {
 struct chunk* virt2chunk(struct pmm_pool* mm_pool, void* virt) {
   struct chunk* chunk;
   chunk = mm_pool->chunk_metadata +
-          ((uint64_t)virt - mm_pool->begin_addr) / SZ_PAGE;
+          ((uintptr_t)virt - mm_pool->begin_addr) / SZ_PAGE;
   return chunk;
 }
