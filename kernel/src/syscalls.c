@@ -29,6 +29,9 @@ Context *syscall_handler(Event ev, Context *context) {
     case SYS_wait:
       retval = sys_wait(proc, (int *)args[0]);
       break;
+    case SYS_read:
+      retval = sys_read(proc, args[0], (void *)args[1], args[2]);
+      break;
     case SYS_kill:
       retval = sys_kill(proc, args[0]);
       break;

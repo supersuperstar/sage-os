@@ -22,7 +22,8 @@ void sem_init(sem_t *sem, const char *name, int value) {
  * @param sem a semaphore instance
  */
 void sem_wait(sem_t *sem) {
-  assert_msg(!is_on_trap, "do not allow sem_wait on trap! sem: %s", sem->name);
+  // assert_msg(!is_on_trap, "do not allow sem_wait on trap! sem: %s",
+  // sem->name);
   spin_lock(&sem->lock);
 
   while (sem->value <= 0) {
@@ -31,6 +32,7 @@ void sem_wait(sem_t *sem) {
     task_t *cur = kmt->get_task();
     assert(cur);
     cur->wait_sem = sem;
+    // cur->state    = ST_S;
     // interrupt
     spin_unlock(&task_list_lock);
     yield();

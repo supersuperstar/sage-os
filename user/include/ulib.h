@@ -1,3 +1,6 @@
+#ifndef ULIB_H__
+#define ULIB_H__
+
 #include <stddef.h>
 #include <stdint.h>
 #include "../../kernel/framework/syscall_defs.h"
@@ -97,3 +100,5 @@ static inline int chdir(const char *path) {
 static inline int dup(int fd) {
   return syscall(SYS_dup, fd, 0, 0, 0);
 }
+
+#endif

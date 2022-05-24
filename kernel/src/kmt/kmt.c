@@ -112,13 +112,14 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
   task->wait_sem = NULL;
   task->killed   = 0;
   task->next     = NULL;
+  task->nctx     = 0;
 
   memset(task->fenceA, FILL_FENCE, sizeof(task->fenceA));
   memset(task->stack, FILL_STACK, sizeof(task->stack));
   memset(task->fenceB, FILL_FENCE, sizeof(task->fenceB));
 
   Area stack = {(void *)task->stack, (void *)task->stack + sizeof(task->stack)};
-  task->context = kcontext(stack, entry, arg);
+  task->context[task->nctx++] = kcontext(stack, entry, arg);
   CHECK_FENCE(task);
   task->next = NULL;
 
@@ -158,11 +159,12 @@ Context *kmt_context_save(Event ev, Context *context) {
   // assert(spin_holding(&ir_lock));
   task_t *cur = kmt_get_task();
   if (cur) {
-    assert(!cur->context);
+    // assert(!cur->context);
     // TODO: more checks for context
     spin_lock(&task_list_lock);
-    cur->state   = ST_W;
-    cur->context = context;
+    cur->state = ST_W;
+    assert_msg(cur->nctx < CTX_STACK_SIZE, "context stack overflow!");
+    cur->context[cur->nctx++] = context;
     spin_unlock(&task_list_lock);
   } else {
     // if no current task (initial), save to null_context
@@ -229,16 +231,17 @@ Context *kmt_schedule(Event ev, Context *context) {
   if (tp != NULL) {
     tp->owner = cpu_current();
     CHECK_FENCE(tp);
-    tp->state   = ST_R;
-    ret         = tp->context;
-    tp->context = NULL;
-    tp->count   = (tp->count + 1) % 1024;
+    ret = tp->context[--tp->nctx];
+    if (tp->nctx == 0) tp->state = ST_R;
+    // tp->context[tp->nctx] = NULL;
+    // if (tp->nctx > 0) tp->nctx--;
+    tp->count = (tp->count + 1) % 1024;
 
     // TODO: more checks here
     kmt_set_task(tp);
-
-    success("schedule: run next pid=%d, name=%s, count=%d, event=%d %s",
-            tp->pid, tp->name, tp->count, ev.event, ev.msg);
+    if (ev.event != EVENT_IRQ_TIMER && ev.event != EVENT_YIELD)
+      success("schedule: run next pid=%d, name=%s, count=%d, event=%d %s",
+              tp->pid, tp->name, tp->count, ev.event, ev.msg);
   } else {
     // if no task to run
     warn("schedule: no task to run");

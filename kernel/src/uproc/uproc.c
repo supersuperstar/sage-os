@@ -50,6 +50,7 @@ int uproc_create(task_t *proc, const char *name) {
   proc->wait_sem = NULL;
   proc->killed   = 0;
   proc->next     = NULL;
+  proc->nctx     = 0;
 
   memset(proc->fenceA, FILL_FENCE, sizeof(proc->fenceA));
   memset(proc->stack, FILL_STACK, sizeof(proc->stack));
@@ -61,7 +62,7 @@ int uproc_create(task_t *proc, const char *name) {
   AddrSpace *as = &proc->as;
 
   // ucontext entry: start addr of proc
-  proc->context = ucontext(as, kstack, as->area.start);
+  proc->context[proc->nctx++] = ucontext(as, kstack, as->area.start);
 
   // Notice: do not inituvm here, move to uproc_init
   proc->pmsize = 0;
@@ -111,12 +112,12 @@ int sys_fork(task_t *proc) {
   uproc_create(subproc, proc->name);
 
   // do not copy parent's rsp0, cr3
-  uintptr_t rsp0 = subproc->context->rsp0;
-  void *cr3      = subproc->context->cr3;
+  uintptr_t rsp0 = subproc->context[0]->rsp0;
+  void *cr3      = subproc->context[0]->cr3;
   memcpy(subproc->context, proc->context, sizeof(Context));
-  subproc->context->rsp0 = rsp0;
-  subproc->context->cr3  = cr3;
-  subproc->context->rax  = 0;
+  subproc->context[0]->rsp0 = rsp0;
+  subproc->context[0]->cr3  = cr3;
+  subproc->context[0]->rax  = 0;
 
   // copy pages
   copyuvm(&subproc->as, &proc->as, proc->pmsize);

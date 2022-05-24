@@ -7,14 +7,14 @@ endif
 SRCS = trampoline.S
 SRCS += $(addsuffix .c, $(target))
 SRCS += $(shell find $(WORK_DIR)/src -name "*.c")
-OBJS = $(addsuffix .o, $(basename $(SRCS)))
+OBJS = $(addsuffix .o, $(notdir $(basename $(SRCS))))
 
 INC_PATH += $(WORK_DIR)/include
 INCFLAGS += $(addprefix -I, $(INC_PATH))
 
 CROSS_COMPILE = x86_64-linux-gnu-
 
-CFLAGS  = -O1 -m64 -fPIC -mno-sse -ggdb $(INCFLAGS) -Wall
+CFLAGS  = -O1 -m64 -fPIC -mno-sse -ggdb $(INCFLAGS) -Wall -Werror
 CFLAGS += -ffreestanding -fno-builtin -nostdlib -fno-stack-protector
 CFLAGS += -fno-asynchronous-unwind-tables
 

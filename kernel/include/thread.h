@@ -11,6 +11,8 @@
 #define STACK_SIZE       8192
 #define STACK_FENCE_SIZE 32
 
+#define CTX_STACK_SIZE 4
+
 #define MAX_TASK_STATES 8
 
 #ifndef PROCESS_FILE_TABLE_SIZE
@@ -29,19 +31,20 @@ enum task_states {
 };
 
 struct task {
-  uint32_t pid;                   // process id
-  const char* name;               // process name for debug
-  void (*entry)(void*);           // kernel thread entry
-  void* arg;                      // args of entry func
-  enum task_states state;         // process state
-  sem_t* wait_sem;                // semaphore that the thread waiting for
-  bool killed;                    // whether process is killed
-  int32_t owner;                  // which cpu running this process now
-  int32_t count;                  // a counter to avoid deadlock
-  char fenceA[STACK_FENCE_SIZE];  // 32 bytes fence
-  char stack[STACK_SIZE];         // user stack
-  char fenceB[STACK_FENCE_SIZE];  // 32 bytes fence
-  Context* context;               // process user context
+  uint32_t pid;                      // process id
+  const char* name;                  // process name for debug
+  void (*entry)(void*);              // kernel thread entry
+  void* arg;                         // args of entry func
+  enum task_states state;            // process state
+  sem_t* wait_sem;                   // semaphore that the thread waiting for
+  bool killed;                       // whether process is killed
+  int32_t owner;                     // which cpu running this process now
+  int32_t count;                     // a counter to avoid deadlock
+  char fenceA[STACK_FENCE_SIZE];     // 32 bytes fence
+  char stack[STACK_SIZE];            // user stack
+  char fenceB[STACK_FENCE_SIZE];     // 32 bytes fence
+  Context* context[CTX_STACK_SIZE];  // process user context
+  int nctx;
   struct task* next;
   struct task* parent;
 
