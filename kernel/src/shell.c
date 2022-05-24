@@ -55,7 +55,8 @@ void shell_task(task_t *proc) {
             cmd_list[i].func(proc, arg, pwd, ret);              
         } else  {            
             if(fork1(proc) == 0) {
-                runcmd(proc, arg, pwd, ret,i);
+                task_t *nowproc = cpu_tasks[cpu_current()];
+                runcmd(nowproc, arg, pwd, ret, i);
             }
             int *stati;
             uproc->sys_wait(proc, stati);
@@ -77,10 +78,9 @@ int fork1(task_t *proc) {
   return pid;
 }
 
-void runcmd(const char *arg, const char *pwd, char *ret,int i) {
-    cmd_list[i].func(arg, pwd, ret);
-    //todo:得到当前进程
-    uproc->sys_exit();
+void runcmd(const task_t *proc,char *arg, const char *pwd, char *ret,int i) {
+    cmd_list[i].func(proc, arg, pwd, ret);
+    uproc->sys_exit(proc, 0);
 }
 
 bool get_dir(const char *arg, const char *pwd, char *dir) {
@@ -132,7 +132,6 @@ FUNC(man) {
   strcat(ret, "\n");
 }
 
-
 FUNC(echo) {
   sprintf(ret, "%s\n", arg);
 }
@@ -172,13 +171,7 @@ FUNC(cat) {
   } else {
     int fd = vfs->sys_open(proc, dir, O_RDONLY);
     if (fd < 0) {
-      sprintf(ret, "VFS ERROR: open failed with status %d.\n"
-          "Possible reasons:\n"
-          " %d: command not supported by fs.\n"
-          " %d: file does not exist.\n"
-          " %d: file has wrong type.\n"
-          " %d: file has wrong privilege.\n",
-          fd, E_BADFS, E_NOENT, E_BADTP, E_BADPR);
+      sprintf(ret, "VFS ERROR: open failed with status %d.\n", fd);
     } else {
       vfs->sys_read(proc, fd, ret, 512);
       vfs->sys_close(proc, fd);
@@ -204,13 +197,7 @@ FUNC(write) {
   } else {
     int fd = vfs->sys_open(proc, dir, O_WRONLY | O_CREAT);
     if (fd < 0) {
-      sprintf(ret, "VFS ERROR: open failed with status %d.\n"
-          "Possible reasons:\n"
-          " %d: command not supported by fs.\n"
-          " %d: file does not exist.\n"
-          " %d: file has wrong type.\n"
-          " %d: file has wrong privilege.\n",
-          fd, E_BADFS, E_NOENT, E_BADTP, E_BADPR);
+      sprintf(ret, "VFS ERROR: open failed with status %d.\n", fd);
     } else {
       ssize_t nwrite = vfs->write(fd, (void *)arg2, strlen(arg2));
       vfs->sys_write(proc, fd, "\n", 1);
