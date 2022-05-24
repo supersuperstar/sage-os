@@ -150,7 +150,8 @@ int sys_open(task_t *proc, const char *pathname, int flags) {
     //获取一个新的文件描述符并绑定到inode
     int fd    = file_alloc();
     file_t *f = file_get(fd);
-    if (f != NULL) f->iptr = inode;
+    assert_msg(f != NULL, "[sys_open] failed to alloc file");
+    f->iptr = inode;
     if (flags & O_RDWR) {
       f->readable = 1;
       f->writable = 1;
@@ -160,15 +161,18 @@ int sys_open(task_t *proc, const char *pathname, int flags) {
     } else {
       f->readable = 0;
       f->writable = 1;
-    }  //从fd_table找一个空的填入fd并返回fd
+    }
+    // 从fd_table找一个空的填入fd并返回fd
     for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++) {
       if (proc->fdtable[i] < 0) {
         proc->fdtable[i] = fd;
         return i;
       }
     }
+    panic("[sys_open] process fd table is full!");
     return -1;
-  } else {  // flg=0表明没找到文件（inode此时为最大匹配）
+  } else {
+    // flg=0表明没找到文件（inode此时为最大匹配）
     int flg = 0;
     // flg=find_inode_by_pathname(pathname,inode);
     if (inode != NULL && flg == 1) {

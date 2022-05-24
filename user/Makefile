@@ -1,17 +1,28 @@
-# Automatically links all .c files
-SRCS = trampoline.S $(shell find . -name "*.c")
+WORK_DIR  = $(shell pwd)
+
+ifeq ($(target),)
+export target := init
+endif
+
+SRCS = trampoline.S
+SRCS += $(addsuffix .c, $(target))
+SRCS += $(shell find $(WORK_DIR)/src -name "*.c")
 OBJS = $(addsuffix .o, $(basename $(SRCS)))
+
+INC_PATH += $(WORK_DIR)/include
+INCFLAGS += $(addprefix -I, $(INC_PATH))
 
 CROSS_COMPILE = x86_64-linux-gnu-
 
-CFLAGS  = -O1 -m64 -fPIC -mno-sse -ggdb -Wall -Werror
+CFLAGS  = -O1 -m64 -fPIC -mno-sse -ggdb $(INCFLAGS) -Wall -Werror
 CFLAGS += -ffreestanding -fno-builtin -nostdlib -fno-stack-protector
 CFLAGS += -fno-asynchronous-unwind-tables
 
 LDFLAGS  = -static --omagic --pic-executable --no-dynamic-linker
 LDFLAGS += --gc-sections
 
-_init: $(SRCS) ulib.h Makefile
+_init: $(SRCS) Makefile
+	@echo -e "user: make target $(target)"
 	$(CROSS_COMPILE)gcc $(CFLAGS) -c $(SRCS)
 	$(CROSS_COMPILE)ld $(LDFLAGS) -o $@ -e _start $(OBJS)
 	$(CROSS_COMPILE)objcopy -S -j .text* -j.rodata* -j .data* -j .bss* --set-section-flags .bss=alloc,contents -O binary $@
