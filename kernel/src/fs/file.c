@@ -11,14 +11,18 @@ void file_init() {
   spin_init(&ftable.lock, "ftable_lock");
 }
 
-// alloc a available fd
+/**
+ * @brief alloc a available global fd
+ *
+ * @return int fd index in ftable
+ */
 int file_alloc() {
   file_t* f;
-  // 0 1 2 used,so start from 3
+  // 0 1 2 used, so start from 3
   int fd = 3;
   spin_lock(&ftable.lock);
   for (f = ftable.files; f < ftable.files + FILE_TABLE_SIZE; f++) {
-    // ref is 0 means no process hold this fd,can be reused.
+    // ref is 0 means no process hold this fd, can be reused.
     if (f->ref == 0) {
       f->ref  = 1;
       f->off  = 0;
@@ -33,12 +37,12 @@ int file_alloc() {
   panic("[file.c/file_alloc]:no file to alloc");
 }
 
-// dup just let file's and inode's ref + 1,and return the smallest available fd
+// dup just let file's and inode's ref + 1, and return the smallest available fd
 int file_dup(file_t* f) {
-  if (f == NULL) panic("[file->dup]dup a null file");
+  if (f == NULL) panic("[file->dup] dup a null file");
   spin_lock(&ftable.lock);
 
-  if (f->ref < 1) panic("[file.c/file_dup]:no ref");
+  if (f->ref < 1) panic("[file.c/file_dup] no ref");
   f->ref++;
   idup(f->iptr);
   int fd = 3;

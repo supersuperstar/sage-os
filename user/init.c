@@ -1,27 +1,33 @@
-#include "ulib.h"
-
-void print_time() {
-  int64_t t   = uptime();  // ms
-  char st[10] = {(t / 10000) % 10 + '0', (t / 1000) % 10 + '0',
-                 (t / 100) % 10 + '0',   (t / 10) % 10 + '0',
-                 t % 10 + '0',           '\0'};
-  kputstr(st);
-}
+#include <ulib.h>
+#include <utils.h>
 
 int main() {
+  // test fork
+  // int pid;
+  // for (int i = 0; i < 2; i++) {
+  //   kputstr("main for loop\n");
+  //   if ((pid = fork()) != 0) {
+  //     sleep(1);
+  //   } else {
+  //     kputstr("subproc!\n");
+  //   }
+  cputstr("initcode!\n");
   int fd       = open("/dev/zero", O_RDONLY);
   char buf[10] = {-1};
   // will assert fault here: read not implemented
   if (read(fd, buf, 1) != -1 && buf[0] == 0) {
-    kputstr("success!");
+    cputstr("success!\n");
   } else {
-    kputstr("error!");
+    cputstr("error!\n");
   }
+
   while (1) {
     print_time();
     kputstr(" hello from initcode!\n");
     // test open
     sleep(1);
   }
+  while (1)
+    sleep(1000);
   return 0;
 }

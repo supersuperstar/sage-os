@@ -14,8 +14,6 @@ int main() {
   uproc->init();
   vfs->init();
 
-  task_t* task= pmm->alloc(sizeof(task_t));
-
   mpe_init(os->run);
   return 1;
 }

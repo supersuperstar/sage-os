@@ -6,15 +6,9 @@
 #include <fs.h>
 #include "trap.h"
 
-int main() {
-  _log_mask = LOG_ERROR | LOG_INFO;
-  ioe_init();
-  cte_init(os->trap);
-  os->init();
-  vme_init(pmm->pgalloc, pmm->free);
+task_t* task;
 
-  fs->init();
-
+void func(void* arg) {
   char* buf      = "this is a test file data.";
   char* out      = "";
   inode_t* inode = ialloc(DINODE_TYPE_F);
@@ -32,13 +26,26 @@ int main() {
   f->writable = 1;
   f->readable = 1;
   file_write(f, buf, 25);
-  f->off=0;
+  f->off = 0;
   file_read(f, out, 25);
-  int fd2=file_dup(f);
-  stat_t* st=pmm->alloc(sizeof(stat_t));
-  file_stat(f,st);
-  printf("%d",fd2);
+  int fd2    = file_dup(f);
+  stat_t* st = pmm->alloc(sizeof(stat_t));
+  file_stat(f, st);
+  printf("%d", fd2);
   file_close(f);
+}
+
+int main() {
+  _log_mask = LOG_ERROR | LOG_INFO;
+  ioe_init();
+  cte_init(os->trap);
+  os->init();
+  vme_init(pmm->pgalloc, pmm->free);
+
+  fs->init();
+
+  task = pmm->alloc(sizeof(task_t));
+  kmt->create(task, "file", func, NULL);
 
   mpe_init(os->run);
 
