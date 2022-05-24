@@ -2,6 +2,7 @@
 #include <sem.h>
 #include <spinlock.h>
 #include <thread.h>
+#include <syscalls.h>
 
 task_t *kmt_get_task();
 void kmt_set_task(task_t *task);
@@ -49,8 +50,16 @@ task_t *cpu_tasks[MAX_CPU] = {};
  * @param task
  */
 #define CHECK_FENCE(task) \
-  assert(memcmp(fence_val, (task)->fenceA, sizeof(fence_val)) == 0); \
-  assert(memcmp(fence_val, (task)->fenceB, sizeof(fence_val)) == 0)
+  ({ \
+    assert(memcmp(fence_val, (task)->fenceB, sizeof(fence_val)) == 0); \
+    assert(memcmp(fence_val, (task)->fenceA, sizeof(fence_val)) == 0); \
+  })
+
+uint32_t kmt_next_pid() {
+  assert(next_pid < 1 << 15);
+  // TODO: reuse next pid
+  return next_pid++;
+}
 
 /**
  * @brief initialize kmt module
@@ -58,7 +67,7 @@ task_t *cpu_tasks[MAX_CPU] = {};
  */
 void kmt_init() {
   // create root_task
-  root_task.pid   = next_pid++;
+  root_task.pid   = kmt_next_pid();
   root_task.name  = "Root Task";
   root_task.state = ST_X;
   root_task.count = 0;
@@ -73,13 +82,14 @@ void kmt_init() {
   os->on_irq(0, EVENT_ERROR, kmt_error);
   os->on_irq(0, EVENT_IRQ_TIMER, kmt_timer);
   os->on_irq(0, EVENT_YIELD, kmt_yield);
+  os->on_irq(0, EVENT_SYSCALL, syscall_handler);
   os->on_irq(INT32_MAX, EVENT_NULL, kmt_schedule);
 }
 
 /**
  * @brief create thread
  *
- * @param task task ptr of thread
+ * @param task task ptr of thread (should be allocated)
  * @param name thread name
  * @param entry thread user code function entry
  * @param arg args pass to entry
@@ -87,8 +97,9 @@ void kmt_init() {
  */
 int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
                void *arg) {
-  assert(task != NULL && name != NULL && entry != NULL);
-  task->pid      = next_pid++;
+  assert_msg(task != NULL && name != NULL && entry != NULL,
+             "null arguments in kmt_create");
+  task->pid      = kmt_next_pid();
   task->name     = name;
   task->entry    = entry;
   task->arg      = arg;
@@ -253,6 +264,18 @@ Context *kmt_schedule(Event ev, Context *context) {
  * @return Context* always NULL
  */
 Context *kmt_timer(Event ev, Context *context) {
+  // wake up sleep process
+  assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
+  spin_lock(&task_list_lock);
+  task_t *tp = NULL;
+  for (tp = root_task.next; tp; tp = tp->next) {
+    tp->count++;
+    if (tp->count >= (1 << 15)) tp->count = 0;
+    if (tp->state == ST_S && tp->count >= 0 && tp->wait_sem == NULL) {
+      tp->state = ST_W;
+    }
+  }
+  spin_unlock(&task_list_lock);
   return NULL;
 }
 

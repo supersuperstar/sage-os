@@ -53,7 +53,8 @@ int _log_mask;
 
 #ifndef LOG_MASK
 #define LOG_MASK \
-  (LOG_INFO | LOG_WARN | LOG_ERROR)  // defalt print INFO and above
+  (LOG_INFO | LOG_WARN | LOG_ERROR | \
+   LOG_SUCCESS)  // defalt print INFO and above
 #endif
 
 extern const char* logger_type_str[10];
