@@ -43,6 +43,7 @@ struct pmm_pool {
   uintptr_t begin_addr;
   uint64_t page_num;
   uint64_t size;
+  uint64_t occupied;
   struct chunk* chunk_metadata;
   struct free_list free_lists[BUDDY_MAX_ORDER];
 };
