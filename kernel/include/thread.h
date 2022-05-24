@@ -13,6 +13,10 @@
 
 #define MAX_TASK_STATES 8
 
+#ifndef PROCESS_FILE_TABLE_SIZE
+#define PROCESS_FILE_TABLE_SIZE 16
+#endif
+
 enum task_states {
   ST_U,  // Unused
   ST_E,  // Embryo
@@ -41,6 +45,12 @@ struct task {
   struct task* next;
   struct task* parent;
 
+  // fdtable size is 16,
+  // value -1 means empty,
+  // value 0/1/2 means stdin/out/err
+  // others nonnegative value means system fd
+  int fdtable[PROCESS_FILE_TABLE_SIZE];
+  
   AddrSpace as;
   int pmsize;  // proc memory size
 };
