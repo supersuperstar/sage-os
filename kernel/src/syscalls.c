@@ -12,7 +12,7 @@
  * @return Context*
  */
 Context *syscall_handler(Event ev, Context *context) {
-  task_t *proc     = cpu_tasks[cpu_current()];
+  task_t *proc     = current_task;
   uint64_t args[4] = {context->rdi, context->rsi, context->rdx, context->rcx};
   uint64_t retval  = 0;
   int sys_id       = context->rax;

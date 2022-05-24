@@ -14,15 +14,16 @@ INCFLAGS += $(addprefix -I, $(INC_PATH))
 
 CROSS_COMPILE = x86_64-linux-gnu-
 
-CFLAGS  = -O1 -m64 -fPIC -mno-sse -ggdb $(INCFLAGS) -Wall -Werror
+CFLAGS  = -O1 -m64 -fPIC -mno-sse -ggdb $(INCFLAGS) -Wall
 CFLAGS += -ffreestanding -fno-builtin -nostdlib -fno-stack-protector
 CFLAGS += -fno-asynchronous-unwind-tables
 
 LDFLAGS  = -static --omagic --pic-executable --no-dynamic-linker
 LDFLAGS += --gc-sections
 
-_init: $(SRCS) Makefile
-	@echo -e "user: make target $(target)"
+_init: $(SRCS) Makefile latest
+	@echo "user: make target $(target)"
+	@echo "-------------------------------"
 	$(CROSS_COMPILE)gcc $(CFLAGS) -c $(SRCS)
 	$(CROSS_COMPILE)ld $(LDFLAGS) -o $@ -e _start $(OBJS)
 	$(CROSS_COMPILE)objcopy -S -j .text* -j.rodata* -j .data* -j .bss* --set-section-flags .bss=alloc,contents -O binary $@
@@ -30,3 +31,5 @@ _init: $(SRCS) Makefile
 
 clean:
 	rm -f *.o _*
+
+latest:

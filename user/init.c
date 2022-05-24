@@ -9,14 +9,15 @@ void print_time() {
 }
 
 int main() {
-  int fd       = open("/dev/zero", O_RDONLY);
-  char buf[10] = {-1};
-  // will assert fault here: read not implemented
-  if (read(fd, buf, 1) != -1 && buf[0] == 0) {
-    kputstr("success!");
-  } else {
-    kputstr("error!");
-  }
+  // int fd       = open("/dev/zero", O_RDONLY);
+  // char buf[10] = {-1};
+  // // will assert fault here: read not implemented
+  // if (read(fd, buf, 1) != -1 && buf[0] == 0) {
+  //   kputstr("success!");
+  // } else {
+  //   kputstr("error!");
+  // }
+
   while (1) {
     print_time();
     kputstr(" hello from initcode!\n");

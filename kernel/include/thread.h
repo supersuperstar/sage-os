@@ -50,7 +50,7 @@ struct task {
   // value 0/1/2 means stdin/out/err
   // others nonnegative value means system fd
   int fdtable[PROCESS_FILE_TABLE_SIZE];
-  
+
   AddrSpace as;
   int pmsize;  // proc memory size
 };
@@ -58,7 +58,19 @@ struct task {
 const char* task_states_str[MAX_TASK_STATES];
 
 task_t root_task;
-task_t* cpu_tasks[MAX_CPU];
+// task_t* cpu_tasks[MAX_CPU];
+
+typedef struct {
+  task_t* _task;
+  bool _is_on_irq;
+  bool _is_on_trap;
+} cpu_t;
+cpu_t percpu[MAX_CPU];
+
+#define current_task (percpu[cpu_current()]._task)
+#define is_on_irq    (percpu[cpu_current()]._is_on_irq)
+#define is_on_trap   (percpu[cpu_current()]._is_on_trap)
+
 spinlock_t task_list_lock;
 
 void kmt_print_all_tasks(int mask);
