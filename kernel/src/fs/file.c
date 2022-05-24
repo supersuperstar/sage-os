@@ -116,7 +116,7 @@ int file_write(file_t* f, char* buf, uint32_t n) {
 
 // get file by fd
 file_t* file_get(uint32_t fd) {
-  if (fd > FILE_TABLE_SIZE + 3) return NULL;
+  if (fd > FILE_TABLE_SIZE + 3 || fd < 3) return NULL;
   return FILE(fd);
 }
 
