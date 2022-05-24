@@ -102,6 +102,7 @@ Context *uproc_pagefault(Event ev, Context *context) {
   void *paddr   = pmm->pgalloc();
   // vaddr:  the start addr of that page
   uintptr_t vaddr = ref & ~(as->pgsize - 1L);
+  success("get next page frame: 0x%x", (intptr_t)paddr);
   uproc_pgmap(cpu_tasks[cpu_current()], (void *)vaddr, paddr,
               MMAP_READ | MMAP_WRITE);
   return NULL;

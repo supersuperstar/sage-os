@@ -135,5 +135,18 @@ void copyuvm(task_t* proc, task_t* src, int sz) {
 
 int deallocuvm(task_t* proc, int newsz, int oldsz) {
   assert(newsz <= oldsz);
-  panic("not implemented");
+  intptr_t a, pa;
+
+  a = ROUNDUP(newsz, SZ_PAGE);
+  for (; a < oldsz; a += SZ_PAGE) {
+    mapnode_t* pos = NULL;
+    list_for_each_entry(pos, &proc->pg_map, list) {
+      if (pos->va == a) {
+        uporc_pgunmap(proc, a);
+        pmm->free(pos->pa);
+        break;
+      }
+    }
+  }
+  return newsz;
 }
