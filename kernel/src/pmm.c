@@ -1,11 +1,15 @@
 #include <common.h>
 #include <buddy.h>
 #include <logger.h>
+#include <slab.h>
 
-struct pmm_pool global_mm_pool;
 
 static void* kalloc(size_t size) {
   assert((int)size > 0);
+  if (size <= SLAB_SIZE) {
+    //printf("small:alloc_in_slab\n");
+		return alloc_in_slab(size);
+	}
   int npage               = (size - 1) / SZ_PAGE + 1;
   int acquire_order       = power2ify(npage);
   struct chunk* page_addr = chunk_alloc(&global_mm_pool, acquire_order);
@@ -27,8 +31,14 @@ static void* kalloc_safe(size_t size) {
 
 static void kfree(void* ptr) {
   struct chunk* chunk = virt2chunk(&global_mm_pool, ptr);
-  chunk_free(&global_mm_pool, chunk);
-  success("free successfully, address: 0x%x", ptr);
+  if (chunk && chunk->slab){
+    //printf("small:free in slab\n");
+		free_in_slab(ptr);
+  }
+  else {
+    chunk_free(&global_mm_pool, chunk);
+    success("free successfully, address: 0x%x", ptr);
+  }
 }
 
 static void kfree_safe(void* ptr) {
@@ -54,6 +64,7 @@ static void pmm_init() {
   info("page start addr: 0x%x, page indicator addr: 0x%x, available page: %d",
        pg_start, pi_start, nr_page);
   buddy_init(&global_mm_pool, pi_start, pg_start, nr_page);
+  slab_init();
 }
 
 MODULE_DEF(pmm) = {
