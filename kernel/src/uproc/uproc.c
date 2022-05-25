@@ -1,8 +1,12 @@
 #include <kernel.h>
 #include <syscall_defs.h>
+#include <syscalls.h>
 #include <thread.h>
 #include <vm.h>
 #include <common.h>
+#include <list.h>
+#include <io.h>
+#include <fs.h>
 
 #include "initcode.inc"
 
@@ -10,16 +14,6 @@ void uproc_init();
 int uproc_create(task_t *proc, const char *name);
 Context *uproc_pagefault(Event ev, Context *context);
 Context *uproc_syscall(Event ev, Context *context);
-int sys_kputc(task_t *proc, char ch);
-int sys_fork(task_t *proc);
-int sys_wait(task_t *proc, int *status);
-int sys_exit(task_t *proc, int status);
-int sys_kill(task_t *proc, int pid);
-void *sys_mmap(task_t *proc, void *addr, int length, int prot, int flags);
-int sys_getpid(task_t *proc);
-int sys_sleep(task_t *proc, int seconds);
-int64_t sys_uptime(task_t *proc);
-int sys_sbrk(int n);
 int growuproc(int n);
 
 /**
@@ -32,10 +26,9 @@ void uproc_init() {
   uproc_create(initproc, "initcode");
 
   // init the user vm area
-  inituvm(&initproc->as, _init, _init_len);
+  inituvm(initproc, _init, _init_len);
   initproc->pmsize = SZ_PAGE;
 
-  os->on_irq(0, EVENT_SYSCALL, uproc_syscall);
   os->on_irq(0, EVENT_PAGEFAULT, uproc_pagefault);
 }
 
@@ -47,17 +40,25 @@ void uproc_init() {
  * @param name process name
  */
 int uproc_create(task_t *proc, const char *name) {
+  assert_msg(!is_on_irq, "cannot create uproc in irq handler!");
   assert_msg(proc != NULL && name != NULL, "null arguments in uproc_create");
-  proc->pid      = kmt_next_pid();
-  proc->name     = name;
-  proc->entry    = NULL;
-  proc->arg      = NULL;
-  proc->state    = ST_E;
-  proc->owner    = -1;
-  proc->count    = 0;
-  proc->wait_sem = NULL;
-  proc->killed   = 0;
-  proc->next     = NULL;
+  proc->pid        = kmt_next_pid();
+  proc->name       = name;
+  proc->entry      = NULL;
+  proc->arg        = NULL;
+  proc->state      = ST_E;
+  proc->owner      = -1;
+  proc->count      = 0;
+  proc->wait_sem   = NULL;
+  proc->killed     = 0;
+  proc->next       = NULL;
+  proc->nctx       = 0;
+  proc->fdtable[0] = 0;
+  proc->fdtable[1] = 1;
+  proc->fdtable[2] = 2;
+  proc->cwd        = iget(ROOTINO);
+  for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++)
+    proc->fdtable[i] = -1;
 
   memset(proc->fenceA, FILL_FENCE, sizeof(proc->fenceA));
   memset(proc->stack, FILL_STACK, sizeof(proc->stack));
@@ -67,9 +68,18 @@ int uproc_create(task_t *proc, const char *name) {
                  (void *)proc->stack + sizeof(proc->stack)};
   protect(&proc->as);
   AddrSpace *as = &proc->as;
+  INIT_LIST_HEAD(&proc->pg_map);
 
   // ucontext entry: start addr of proc
-  proc->context = ucontext(as, kstack, as->area.start);
+  proc->context[proc->nctx++] = ucontext(as, kstack, as->area.start);
+
+  // // map stack
+  // intptr_t i;
+  // for (i = 0; i < STACK_SIZE; i += (as->pgsize)) {
+  //   uproc_pgmap(as, as->area.end - STACK_SIZE + i,
+  //               (void *)((intptr_t)kstack.start + i), MMAP_WRITE |
+  //               MMAP_READ);
+  // }
 
   // Notice: do not inituvm here, move to uproc_init
   proc->pmsize = 0;
@@ -96,62 +106,13 @@ int uproc_create(task_t *proc, const char *name) {
 Context *uproc_pagefault(Event ev, Context *context) {
   // ev.ref: the failed virtual addr, 48bit unsigned long
   uintptr_t ref = (uintptr_t)ev.ref;
-  info("pid=%d pagefault: %06x%06x", cpu_tasks[cpu_current()]->pid, ref >> 24,
+  info("pid=%d pagefault: %06x%06x", current_task->pid, ref >> 24,
        (uint32_t)ref & ((1L << 24) - 1));
-  AddrSpace *as = &cpu_tasks[cpu_current()]->as;
+  AddrSpace *as = &current_task->as;
   void *paddr   = pmm->pgalloc();
   // vaddr:  the start addr of that page
   uintptr_t vaddr = ref & ~(as->pgsize - 1L);
-  uproc_pgmap(&cpu_tasks[cpu_current()]->as, (void *)vaddr, paddr,
-              MMAP_READ | MMAP_WRITE);
-  return NULL;
-}
-
-/**
- * @brief EVENT_SYSCALL handler on trap
- *
- * @param ev
- * @param context
- * @return Context*
- */
-Context *uproc_syscall(Event ev, Context *context) {
-  task_t *proc     = cpu_tasks[cpu_current()];
-  uint64_t args[4] = {context->rdi, context->rsi, context->rdx, context->rcx};
-  uint64_t retval  = 0;
-  int sys_id       = context->rax;
-  switch (sys_id) {
-    case SYS_kputc:
-      retval = sys_kputc(proc, args[0]);
-      break;
-    case SYS_fork:
-      retval = sys_fork(proc);
-      break;
-    case SYS_exit:
-      retval = sys_exit(proc, args[0]);
-      break;
-    case SYS_wait:
-      retval = sys_wait(proc, (int *)args[0]);
-      break;
-    case SYS_kill:
-      retval = sys_kill(proc, args[0]);
-      break;
-    case SYS_getpid:
-      retval = sys_getpid(proc);
-      break;
-    case SYS_mmap:
-      sys_mmap(proc, (void *)args[0], args[1], args[2], args[3]);
-      break;
-    case SYS_sleep:
-      retval = sys_sleep(proc, args[0]);
-      break;
-    case SYS_uptime:
-      retval = sys_uptime(proc);
-      break;
-    default:
-      assert_msg(false, "syscall not implemented: %d", sys_id);
-      break;
-  }
-  if (sys_id != SYS_mmap) context->rax = retval;
+  uproc_pgmap(current_task, (void *)vaddr, paddr, MMAP_READ | MMAP_WRITE);
   return NULL;
 }
 
@@ -168,15 +129,15 @@ int sys_fork(task_t *proc) {
   uproc_create(subproc, proc->name);
 
   // do not copy parent's rsp0, cr3
-  uintptr_t rsp0 = subproc->context->rsp0;
-  void *cr3      = subproc->context->cr3; 
+  uintptr_t rsp0 = subproc->context[0]->rsp0;
+  void *cr3      = subproc->context[0]->cr3;
   memcpy(subproc->context, proc->context, sizeof(Context));
-  subproc->context->rsp0 = rsp0;
-  subproc->context->cr3  = cr3;
-  subproc->context->rax  = 0;
+  subproc->context[0]->rsp0 = rsp0;
+  subproc->context[0]->cr3  = cr3;
+  subproc->context[0]->rax  = 0;
 
   // copy pages
-  copyuvm(&subproc->as, &proc->as, proc->pmsize);
+  copyuvm(subproc, proc, proc->pmsize);
   subproc->pmsize = proc->pmsize;
   subproc->parent = proc;
 
@@ -186,12 +147,12 @@ int sys_fork(task_t *proc) {
 int sys_exit(task_t *proc, int status) {
   task_t *p;
   kmt->spin_lock(&task_list_lock);
-  for(p = root_task.next; p != NULL; p = p->next){
-    if(proc->parent == p) {
-      if (p->state == ST_S && p->wait_subproc_status != NULL)
-      {
+  for (p = root_task.next; p != NULL; p = p->next) {
+    if (proc->parent == p) {
+      if (p->state == ST_S && p->wait_subproc_status != NULL) {
         p->state = ST_W;
-        *(p->wait_subproc_status) = status;
+        // ERROR: cannot assign value crossing vm
+        // *(p->wait_subproc_status) = status;
       }
       break;
     }
@@ -202,69 +163,28 @@ int sys_exit(task_t *proc, int status) {
 }
 
 int sys_wait(task_t *proc, int *status) {
-  task_t *p;
-  int havekids, pid;  
-  havekids = 0;
+  assert_msg(status != NULL, "NULL pointer status in sys_wait");
+
+  int havekids = 0;
   assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
+  task_t *p;
   kmt->spin_lock(&task_list_lock);
-  for(p = root_task.next; p != NULL; p = p->next){
-    if(p->parent != proc)
-      continue;
+  for (p = root_task.next; p != NULL; p = p->next) {
+    if (p->parent != proc) continue;
     havekids = 1;
   }
   // No point waiting if we don't have any children.
-  if(!havekids || proc->killed){
+  if (!havekids || proc->killed) {
     kmt->spin_unlock(&task_list_lock);
     return -1;
   }
 
   proc->wait_subproc_status = status;
-  proc->state = ST_S;
+  proc->state               = ST_S;
   kmt->spin_unlock(&task_list_lock);
 
   return 0;
 }
-
-int sys_old_wait(task_t *proc, int *status) {
-  task_t *p;
-  int havekids, pid;  
-  assert_msg(!spin_holding(&task_list_lock), "already hold task_list_lock");
-  
-  for(;;){
-    kmt->spin_lock(&task_list_lock);
-    // Scan through table looking for exited children.
-    havekids = 0;
-    for(p = root_task.next; p != NULL; p = p->next){
-      if(p->parent != proc)
-        continue;
-      havekids = 1;
-      if(p->state == ST_Z){
-        // Found one.
-        pid = p->pid;
-        pmm->free(p->stack);
-        unprotect(&p->as);
-        p->pid = 0;
-        p->parent = 0;
-        p->killed = 0;
-        p->state = ST_U;
-        kmt->spin_unlock(&task_list_lock);
-        return pid;
-      }
-    }
-
-    // No point waiting if we don't have any children.
-    if(!havekids || proc->killed){
-      kmt->spin_unlock(&task_list_lock);
-      return -1;
-    }
-
-    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    kmt->spin_unlock(&task_list_lock);
-    sleep(proc, 1);  //DOC: wait-sleep
-  }
-}
-
-
 
 int sys_kill(task_t *proc, int pid) {
   panic("not implemented");
@@ -287,27 +207,29 @@ int sys_sleep(task_t *proc, int seconds) {
 }
 
 int64_t sys_uptime(task_t *proc) {
-  return io_read(AM_TIMER_UPTIME).us / 1000;
+  return safe_io_read(AM_TIMER_UPTIME).us / 1000;
 }
-int sys_sbrk(int n) {
-  int sz;
-  sz = cpu_tasks[cpu_current()]->pmsize;
-  if (growuproc(n) < 0) return -1;
-  return sz;
-}
+
 int growuproc(int n) {
   int sz;
-  task_t *task = cpu_tasks[cpu_current()];
+  task_t *task = current_task;
   sz           = task->pmsize;
   if (n > 0) {
-    sz = allocuvm(&task->as, sz, sz + n);
+    sz = allocuvm(task, sz, sz + n);
     if (sz == 0) return -1;
   } else if (n < 0) {
-    sz = deallocuvm(&task->as, sz, sz + n);
+    sz = deallocuvm(task, sz, sz + n);
     if (sz == 0) return -1;
   }
   task->pmsize = sz;
   return 0;
+}
+
+int sys_sbrk(int n) {
+  int sz;
+  sz = current_task->pmsize;
+  if (growuproc(n) < 0) return -1;
+  return sz;
 }
 
 MODULE_DEF(uproc) = {

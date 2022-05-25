@@ -2,6 +2,8 @@
 #include <sem.h>
 #include <spinlock.h>
 #include <thread.h>
+#include <syscalls.h>
+#include <fs.h>
 
 task_t *kmt_get_task();
 void kmt_set_task(task_t *task);
@@ -27,7 +29,7 @@ const char fence_val[32] = {
     FILL_FENCE, FILL_FENCE};
 
 // use to lock whole os_trap
-extern spinlock_t ir_lock;
+// extern spinlock_t ir_lock;
 
 // use to lock task_list
 spinlock_t task_list_lock = {
@@ -41,7 +43,8 @@ task_t root_task;
 Context *null_contexts[MAX_CPU] = {};
 
 // current task in each cpu
-task_t *cpu_tasks[MAX_CPU] = {};
+// task_t *cpu_tasks[MAX_CPU] = {};
+cpu_t percpu[MAX_CPU];
 
 /**
  * @brief check the fence protection value.
@@ -81,11 +84,13 @@ void kmt_init() {
   os->on_irq(0, EVENT_ERROR, kmt_error);
   os->on_irq(0, EVENT_IRQ_TIMER, kmt_timer);
   os->on_irq(0, EVENT_YIELD, kmt_yield);
+  os->on_irq(0, EVENT_SYSCALL, syscall_handler);
   os->on_irq(INT32_MAX, EVENT_NULL, kmt_schedule);
 }
 
 /**
- * @brief create thread
+ * @brief create thread.
+ *        Notice: cannot call create or teardown in irq handler!
  *
  * @param task task ptr of thread (should be allocated)
  * @param name thread name
@@ -95,25 +100,34 @@ void kmt_init() {
  */
 int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
                void *arg) {
+  assert_msg(!is_on_trap, "cannot create thread on trap!");
   assert_msg(task != NULL && name != NULL && entry != NULL,
              "null arguments in kmt_create");
-  task->pid      = kmt_next_pid();
-  task->name     = name;
-  task->entry    = entry;
-  task->arg      = arg;
-  task->state    = ST_E;
-  task->owner    = -1;
-  task->count    = 0;
-  task->wait_sem = NULL;
-  task->killed   = 0;
-  task->next     = NULL;
+  task->pid        = kmt_next_pid();
+  task->name       = name;
+  task->entry      = entry;
+  task->arg        = arg;
+  task->state      = ST_E;
+  task->owner      = -1;
+  task->count      = 0;
+  task->wait_sem   = NULL;
+  task->killed     = 0;
+  task->next       = NULL;
+  task->as.ptr     = NULL;
+  task->nctx       = 0;
+  task->fdtable[0] = 0;
+  task->fdtable[1] = 1;
+  task->fdtable[2] = 2;
+  task->cwd        = iget(ROOTINO);
+  for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++)
+    task->fdtable[i] = -1;
 
   memset(task->fenceA, FILL_FENCE, sizeof(task->fenceA));
   memset(task->stack, FILL_STACK, sizeof(task->stack));
   memset(task->fenceB, FILL_FENCE, sizeof(task->fenceB));
 
   Area stack = {(void *)task->stack, (void *)task->stack + sizeof(task->stack)};
-  task->context = kcontext(stack, entry, arg);
+  task->context[task->nctx++] = kcontext(stack, entry, arg);
   CHECK_FENCE(task);
   task->next = NULL;
 
@@ -130,11 +144,13 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
 
 /**
  * @brief tear down a thread
+ *        Notice: cannot call create or teardown in irq handler!
  *
  * @param task task of thread
  */
 void kmt_teardown(task_t *task) {
-  assert_msg(!spin_holding(&ir_lock), "do not allow kmt_teardown in trap");
+  assert_msg(!is_on_trap, "cannot teardown thread on trap!");
+  // assert_msg(!spin_holding(&ir_lock), "do not allow kmt_teardown in trap");
   spin_lock(&task_list_lock);
   task->killed = 1;
   spin_unlock(&task_list_lock);
@@ -148,14 +164,15 @@ void kmt_teardown(task_t *task) {
  * @return Context* always NULL
  */
 Context *kmt_context_save(Event ev, Context *context) {
-  assert(spin_holding(&ir_lock));
+  // assert(spin_holding(&ir_lock));
   task_t *cur = kmt_get_task();
   if (cur) {
-    assert(!cur->context);
+    // assert(!cur->context);
     // TODO: more checks for context
     spin_lock(&task_list_lock);
-    cur->state   = ST_W;
-    cur->context = context;
+    cur->state = ST_W;
+    assert_msg(cur->nctx < CTX_STACK_SIZE, "context stack overflow!");
+    cur->context[cur->nctx++] = context;
     spin_unlock(&task_list_lock);
   } else {
     // if no current task (initial), save to null_context
@@ -173,7 +190,7 @@ Context *kmt_context_save(Event ev, Context *context) {
  * @return Context* always NULL
  */
 Context *kmt_yield(Event ev, Context *context) {
-  assert(spin_holding(&ir_lock));
+  // assert(spin_holding(&ir_lock));
   spin_lock(&task_list_lock);
   task_t *cur = kmt_get_task();
   if (cur && cur->wait_sem) {
@@ -192,7 +209,7 @@ Context *kmt_yield(Event ev, Context *context) {
  * @return Context*
  */
 Context *kmt_schedule(Event ev, Context *context) {
-  assert(spin_holding(&ir_lock));
+  // assert(spin_holding(&ir_lock));
   task_t *cur = kmt_get_task();
 
   // free killed process
@@ -203,6 +220,10 @@ Context *kmt_schedule(Event ev, Context *context) {
     while (tp->next != cur)
       tp = tp->next;
     tp->next = cur->next;
+    if (cur->as.ptr != NULL) {
+      unprotect(&cur->as);
+      // TODO: free uvm
+    }
     pmm->free(cur);
   }
 
@@ -222,21 +243,22 @@ Context *kmt_schedule(Event ev, Context *context) {
   if (tp != NULL) {
     tp->owner = cpu_current();
     CHECK_FENCE(tp);
-    tp->state   = ST_R;
-    ret         = tp->context;
-    tp->context = NULL;
-    tp->count   = (tp->count + 1) % 1024;
+    ret = tp->context[--tp->nctx];
+    if (tp->nctx == 0) tp->state = ST_R;
+    // tp->context[tp->nctx] = NULL;
+    // if (tp->nctx > 0) tp->nctx--;
+    tp->count = (tp->count + 1) % 1024;
 
     // TODO: more checks here
     kmt_set_task(tp);
-
-    success("schedule: run next pid=%d, name=%s, count=%d, event=%d %s",
-            tp->pid, tp->name, tp->count, ev.event, ev.msg);
+    if (ev.event != EVENT_IRQ_TIMER && ev.event != EVENT_YIELD)
+      success("schedule: run next pid=%d, name=%s, count=%d, event=%d %s",
+              tp->pid, tp->name, tp->count, ev.event, ev.msg);
   } else {
     // if no task to run
-    warn("schedule: no task to run");
-    kmt_print_all_tasks(LOG_WARN);
-    kmt_print_cpu_tasks(LOG_WARN);
+    // warn("schedule: no task to run");
+    // kmt_print_all_tasks(LOG_WARN);
+    // kmt_print_cpu_tasks(LOG_WARN);
     ret = null_contexts[cpu_current()];
 
     null_contexts[cpu_current()] = NULL;
@@ -249,7 +271,7 @@ Context *kmt_schedule(Event ev, Context *context) {
     error_detail("switch to null context");
     kmt_print_all_tasks(LOG_ERROR);
     kmt_print_cpu_tasks(LOG_ERROR);
-    panic("");
+    panic("switch to null context");
   }
   return ret;
 }
@@ -285,32 +307,34 @@ Context *kmt_timer(Event ev, Context *context) {
  * @return Context* always NULL
  */
 Context *kmt_error(Event ev, Context *context) {
-  assert(spin_holding(&ir_lock));
+  // assert(spin_holding(&ir_lock));
   assert(ev.event == EVENT_ERROR);
   error_detail("error detected: %s", ev.msg);
+  // TODO: stop current task
+  current_task->state = ST_Z;
   kmt_print_all_tasks(LOG_ERROR);
   kmt_print_cpu_tasks(LOG_ERROR);
   return NULL;
 }
 
 /**
- * @brief get current cpu's tasks
+ * @brief get current cpu's tasks. multi-thread safe.
  *
  * @return task_t*
  */
 task_t *kmt_get_task() {
   assert(cpu_current() < MAX_CPU);
-  return cpu_tasks[cpu_current()];
+  return current_task;
 }
 
 /**
- * @brief set cpu's current task
+ * @brief set cpu's current task. multi-thread safe.
  *
  * @param task
  */
 void kmt_set_task(task_t *task) {
   assert(cpu_current() < MAX_CPU);
-  cpu_tasks[cpu_current()] = task;
+  current_task = task;
 }
 
 /**
@@ -342,7 +366,7 @@ void kmt_print_cpu_tasks(int mask) {
   if (!holding) spin_lock(&task_list_lock);
   printf("%s [cpu tasks]:\n", logger_type_str[mask]);
   for (int i = 0; i < cpu_count(); i++) {
-    task_t *tp = cpu_tasks[i];
+    task_t *tp = current_task;
     if (tp)
       printf("CPU %d pid %d <%s>:\t\tstate=%s, count=%d, wait_sem=%s\n", i,
              tp->pid, tp->name, task_states_str[tp->state], tp->count,
