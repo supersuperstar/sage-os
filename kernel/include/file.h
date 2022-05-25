@@ -10,8 +10,28 @@
 #define FILE_TABLE_SIZE         100
 #define PROCESS_FILE_TABLE_SIZE 16
 
+#define DEV_ZERO_FD   100
+#define DEV_NULL_FD   101
+#define DEV_RANDOM_FD 102
+#define DEV_INPUT_FD  103
+#define DEV_VIDEO_FD  104
+
+#define DEV_ZERO_PATH   "/dev/zero"
+#define DEV_NULL_PATH   "/dev/null"
+#define DEV_RANDOM_PATH "/dev/random"
+#define DEV_INPUT_PATH  "/dev/input"
+#define DEV_VIDEO_PATH  "/dev/video"
+
 typedef struct file {
-  enum { FD_NONE, FD_INODE, FD_DEV } type;
+  enum {
+    FD_NONE,
+    FD_INODE,
+    FD_DEV_ZERO,
+    FD_DEV_NULL,
+    FD_DEV_RANDOM,
+    FD_DEV_INPUT,
+    FD_DEV_VIDEO
+  } type;
   int ref;  // reference count
   char readable;
   char writable;
