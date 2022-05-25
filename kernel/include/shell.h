@@ -13,6 +13,7 @@ typedef struct cmd {
 void shell_task(task_t *proc);
 bool get_dir(const char *arg, const char *pwd, char *dir);
 int fork1(task_t *proc);
+void runcmd(const task_t *proc,char *arg, const char *pwd, char *ret,int i)
 
 FUNC(man);
 FUNC(echo);
@@ -25,5 +26,7 @@ FUNC(link);
 FUNC(mkdir);
 FUNC(rmdir);
 FUNC(rm);
+FUNC(run);
+FUNC(ps);
 
 #endif

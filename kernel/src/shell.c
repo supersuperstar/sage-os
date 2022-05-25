@@ -15,6 +15,8 @@ const cmd_t cmd_list[] = {
   { "mkdir",  mkdir  },
   { "rmdir",  rmdir  },
   { "rm"   ,  rm     },
+  { "run"  ,  run    },
+  { "ps"   ,  ps     },
 };
 const int NR_CMD = sizeof(cmd_list) / sizeof(cmd_t);
 
@@ -30,7 +32,7 @@ void shell_task(task_t *proc) {
   Assert(stdin >= 0, "failed to open stdin");
   Assert(stdout >= 0, "failed to open stdout");
 
-  sprintf(buf, "Welcome to sHELL.\nType [help] for help.\n\n");
+  sprintf(buf, "Welcome to SOShell.\nType [man] for help.\n\n");
   vfs->sys_write(proc, stdout, buf, strlen(buf));
 
   sprintf(pwd, "/");
@@ -274,4 +276,9 @@ FUNC(rm) {
        sprintf(ret, "VFS ERROR: unlink failed with status %d.\n", status);
     }
   }
+}
+
+FUNC(run) {
+}
+FUNC(ps) {
 }
