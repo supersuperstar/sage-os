@@ -17,7 +17,7 @@
 #define OFFSET_ALLBITMAP (OFFSET_ALLINODE + NBLOCK / 8)
 #define OFFSET_BLOCK(i)  (ROUNDUP_BLK_NUM(OFFSET_ALLBITMAP) + i * BSIZE)
 
-#define NBLOCK        1024  // data block num
+#define NBLOCK        2048  // data block num
 #define BSIZE         512   // block size
 #define MAX_FILE_SIZE ((NDIRECT + NINDIRECT) * BSIZE)
 
@@ -28,6 +28,7 @@
 #define NDIRECT       12                          // num of direct address
 #define NINDIRECT     (BSIZE / sizeof(uint32_t))  // 128
 #define MAXFILE       (NDIRECT + NINDIRECT)
+#define ROOTINO 1
 
 typedef struct superblock {
   uint32_t size;        // Size of file system image (blocks)
@@ -67,6 +68,17 @@ void iput(inode_t* ip);
 void iunlockput(inode_t* ip);
 int readi(inode_t* ip, char* dst, uint32_t off, uint32_t n);
 int writei(inode_t* ip, char* src, uint32_t off, uint32_t n);
+
+
+int namecmp(const char* s, const char* t);
+inode_t* dirlookup(inode_t* dp, char* name, uint32_t* poff);
+int dirlink(inode_t* dp, char* name, uint32_t inum);
+
+inode_t* namei(char* path);
+inode_t* nameiparent(char* path, char* name);
+
+void fs_print_datablock_bitmap_info(int level);
+void fs_print_inode_info(int level);
 void inode_print(inode_t* ip);
 
 #endif

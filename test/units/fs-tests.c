@@ -15,26 +15,57 @@ int main() {
   fs->init();
 
   //------------------------test  offset------------------------------------
-  int o1, o2, o3, o4, o5;
+  int o1, o2, o3, o4, o5, o6;
   o1 = OFFSET_BOOT;
+  o6 = OFFSET_SB;
   o2 = OFFSET_ALLINODE;
   o3 = OFFSET_ALLBITMAP;
   o4 = OFFSET_BLOCK(0);
-  o5 = OFFSET_BLOCK((NBLOCK - 1));
-  printf("OFFSET_BOOT is %d\n", o1);
-  printf("OFFSET_ALLINODE is %d\n", o2);
-  printf("OFFSET_ALLBITMAP is %d\n", o3);
-  printf("OFFSET_BLOCK 0 is %d\n", o4);
-  printf("OFFSET_BLOCK N is %d\n", o5);
+  o5 = OFFSET_BLOCK((NBLOCK));
+  // printf("OFFSET_BOOT is %d\n", o1);
+  // printf("OFFSET_ALLINODE is %d\n", o2);
+  // printf("OFFSET_ALLBITMAP is %d\n", o3);
+  // printf("OFFSET_BLOCK 0 is %d\n", o4);
+  // printf("OFFSET_BLOCK N is %d\n", o5);
 
-  //------------------------test data block rw------------------------------
-  block_t buf = {.blk_no = 0, .data = "this is a test block data"};
-  fs->writeblk(dev->lookup("sda"), 0, &buf);
+  printf("------------------------\n");
+  printf("|\tBOOT      \t|\n");
+  printf("|   \t(%d)blocks\t|\n", o1 / BSIZE);
+  printf("|end at (0x%8x)\t|\n", o1);
+  printf("------------------------\n");
+  printf("|\tSUPER BLOCK\t|\n");
+  printf("|   \t(%d)blocks\t|\n", (o6) / BSIZE);
+  printf("|end at (0x%8x)\t|\n", o1 + o6);
+  printf("------------------------\n");
+  printf("|\tINODE      \t|\n");
+  printf("|   \t(%d)blocks\t|\n", (o2 - o6 - o1) / BSIZE);
+  printf("|end at (0x%8x)\t|\n", o2);
+  printf("------------------------\n");
+  printf("|\tBIT MAP    \t|\n");
+  printf("|   \t(%d)blocks\t|\n", (ROUNDUP_BLK_NUM(o3 - o2)) / BSIZE);
+  printf("|end at (0x%8x)\t|\n", o3);
+  printf("------------------------\n");
+  printf("|\tDATA BLOCK\t|\n");
+  printf("|   \t(%d)blocks\t|\n", (o5 - o4) / BSIZE);
+  printf("|end at (0x%8x)\t|\n", o5);
+  printf("------------------------\n");
+
+  // //------------------------test data block rw------------------------------
+  // uint64_t start=uptime();
+  block_t buf;
+  for (int i = 1; i <= 20; i++){
+    sprintf((char*)buf.data,"this is data block %d.",i % 2 ? i : i + 100);
+    fs->writeblk(dev->lookup("sda"), i % 2 ? i : i + 100, &buf);
+  }
   block_t out;
-  fs->readblk(dev->lookup("sda"), 0, &out);
-  printf("data is :[%s]\n", out.data);
+  for (int i = 1; i <= 20; i++) {
+    fs->readblk(dev->lookup("sda"), i % 2 ? i : i + 100, &out);
+    printf("data %d is :[%s]\n", i, out.data);
+  }
+  // uint64_t end=uptime();
+  // printf("random RW 100 blocks time:%d\n",end-start);
 
-  //------------------------test inode rw-----------------------------------
+  //------------------------test inoderw-----------------------------------
   inode_t inode, inodeout;
   inode.dev   = dev->lookup("sda");
   inode.size  = 256;
@@ -47,7 +78,7 @@ int main() {
   fs->writeinode(dev->lookup("sda"), inode.inum, &inode);
   fs->readinode(dev->lookup("sda"), inode.inum, &inodeout);
   printf(
-      "\ninode is:\n\tnum: %d\n\ttype: %d\n\tsize: %d\n\tnlinks: %d\n\taddrs: ",
+      "\ninode is:\n\tnum: %d\n\ttype: %d\n\tsize: %d\n\tnlinks:%d\n\taddrs:",
       inodeout.inum, inodeout.type, inodeout.size, inodeout.nlink);
   for (int i = 0; i <= NDIRECT; i++) {
     printf("[%d] ", inodeout.addrs[i]);
@@ -76,6 +107,9 @@ int main() {
     printf("alloc %d block is :%d\n", i + 1, blk_no);
   }
 
+  fs_print_datablock_bitmap_info(0);
+  fs_print_inode_info(0);
+  
   mpe_init(os->run);
 
   while (1)

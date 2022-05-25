@@ -1,6 +1,7 @@
 #include <devices.h>
 #include <fs.h>
 #include <file.h>
+#include <thread.h>
 
 #define D "sda"
 superblock_t sb;
@@ -32,7 +33,7 @@ uint32_t fs_allocblk(device_t* dev) {
   uint32_t i, j, k;
   block_t block;
   for (i = 0; i < NBLOCK; i += BSIZE * 8) {
-    block.blk_no = ROUNDUP_BLK_NUM((OFFSET_BITMAP(i)))/ BSIZE;
+    block.blk_no = ROUNDUP_BLK_NUM((OFFSET_BITMAP(i))) / BSIZE;
     // read bit map block
     dev->ops->read(dev, OFFSET_BITMAP(i), block.data, BSIZE);
     for (j = 0; j < BSIZE * 8 && i + j <= NBLOCK; j++) {
@@ -126,8 +127,8 @@ void fs_init() {
   fs_initblks(dev->lookup(D));
   fs_allocblk(dev->lookup(D));
   file_init();
+  inodes[1].type = DINODE_TYPE_D;
 }
-
 
 // inode operations
 
@@ -240,7 +241,8 @@ int readi(inode_t* ip, char* dst, uint32_t off, uint32_t n) {
   char* offnow;
   int startblk = off / BSIZE, offstart = off % BSIZE,
       endblk = (off + n) / BSIZE, offend = (off + n) % BSIZE;
-  // printf("off:%d\nn:%d\nstartblk:%d\noffstart:%d\nendblk:%d\noffend:%d\n", off,
+  // printf("off:%d\nn:%d\nstartblk:%d\noffstart:%d\nendblk:%d\noffend:%d\n",
+  // off,
   //        n, startblk, offstart, endblk, offend);
   block_t buf;
   if (startblk < NDIRECT && endblk < NDIRECT) {
@@ -410,7 +412,7 @@ int writei(inode_t* ip, char* src, uint32_t off, uint32_t n) {
     addr++;
     fs_writeblk(ip->dev, ip->addrs[NDIRECT], &tmp);
   } else if (startblk >= NDIRECT && endblk >= NDIRECT) {
-    //printf("-----3-----\n");
+    // printf("-----3-----\n");
     block_t tmp;
     if (ip->addrs[NDIRECT] == 0) {
       ip->addrs[NDIRECT] = fs_allocblk(ip->dev);
@@ -464,8 +466,147 @@ int writei(inode_t* ip, char* src, uint32_t off, uint32_t n) {
     iupdate(ip);
   }
 
-  //printf("size:%d\n", ip->size);
+  // printf("size:%d\n", ip->size);
   return n;
+}
+
+int namecmp(const char* s, const char* t) {
+  return strncmp(s, t, PATH_LENGTH);
+}
+
+// Look for a directory entry in a directory.
+// If found, set *poff to byte offset of entry.
+inode_t* dirlookup(inode_t* dp, char* name, uint32_t* poff) {
+  uint32_t off, inum;
+  dirent_t de;
+
+  if (dp->type != DINODE_TYPE_D) panic("[fs.c/dirlookup] dirlookup not DIR");
+
+  for (off = 0; off < dp->size; off += sizeof(de)) {
+    if (readi(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
+      panic("[fs.c/dirlookup] dirlookup read");
+    if (de.inum == 0) continue;
+    if (namecmp(name, de.name) == 0) {
+      // entry matches path element
+      if (poff) *poff = off;
+      inum = de.inum;
+      return iget(inum);
+    }
+  }
+  panic("[fs.c/dirlookup] not found inode");
+  return 0;
+}
+
+// Write a new directory entry (name, inum) into the directory dp.
+int dirlink(inode_t* dp, char* name, uint32_t inum) {
+  int off;
+  dirent_t de;
+  inode_t* ip;
+
+  // Check that name is not present.
+  if ((ip = dirlookup(dp, name, 0)) != 0) {
+    iput(ip);
+    panic("[fs.c/dirlink] dirlookup");
+    return -1;
+  }
+
+  // Look for an empty dirent.
+  for (off = 0; off < dp->size; off += sizeof(de)) {
+    if (readi(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
+      panic("[fs.c/dirlink] dirlink read");
+    if (de.inum == 0) break;
+  }
+
+  strncpy(de.name, name, PATH_LENGTH);
+  de.inum = inum;
+  if (writei(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
+    panic("[fs.c/dirlink] dirlink");
+
+  return 0;
+}
+
+// Paths
+
+// Copy the next path element from path into name.
+// Return a pointer to the element following the copied one.
+// The returned path has no leading slashes,
+// so the caller can check *path=='\0' to see if the name is the last one.
+// If no name to remove, return 0.
+//
+// Examples:
+//   skipelem("a/bb/c", name) = "bb/c", setting name = "a"
+//   skipelem("///a//bb", name) = "bb", setting name = "a"
+//   skipelem("a", name) = "", setting name = "a"
+//   skipelem("", name) = skipelem("////", name) = 0
+//
+static char* skipelem(char* path, char* name) {
+  char* s;
+  int len;
+
+  while (*path == '/')
+    path++;
+  if (*path == 0) return 0;
+  s = path;
+  while (*path != '/' && *path != 0)
+    path++;
+  len = path - s;
+  if (len >= PATH_LENGTH)
+    memmove(name, s, PATH_LENGTH);
+  else {
+    memmove(name, s, len);
+    name[len] = 0;
+  }
+  while (*path == '/')
+    path++;
+  return path;
+}
+
+// Look up and return the inode for a path name.
+// If parent != 0, return the inode for the parent and copy the final
+// path element into name, which must have room for DIRSIZ bytes.
+// Must be called inside a transaction since it calls iput().
+static inode_t* namex(char* path, int nameiparent, char* name) {
+  inode_t *ip, *next;
+
+  if (*path == '/')
+    ip = iget(ROOTINO);
+  else
+    ip = idup(current_task->cwd);
+
+  while ((path = skipelem(path, name)) != 0) {
+    ilock(ip);
+    if (ip->type != DINODE_TYPE_D) {
+      iunlockput(ip);
+      return 0;
+    }
+    if (nameiparent && *path == '\0') {
+      // Stop one level early.
+      iunlock(ip);
+      return ip;
+    }
+    if ((next = dirlookup(ip, name, 0)) == 0) {
+      iunlockput(ip);
+      panic("[fs.c/namex] dirlookup == 0");
+      return 0;
+    }
+    iunlockput(ip);
+    ip = next;
+  }
+  if (nameiparent) {
+    iput(ip);
+    panic("[fs.c/namex] nameiparent");
+    return 0;
+  }
+  return ip;
+}
+
+inode_t* namei(char* path) {
+  char name[PATH_LENGTH];
+  return namex(path, 0, name);
+}
+
+inode_t* nameiparent(char* path, char* name) {
+  return namex(path, 1, name);
 }
 
 void inode_print(inode_t* ip) {
@@ -476,6 +617,54 @@ void inode_print(inode_t* ip) {
     printf("[%d] ", ip->addrs[i]);
   }
   printf("\n");
+}
+
+void fs_print_datablock_bitmap_info(int level) {
+  device_t* device = dev->lookup(D);
+  uint32_t i, j, k;
+  block_t block;
+  int unused = 0;
+  for (i = 0; i < NBLOCK; i += BSIZE * 8) {
+    block.blk_no = ROUNDUP_BLK_NUM((OFFSET_BITMAP(i))) / BSIZE;
+    // read bit map block
+    device->ops->read(device, OFFSET_BITMAP(i), block.data, BSIZE);
+    for (j = 0; j < BSIZE * 8 && i + j <= NBLOCK; j++) {
+      // k is the byte that contains bitmap number j
+      k = j / 8;
+      if (level) info("BLK %d:%d", i + j, block.data[k] & (1 << (7 - (j % 8))));
+      if ((block.data[k] & (1 << (7 - (j % 8)))) == 0) {
+        unused++;
+      }
+    }
+  }
+  info("[DATA BLOCK INFO]total:%d", NBLOCK);
+  info("[DATA BLOCK INFO]unused:%d", unused);
+}
+
+void fs_print_inode_info(int level) {
+  inode_t* i;
+  int unused    = 0;
+  int filenum   = 0;
+  int direntnum = 0;
+  for (i = inodes; i < inodes + NBLOCK; i++) {
+    switch (i->type) {
+      case DINODE_TYPE_N:
+        if (level) info("inode(%d):available", i->inum);
+        unused++;
+        break;
+      case DINODE_TYPE_F:
+        if (level) info("inode(%d):file", i->inum);
+        filenum++;
+        break;
+      case DINODE_TYPE_D:
+        if (level) info("inode(%d):dirent", i->inum);
+        direntnum++;
+        break;
+    }
+  }
+  info("[INODE INFO]available inode num:%d", unused);
+  info("[INODE INFO]file inode num:%d", filenum);
+  info("[INODE INFO]dirent inode num:%d", direntnum);
 }
 
 MODULE_DEF(fs) = {

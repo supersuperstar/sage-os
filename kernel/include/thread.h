@@ -53,6 +53,7 @@ struct task {
   char stack[STACK_SIZE];            // user stack
   char fenceB[STACK_FENCE_SIZE];     // 32 bytes fence
   Context* context[CTX_STACK_SIZE];  // process user context
+  struct inode* cwd;                 // Current directory
   int nctx;
   struct task* next;
   /* below: only available for process */

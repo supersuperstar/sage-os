@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <klib.h>
+#include <user.h>
 #include <am.h>
 #include <logger.h>
 #include <file.h>
@@ -12,8 +13,15 @@ int main() {
   os->init();
   vme_init(pmm->pgalloc, pmm->free);
   uproc->init();
+
   vfs->init();
 
+  task_t* task=pmm->alloc(sizeof(task_t));
+  task->fdtable[0]=0;
+  task->fdtable[1]=1;
+  task->fdtable[2]=2;
+  vfs->open(task,"/usr/te.c",O_CREAT | O_RDWR);
+  //vfs->link(task,"","/uproc/task1");
   mpe_init(os->run);
   return 1;
 }
