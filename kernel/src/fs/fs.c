@@ -100,9 +100,12 @@ void fs_writeinode(device_t* dev, uint32_t inode_no, inode_t* inode) {
 
 // ok
 void fs_initinodes(device_t* dev) {
+  char name[20] = {0};
   for (int i = 0; i < NBLOCK; i++) {
     inodes[i].dev  = dev;
     inodes[i].inum = i;
+    sprintf(name, "inode lock %d", i);
+    spin_init(&(inodes[i].lock), name);
     fs_writeinode(dev, i, &inodes[i]);
   }
 }
@@ -127,7 +130,6 @@ void fs_init() {
   fs_initblks(dev->lookup(D));
   fs_allocblk(dev->lookup(D));
   file_init();
-  inodes[1].type = DINODE_TYPE_D;
 }
 
 // inode operations
@@ -479,21 +481,23 @@ int namecmp(const char* s, const char* t) {
 inode_t* dirlookup(inode_t* dp, char* name, uint32_t* poff) {
   uint32_t off, inum;
   dirent_t de;
-
+  // info("lookup dirent %s",name);
   if (dp->type != DINODE_TYPE_D) panic("[fs.c/dirlookup] dirlookup not DIR");
 
   for (off = 0; off < dp->size; off += sizeof(de)) {
     if (readi(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
       panic("[fs.c/dirlookup] dirlookup read");
     if (de.inum == 0) continue;
-    if (namecmp(name, de.name) == 0) {
+    // info("lookup dirent conpareing %s",de.name);
+    if (strcmp(name, de.name) == 0) {
       // entry matches path element
       if (poff) *poff = off;
       inum = de.inum;
       return iget(inum);
     }
   }
-  panic("[fs.c/dirlookup] not found inode");
+  // warn("[fs.c/dirlookup] not found dirent inode \"%s\".",name);
+  // panic("[fs.c/dirlookup] not found inode");
   return 0;
 }
 
@@ -609,7 +613,8 @@ inode_t* nameiparent(char* path, char* name) {
   return namex(path, 1, name);
 }
 
-void inode_print(inode_t* ip) {
+void inode_print(int inum) {
+  inode_t* ip = inodes + inum;
   printf("\ninode is "
          ":\n\tinum:%d\n\ttype:%d\n\tsize:%d\n\tnlinks:%d\n\tref:%d\n\taddrs:",
          ip->inum, ip->type, ip->size, ip->nlink, ip->ref);

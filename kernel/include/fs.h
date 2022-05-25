@@ -79,6 +79,6 @@ inode_t* nameiparent(char* path, char* name);
 
 void fs_print_datablock_bitmap_info(int level);
 void fs_print_inode_info(int level);
-void inode_print(inode_t* ip);
+void inode_print(int inum);
 
 #endif

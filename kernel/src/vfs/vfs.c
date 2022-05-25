@@ -25,13 +25,17 @@ static inode_t *create(char *path, short type) {
   if ((ip = dirlookup(dp, name, 0)) != 0) {
     iunlockput(dp);
     ilock(ip);
-    if (type == DINODE_TYPE_F && ip->type == DINODE_TYPE_F) return ip;
+    if (type == DINODE_TYPE_F && ip->type == DINODE_TYPE_F) {
+      warn("[vfs.c/create] path=\"%s\",file already exist.but the system still create it.", path);
+      iunlockput(ip);
+      return ip;
+    }
     iunlockput(ip);
-    panic("[vfs.c/create] create: dirlookup.");
+    warn("[vfs.c/create] path=\"%s\",dir already exist.", path);
     return 0;
   }
 
-  if ((ip = ialloc(type)) == 0) panic("create: ialloc");
+  if ((ip = ialloc(type)) == 0) panic("[vfs.c/create] ialloc failed.");
 
   ilock(ip);
   ip->nlink = 1;
@@ -42,13 +46,14 @@ static inode_t *create(char *path, short type) {
     iupdate(dp);
     // No ip->nlink++ for ".": avoid cyclic ref count.
     if (dirlink(ip, ".", ip->inum) < 0 || dirlink(ip, "..", dp->inum) < 0)
-      panic("create dots");
+      panic("[vfs.c/create]dots");
   }
 
-  if (dirlink(dp, name, ip->inum) < 0) panic("create: dirlink");
+  if (dirlink(dp, name, ip->inum) < 0) panic("[vfs.c/create] dirlink");
 
   iunlockput(dp);
-
+  iunlock(ip);
+  success("[vfs.c/create]create file/dirent %s successfully.", path);
   return ip;
 }
 
@@ -72,7 +77,21 @@ void vfs_init() {
   //   fs->readinode(dev->lookup("sda"), i, inodetable + i);
   // }
   fs->init();
-  // info("vfs initialized");
+
+  //WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  //operation behind need to move to mkfs.c
+  //usage:create root dirent and /dev /uproc /usr
+  ialloc(DINODE_TYPE_D);
+  ialloc(DINODE_TYPE_D);
+  dirent_t dir;
+  memset(dir.name, 0, PATH_LENGTH);
+  dir.inum = ROOTINO;
+  strncpy(dir.name, ".", 1);
+  writei(iget(ROOTINO), (char *)&dir, 0, sizeof(dirent_t));
+
+  dir.inum = ROOTINO;
+  strncpy(dir.name, "..", 2);
+  writei(iget(ROOTINO), (char *)&dir, sizeof(dirent_t), sizeof(dirent_t));
   create("/dev", DINODE_TYPE_D);
   create("/uproc", DINODE_TYPE_D);
   create("/usr", DINODE_TYPE_D);
@@ -227,12 +246,11 @@ int sys_open(task_t *proc, const char *pathname, int flags) {
     panic("[sys_open] process fd table is full!");
     return -1;
   } else {  // flg=0表明没找到文件（inode此时为最大匹配）
-    int flg = 0;
-    inode   = namei(path);
+    inode = namei(path);
     assert_msg(inode != NULL, "[sys_open] failed to alloc inode");
-    if (inode != NULL && flg == 1) {
+    if (inode != NULL) {
       //获取一个新的文件描述符并绑定到inode
-      int fd    = file_alloc();
+      int fd = file_alloc();
       file_t *f = file_get(fd);
       if (f == NULL) {
         warn("[vfs.c/sys_open] no fd available.");
