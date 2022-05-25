@@ -75,38 +75,39 @@ typedef struct file file_t;
 
 MODULE(vfs) {
   void (*init)();
-  int (*write)(task_t *proc, int fd, void *buf, size_t count);
-  int (*read)(task_t *proc, int fd, void *buf, size_t count);
-  int (*close)(task_t *proc, int fd);
-  int (*open)(task_t *proc, const char *pathname, int flags);
-  int (*link)(task_t *proc, const char *oldpath, const char *newpath);
-  int (*unlink)(task_t *proc, const char *pathname);
-  int (*fstat)(task_t *proc, int fd, stat_t *buf);
-  int (*mkdir)(task_t *proc, const char *pathname);
-  int (*chdir)(task_t *proc, const char *path);
-  int (*dup)(task_t *proc, int fd);
+  int (*write)(task_t * proc, int fd, void *buf, size_t count);
+  int (*read)(task_t * proc, int fd, void *buf, size_t count);
+  int (*close)(task_t * proc, int fd);
+  int (*open)(task_t * proc, const char *pathname, int flags);
+  int (*link)(task_t * proc, const char *oldpath, const char *newpath);
+  int (*unlink)(task_t * proc, const char *pathname);
+  int (*fstat)(task_t * proc, int fd, stat_t *buf);
+  int (*mkdir)(task_t * proc, const char *pathname);
+  int (*chdir)(task_t * proc, const char *path);
+  int (*dup)(task_t * proc, int fd);
+  int (*lseek)(task_t * proc, int fd, int off);
 };
 
 MODULE(fs) {
   void (*init)();
-  void (*readblk)(device_t* dev, uint32_t blk_no, block_t* buf);
-  void (*writeblk)(device_t* dev, uint32_t blk_no, block_t* buf);
-  void (*zeroblk)(device_t* dev, uint32_t blk_no);
-  uint32_t (*allocblk)(device_t* dev);
-  void (*freeblk)(device_t* dev, uint32_t blk_no);
-  void (*readinode)(device_t* dev, uint32_t inode_no, inode_t* inode);
-  void (*writeinode)(device_t* dev, uint32_t inode_no, inode_t* inode);
+  void (*readblk)(device_t * dev, uint32_t blk_no, block_t * buf);
+  void (*writeblk)(device_t * dev, uint32_t blk_no, block_t * buf);
+  void (*zeroblk)(device_t * dev, uint32_t blk_no);
+  uint32_t (*allocblk)(device_t * dev);
+  void (*freeblk)(device_t * dev, uint32_t blk_no);
+  void (*readinode)(device_t * dev, uint32_t inode_no, inode_t * inode);
+  void (*writeinode)(device_t * dev, uint32_t inode_no, inode_t * inode);
 };
 
-// MODULE(file) {
-//   void (*init)(void);
-//   int (*alloc)();
-//   int (*dup)(file_t* f);
-//   int (*stat)(file_t* f, stat_t* st);
-//   void (*close)(file_t* f);
-//   int (*read)(file_t* f, char* buf, uint32_t n);
-//   int (*write)(file_t* f, char* buf, uint32_t n);
-//   file_t* (*get)(uint32_t fd);
-// };
+  // MODULE(file) {
+  //   void (*init)(void);
+  //   int (*alloc)();
+  //   int (*dup)(file_t* f);
+  //   int (*stat)(file_t* f, stat_t* st);
+  //   void (*close)(file_t* f);
+  //   int (*read)(file_t* f, char* buf, uint32_t n);
+  //   int (*write)(file_t* f, char* buf, uint32_t n);
+  //   file_t* (*get)(uint32_t fd);
+  // };
 
 #endif

@@ -16,6 +16,18 @@ static inode_t *create(const char *path, short type) {
   struct inode *ip, *dp;
   char name[PATH_LENGTH];
 
+  if (strcmp(path, DEV_ZERO_PATH) == 0) {
+    return 0;
+  } else if (strcmp(path, DEV_NULL_PATH) == 0) {
+    return 0;
+  } else if (strcmp(path, DEV_RANDOM_PATH) == 0) {
+    return 0;
+  } else if (strcmp(path, DEV_INPUT_PATH) == 0) {
+    return 0;
+  } else if (strcmp(path, DEV_VIDEO_PATH) == 0) {
+    return 0;
+  }
+
   if ((dp = nameiparent(path, name)) == 0) {
     panic("[vfs.c/create] nameiparent.");
     return 0;
@@ -72,6 +84,10 @@ static int isdirempty(inode_t *dp) {
   return 1;
 }
 
+int randint(int l, int r) {
+  return l + (rand() & 0x7fffffff) % (r - l + 1);
+}
+
 void vfs_init() {
   // int i;
   // inodetable = pmm->alloc(sizeof(inode_t) * NBLOCK);
@@ -101,7 +117,37 @@ void vfs_init() {
 // open a file,return  the process fd(fdtable's subscript)
 // rather than the system global fd
 int sys_open(task_t *proc, const char *pathname, int flags) {
-  inode_t *inode = NULL;
+  inode_t *inode   = NULL;
+  int available_fd = -1;  // process idel fd
+
+  // find available process fd.if not found,return -1
+  for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++) {
+    if (proc->fdtable[i] < 0) {
+      available_fd = i;
+      break;
+    }
+  }
+  if (available_fd == -1) {
+    warn("[sys_open] process fd table is full!");
+    return -1;
+  }
+  // special device
+  if (strcmp(pathname, DEV_ZERO_PATH) == 0) {
+    proc->fdtable[available_fd] = DEV_ZERO_FD;
+    return available_fd;
+  } else if (strcmp(pathname, DEV_NULL_PATH) == 0) {
+    proc->fdtable[available_fd] = DEV_NULL_FD;
+    return available_fd;
+  } else if (strcmp(pathname, DEV_RANDOM_PATH) == 0) {
+    proc->fdtable[available_fd] = DEV_RANDOM_FD;
+    return available_fd;
+  } else if (strcmp(pathname, DEV_INPUT_PATH) == 0) {
+    proc->fdtable[available_fd] = DEV_INPUT_FD;
+    return available_fd;
+  } else if (strcmp(pathname, DEV_VIDEO_PATH) == 0) {
+    proc->fdtable[available_fd] = DEV_VIDEO_FD;
+    return available_fd;
+  }
 
   if (flags & O_CREAT) {
     inode = create((char *)pathname, DINODE_TYPE_F);
@@ -154,8 +200,11 @@ int sys_open(task_t *proc, const char *pathname, int flags) {
 }
 
 int sys_close(task_t *proc, int fd) {
-  file_t *f         = file_get(proc->fdtable[fd]);
+  int sys_fd        = proc->fdtable[fd];
   proc->fdtable[fd] = -1;
+  if (sys_fd < 3 || sys_fd >= FILE_TABLE_SIZE) return 0;
+
+  file_t *f = file_get(sys_fd);
   if (f != NULL) {
     file_close(f);
   } else {
@@ -175,6 +224,16 @@ int sys_read(task_t *proc, int fd, void *buf, size_t nbyte) {
     case 2:
       warn("[sys_read]WARNING!You are trying to read from stdout/stderr!");
       return -1;
+    case DEV_ZERO_FD:
+    case DEV_NULL_FD:
+      return 0;
+    case DEV_RANDOM_FD:
+      return randint(0, 256);
+    case DEV_INPUT_FD:
+      d = dev->lookup("input");
+      return d->ops->read(d, 0, buf, nbyte);
+    case DEV_VIDEO_FD:
+      return 0;
     default:
       return file_read(file_get(proc->fdtable[fd]), buf, nbyte);
   }
@@ -190,6 +249,16 @@ int sys_write(task_t *proc, int fd, void *buf, size_t nbyte) {
     case 2:
       d = dev->lookup("tty1");
       return d->ops->write(d, 0, buf, nbyte);
+    case DEV_ZERO_FD:
+    case DEV_NULL_FD:
+      return 0;
+    case DEV_RANDOM_FD:
+      return -1;
+    case DEV_INPUT_FD:
+      warn("[sys_write]WARNING!You are trying to write to input device!");
+      return -1;
+    case DEV_VIDEO_FD:
+      return 0;
     default:
       return file_write(file_get(proc->fdtable[fd]), buf, nbyte);
   }
@@ -324,6 +393,30 @@ int sys_dup(task_t *proc, int fd) {
   return -1;
 }
 
+int sys_lseek(task_t *proc, int fd, int off) {
+  file_t *f;
+  switch (proc->fdtable[fd]) {
+    case 0:
+    case 1:
+    case 2:
+    case DEV_ZERO_FD:
+    case DEV_NULL_FD:
+    case DEV_RANDOM_FD:
+    case DEV_INPUT_FD:
+    case DEV_VIDEO_FD:
+      warn("[sys_lseek]WARNING!You are trying to lseek for wrong place!");
+      return -1;
+    default:
+      f = file_get(proc->fdtable[fd]);
+      if (f != NULL) {
+        f->off = off;
+        return 0;
+      } else {
+        return -1;
+      }
+  }
+}
+
 MODULE_DEF(vfs) = {
     .init   = vfs_init,
     .write  = sys_write,
@@ -336,4 +429,5 @@ MODULE_DEF(vfs) = {
     .mkdir  = sys_mkdir,
     .chdir  = sys_chdir,
     .dup    = sys_dup,
+    .lseek  = sys_lseek,
 };

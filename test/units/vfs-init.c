@@ -8,7 +8,7 @@
 
 void func(void* arg) {
   task_t* task = (task_t*)arg;
-  vfs->mkdir(task, "/usr");
+  vfs->mkdir(task, "usr");
   vfs->mkdir(task, "/usr/1");
   vfs->mkdir(task, "/usr/1");
 
@@ -21,7 +21,8 @@ void func(void* arg) {
   int w   = vfs->write(task, 3, "hello world!", 13);
   int fd2 = vfs->open(task, "/usr/1/te.c", O_RDONLY);
   // file_print_info(1);
-  int r = vfs->read(task, 5, buf, 13);
+  vfs->lseek(task, 3, 0);
+  int r = vfs->read(task, 3, buf, 13);
   printf("%d %d %d %d %d\n", fd, fd3, w, fd2, r);
   printf("data is:%s\n", buf);
   vfs->close(task, 3);
@@ -49,6 +50,13 @@ void func(void* arg) {
   vfs->close(task, 4);
   vfs->close(task, 5);
   file_print_info(1);
+
+  fd=vfs->open(task,"/dev/random",O_CREAT);
+  r=vfs->read(task,fd,0,0);
+  printf("read from RANDOM is %d\n",r);
+  r=vfs->mkdir(task,"/dev/input");
+  printf("mkdri result is %d\n",r);
+
   while (1)
     ;
   // vfs->link(task,"","/uproc/task1");
