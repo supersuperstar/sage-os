@@ -56,4 +56,6 @@ int file_read(file_t* f, char* buf, uint32_t n);
 int file_write(file_t* f, char* buf, uint32_t n);
 file_t* file_get(uint32_t fd);
 
+void file_print_info(int level);
+
 #endif

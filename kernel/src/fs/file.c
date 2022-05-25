@@ -124,6 +124,31 @@ file_t* file_get(uint32_t fd) {
   return FILE(fd);
 }
 
+void file_print_info(int level) {
+  file_t* f;
+  int used = 0;
+  int fd   = -1;
+  info("System FD table info:");
+  for (int i = 0; i < FILE_TABLE_SIZE; i++) {
+    f = ftable.files + i;
+    if (f->type == FD_INODE) {
+      used++;
+      if (level) {
+        printf("\tFILE %d:", i + 3);
+        printf("\t ref:%d", f->ref);
+        printf("\t off:%d\t", f->off);
+        if (f->readable) printf("R");
+        if (f->writable) printf("W");
+        printf("\n");
+      }
+    } else if (fd == -1) {
+      fd = i + 3;
+    }
+  }
+  info("\tUsed system FD: %d", used);
+  info("\tsmallest available system FD: %d", fd);
+}
+
 // MODULE_DEF(file) = {
 //     .init  = file_init,
 //     .alloc = file_alloc,
