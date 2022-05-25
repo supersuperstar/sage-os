@@ -68,12 +68,17 @@ void uporc_pgunmap(task_t* proc, void* vaddr) {
 
 void inituvm(task_t* proc, unsigned char* init, int sz) {
   AddrSpace* as = &proc->as;
-  assert_msg(sz <= SZ_PAGE, "initcode size greater than 4KB");
-  char* mem;
-  mem = pmm->pgalloc();
-  memset(mem, 0, sizeof(mem));
-  memcpy(mem, init, sz);
-  uproc_pgmap(proc, as->area.start, mem, MMAP_READ | MMAP_WRITE);
+  void* va      = as->area.start;
+  while (sz > 0) {
+    char* mem;
+    mem = pmm->pgalloc();
+    memset(mem, 0, sizeof(mem));
+    memcpy(mem, init, sz);
+    uproc_pgmap(proc, va, mem, MMAP_READ | MMAP_WRITE);
+    sz -= SZ_PAGE;
+    init += SZ_PAGE;
+    va += SZ_PAGE;
+  }
 }
 
 int allocuvm(task_t* proc, int newsz, int oldsz) {
