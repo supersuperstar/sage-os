@@ -12,7 +12,7 @@
 // #define rootinode inodetable
 
 // create an inode bind to path
-static inode_t *create(char *path, short type) {
+static inode_t *create(const char *path, short type) {
   struct inode *ip, *dp;
   char name[PATH_LENGTH];
 
@@ -26,7 +26,9 @@ static inode_t *create(char *path, short type) {
     iunlockput(dp);
     ilock(ip);
     if (type == DINODE_TYPE_F && ip->type == DINODE_TYPE_F) {
-      warn("[vfs.c/create] path=\"%s\",file already exist.but the system still create it.", path);
+      warn("[vfs.c/create] path=\"%s\",file already exist.but the system still "
+           "create it.",
+           path);
       iunlockput(ip);
       return ip;
     }
@@ -35,7 +37,8 @@ static inode_t *create(char *path, short type) {
     return 0;
   }
 
-  if ((ip = ialloc(type)) == 0) panic("[vfs.c/create] ialloc failed.");
+  ip = ialloc(type);
+  assert_msg(ip != NULL, "[vfs.c/create] ialloc failed.");
 
   ilock(ip);
   ip->nlink = 1;
@@ -78,9 +81,9 @@ void vfs_init() {
   // }
   fs->init();
 
-  //WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  //operation behind need to move to mkfs.c
-  //usage:create root dirent and /dev /uproc /usr
+  // WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // operation behind need to move to mkfs.c
+  // usage:create root dirent and /dev /uproc /usr
   ialloc(DINODE_TYPE_D);
   ialloc(DINODE_TYPE_D);
   dirent_t dir;
@@ -93,137 +96,15 @@ void vfs_init() {
   strncpy(dir.name, "..", 2);
   writei(iget(ROOTINO), (char *)&dir, sizeof(dirent_t), sizeof(dirent_t));
   create("/dev", DINODE_TYPE_D);
-  create("/uproc", DINODE_TYPE_D);
-  create("/usr", DINODE_TYPE_D);
 }
-
-// int sys_open(task_t *proc, const char *pathname, int flags) {
-//   inode_t *inode = NULL;
-//
-//   if (flags == O_CREAT) {
-//     // inode=create(pathname,1);
-//     if (inode == NULL) return -1;
-//     //获取一个新的文件描述符并绑定到inode
-//     int fd = file->alloc();
-//     if (file->get(fd) != NULL) file->get(fd)->iptr = inode;
-//     //从fd_table找一个空的填入fd并返回fd
-//     for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++) {
-//       // if(proc->fdtable[i]==0){
-//       //   proc->fdtable[i]=fd;
-//       //   return i;
-//       // }
-//     }
-//     return -1;
-//   } else {  // flg=0表明没找到文件（inode此时为最大匹配）
-//     int flg = 0;
-//     // flg=find_inode_by_pathname(pathname,inode);
-//     if (inode != NULL && flg == 1) {
-//       //获取一个新的文件描述符并绑定到inode
-//       int fd = file->alloc();
-//       if (file->get(fd) != NULL) file->get(fd)->iptr = inode;
-//       if (flags == O_RDWR) {
-//         file->get(fd)->readable = 1;
-//         file->get(fd)->writable = 1;
-//       } else if (flags == O_RDONLY) {
-//         file->get(fd)->readable = 1;
-//         file->get(fd)->writable = 0;
-//       } else {
-//         file->get(fd)->readable = 0;
-//         file->get(fd)->writable = 1;
-//       }
-//       for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++) {
-//         // if(proc->fdtable[i]==0){
-//         //   proc->fdtable[i]=fd;
-//         //   return i;
-//         // }
-//       }
-//     }
-//     return -1;
-//   }
-// }
-//
-// int sys_close(task_t *proc, int fd) {
-//   //   file_t *f = file->get(proc->fdtable[fd]);
-//   //   proc->fdtable[fd]=-1;
-//   //   if (f != NULL) {
-//   //     file->close(f);
-//   //   } else {
-//   //     return -1;
-//   //   }
-//   // }
-//   return 0;
-// }
-//
-// int sys_read(task_t *proc, int fd, void *buf, size_t nbyte) {
-//   device_t *d;
-//   switch (proc->fdtable[fd]) {
-//     case 0:
-//     case 1:
-//     case 2:
-//       d = dev->lookup("tty1");
-//       return d->ops->read(d, 0, buf, nbyte);
-//     default:
-//       return file->read(file->get(proc->fdtable[fd]), buf, nbyte);
-//   }
-// }
-//
-// int sys_write(task_t *proc, int fd, void *buf, size_t nbyte) {
-//   device_t *d;
-//   switch (proc->fdtable[fd]) {
-//     case 0:
-//     case 1:
-//     case 2:
-//       d = dev->lookup("tty1");
-//       return d->ops->write(d, 0, buf, nbyte);
-//     default:
-//       return file->write(file->get(proc->fdtable[fd]), buf, nbyte);
-//   }
-// }
-//
-// int sys_link(task_t *proc, const char *oldpath, const char *newpath) {
-//   assert_msg(false, "sys_link not implemented");
-//   return 1;
-// }
-//
-// int sys_unlink(task_t *proc, const char *pathname) {
-//   assert_msg(false, "sys_unlink not implemented");
-//   return 1;
-// }
-//
-// int sys_fstat(task_t *proc, int fd, stat_t *buf) {
-//   if (proc->fdtable[fd] <= 2) return -1;
-//   return file->stat(file->get(proc->fdtable[fd]), buf);
-// }
-//
-// int sys_mkdir(task_t *proc, const char *pathname) {
-//   assert_msg(false, "sys_mkdir not implemented");
-//   return 1;
-// }
-//
-// int sys_chdir(task_t *proc, const char *path) {
-//   assert_msg(false, "sys_chdir not implemented");
-//   return 1;
-// }
-//
-// int sys_dup(task_t *proc, int fd) {
-//   for (int i = 0; i < PROCESS_FILE_TABLE_SIZE; i++) {
-//     if (proc->fdtable[i] == -1) {
-//       proc->fdtable[i] = proc->fdtable[fd];
-//       return file->dup(file->get(proc->fdtable[fd]));
-//     }
-//   }
-//   return -1;
-// }
 
 // open a file,return  the process fd(fdtable's subscript)
 // rather than the system global fd
 int sys_open(task_t *proc, const char *pathname, int flags) {
   inode_t *inode = NULL;
-  char path[PATH_LENGTH];
-  memcpy(path, pathname, PATH_LENGTH);
 
   if (flags & O_CREAT) {
-    inode = create(path, DINODE_TYPE_F);
+    inode = create((char *)pathname, DINODE_TYPE_F);
     assert_msg(inode != NULL, "[sys_open] failed to alloc inode");
     //获取一个新的文件描述符并绑定到inode
     int fd    = file_alloc();
@@ -246,11 +127,11 @@ int sys_open(task_t *proc, const char *pathname, int flags) {
     panic("[sys_open] process fd table is full!");
     return -1;
   } else {  // flg=0表明没找到文件（inode此时为最大匹配）
-    inode = namei(path);
+    inode = namei((char *)pathname);
     assert_msg(inode != NULL, "[sys_open] failed to alloc inode");
     if (inode != NULL) {
       //获取一个新的文件描述符并绑定到inode
-      int fd = file_alloc();
+      int fd    = file_alloc();
       file_t *f = file_get(fd);
       if (f == NULL) {
         warn("[vfs.c/sys_open] no fd available.");
@@ -315,14 +196,10 @@ int sys_write(task_t *proc, int fd, void *buf, size_t nbyte) {
 }
 
 int sys_link(task_t *proc, const char *oldpath, const char *newpath) {
-  char old[PATH_LENGTH];
-  memcpy(old, oldpath, PATH_LENGTH);
-  char new[PATH_LENGTH];
-  memcpy(new, newpath, PATH_LENGTH);
   char name[PATH_LENGTH];
   inode_t *ip, *dp;
   // find oldpath inode
-  if ((ip = namei(old)) == 0) return -1;
+  if ((ip = namei(oldpath)) == 0) return -1;
   ilock(ip);
   // inode is not file
   if (ip->type == DINODE_TYPE_D) {
@@ -334,7 +211,7 @@ int sys_link(task_t *proc, const char *oldpath, const char *newpath) {
   iupdate(ip);
   iunlock(ip);
 
-  if ((dp = nameiparent(new, name)) == 0) {
+  if ((dp = nameiparent(newpath, name)) == 0) {
     ilock(ip);
     ip->nlink--;
     iupdate(ip);
@@ -356,14 +233,12 @@ int sys_link(task_t *proc, const char *oldpath, const char *newpath) {
 }
 
 int sys_unlink(task_t *proc, const char *pathname) {
-  char path[PATH_LENGTH];
-  memcpy(path, pathname, PATH_LENGTH);
   char name[PATH_LENGTH];
 
   inode_t *ip, *dp;
   uint32_t off;
   dirent_t de;
-  if ((dp = nameiparent(path, name)) == 0) {
+  if ((dp = nameiparent(pathname, name)) == 0) {
     return -1;
   }
   ilock(dp);
@@ -411,17 +286,12 @@ int sys_fstat(task_t *proc, int fd, stat_t *buf) {
 
 // create dir,return 1 if succeed,0 if fail.
 int sys_mkdir(task_t *proc, const char *pathname) {
-  char path[PATH_LENGTH];
-  memcpy(path, pathname, PATH_LENGTH);
-  inode_t *inode = create(path, DINODE_TYPE_D);
+  inode_t *inode = create(pathname, DINODE_TYPE_D);
   if (inode != NULL) return 0;
   return -1;
 }
 
-int sys_chdir(task_t *proc, const char *path) {
-  char pathname[PATH_LENGTH];
-  memcpy(pathname, path, PATH_LENGTH);
-
+int sys_chdir(task_t *proc, const char *pathname) {
   inode_t *ip;
   task_t *curproc = current_task;
 

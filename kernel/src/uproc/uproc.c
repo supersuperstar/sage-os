@@ -6,6 +6,7 @@
 #include <common.h>
 #include <list.h>
 #include <io.h>
+#include <fs.h>
 
 #include "initcode.inc"
 
@@ -41,17 +42,23 @@ void uproc_init() {
 int uproc_create(task_t *proc, const char *name) {
   assert_msg(!is_on_irq, "cannot create uproc in irq handler!");
   assert_msg(proc != NULL && name != NULL, "null arguments in uproc_create");
-  proc->pid      = kmt_next_pid();
-  proc->name     = name;
-  proc->entry    = NULL;
-  proc->arg      = NULL;
-  proc->state    = ST_E;
-  proc->owner    = -1;
-  proc->count    = 0;
-  proc->wait_sem = NULL;
-  proc->killed   = 0;
-  proc->next     = NULL;
-  proc->nctx     = 0;
+  proc->pid        = kmt_next_pid();
+  proc->name       = name;
+  proc->entry      = NULL;
+  proc->arg        = NULL;
+  proc->state      = ST_E;
+  proc->owner      = -1;
+  proc->count      = 0;
+  proc->wait_sem   = NULL;
+  proc->killed     = 0;
+  proc->next       = NULL;
+  proc->nctx       = 0;
+  proc->fdtable[0] = 0;
+  proc->fdtable[1] = 1;
+  proc->fdtable[2] = 2;
+  proc->cwd        = iget(ROOTINO);
+  for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++)
+    proc->fdtable[i] = -1;
 
   memset(proc->fenceA, FILL_FENCE, sizeof(proc->fenceA));
   memset(proc->stack, FILL_STACK, sizeof(proc->stack));

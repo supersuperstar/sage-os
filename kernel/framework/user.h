@@ -1,3 +1,6 @@
+#ifndef USER_H__
+#define USER_H__
+
 #define MAP_SHARED  1
 #define MAP_PRIVATE 2
 #define MAP_UNMAP   3
@@ -35,3 +38,5 @@ typedef struct {
   uint16_t inum;
   char name[PATH_LENGTH];
 } __attribute__((packed)) _dirent_t;
+
+#endif

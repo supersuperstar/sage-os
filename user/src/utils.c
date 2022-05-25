@@ -8,7 +8,7 @@ size_t strlen(char* s) {
 }
 
 int cputstr(char* s) {
-  return write(0, s, strlen(s) + 1);
+  return write(1, s, strlen(s) + 1);
 }
 
 void print_time() {
