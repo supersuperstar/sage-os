@@ -28,7 +28,7 @@
 #define NDIRECT       12                          // num of direct address
 #define NINDIRECT     (BSIZE / sizeof(uint32_t))  // 128
 #define MAXFILE       (NDIRECT + NINDIRECT)
-#define ROOTINO 1
+#define ROOTINO       1
 
 typedef struct superblock {
   uint32_t size;        // Size of file system image (blocks)
