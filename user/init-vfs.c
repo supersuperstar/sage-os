@@ -2,9 +2,10 @@
 #include <utils.h>
 
 int main() {
+  kputstr("hello123\n");
   cputstr("Please input your name:");
   char name[30];
-  if (read(1, name, 30) > 0) {
+  if (read(0, name, 30) > 0) {
     cputstr("\nWelcome, ");
     cputstr(name);
   } else

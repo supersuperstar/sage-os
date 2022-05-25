@@ -102,18 +102,23 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
   assert_msg(!is_on_trap, "cannot create thread on trap!");
   assert_msg(task != NULL && name != NULL && entry != NULL,
              "null arguments in kmt_create");
-  task->pid      = kmt_next_pid();
-  task->name     = name;
-  task->entry    = entry;
-  task->arg      = arg;
-  task->state    = ST_E;
-  task->owner    = -1;
-  task->count    = 0;
-  task->wait_sem = NULL;
-  task->killed   = 0;
-  task->next     = NULL;
-  task->as.ptr   = NULL;
-  task->nctx     = 0;
+  task->pid        = kmt_next_pid();
+  task->name       = name;
+  task->entry      = entry;
+  task->arg        = arg;
+  task->state      = ST_E;
+  task->owner      = -1;
+  task->count      = 0;
+  task->wait_sem   = NULL;
+  task->killed     = 0;
+  task->next       = NULL;
+  task->as.ptr     = NULL;
+  task->nctx       = 0;
+  task->fdtable[0] = 0;
+  task->fdtable[1] = 1;
+  task->fdtable[2] = 2;
+  for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++)
+    task->fdtable[i] = -1;
 
   memset(task->fenceA, FILL_FENCE, sizeof(task->fenceA));
   memset(task->stack, FILL_STACK, sizeof(task->stack));
