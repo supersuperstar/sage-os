@@ -6,6 +6,7 @@
 #include <common.h>
 #include <list.h>
 #include <io.h>
+#include <fs.h>
 
 #include "initcode.inc"
 
@@ -55,6 +56,7 @@ int uproc_create(task_t *proc, const char *name) {
   proc->fdtable[0] = 0;
   proc->fdtable[1] = 1;
   proc->fdtable[2] = 2;
+  proc->cwd        = iget(ROOTINO);
   for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++)
     proc->fdtable[i] = -1;
 

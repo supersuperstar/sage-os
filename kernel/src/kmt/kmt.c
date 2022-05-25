@@ -3,6 +3,7 @@
 #include <spinlock.h>
 #include <thread.h>
 #include <syscalls.h>
+#include <fs.h>
 
 task_t *kmt_get_task();
 void kmt_set_task(task_t *task);
@@ -117,6 +118,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg),
   task->fdtable[0] = 0;
   task->fdtable[1] = 1;
   task->fdtable[2] = 2;
+  task->cwd        = iget(ROOTINO);
   for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++)
     task->fdtable[i] = -1;
 

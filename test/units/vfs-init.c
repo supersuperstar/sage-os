@@ -6,24 +6,9 @@
 #include <file.h>
 #include <fs.h>
 
-int main() {
-  _log_mask = LOG_ERROR | LOG_INFO | LOG_WARN;
-  ioe_init();
-  cte_init(os->trap);
-  os->init();
-  vme_init(pmm->pgalloc, pmm->free);
-  uproc->init();
-
-  task_t* task     = pmm->alloc(sizeof(task_t));
-  task->fdtable[0] = 0;
-  task->fdtable[1] = 1;
-  task->fdtable[2] = 2;
-  for (int i = 3; i < PROCESS_FILE_TABLE_SIZE; i++) {
-    task->fdtable[i] = -1;
-  }
-  vfs->init();
-
-  //
+void func(void* arg) {
+  task_t* task = (task_t*)arg;
+  vfs->mkdir(task, "/usr");
   vfs->mkdir(task, "/usr/1");
   vfs->mkdir(task, "/usr/1");
 
@@ -64,10 +49,23 @@ int main() {
   vfs->close(task, 4);
   vfs->close(task, 5);
   file_print_info(1);
-
   while (1)
     ;
   // vfs->link(task,"","/uproc/task1");
+}
+
+int main() {
+  _log_mask = LOG_ERROR | LOG_INFO | LOG_WARN;
+  ioe_init();
+  cte_init(os->trap);
+  os->init();
+  vme_init(pmm->pgalloc, pmm->free);
+  uproc->init();
+  vfs->init();
+
+  task_t* task = pmm->alloc(sizeof(task_t));
+  kmt->create(task, "test", func, task);
+
   mpe_init(os->run);
   return 1;
 }

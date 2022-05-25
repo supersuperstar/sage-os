@@ -156,11 +156,13 @@ inode_t* ialloc(short type) {
 
 // ok
 void iupdate(inode_t* ip) {
+  assert_msg(ip, "[iupdate] NULL inode pointer!");
   fs_writeinode(dev->lookup("sda"), ip->inum, ip);
 }
 
 // ok
 inode_t* idup(inode_t* ip) {
+  assert_msg(ip, "[idup] NULL inode pointer!");
   spin_lock(&ip->lock);
   ip->ref++;
   spin_unlock(&ip->lock);
@@ -543,9 +545,10 @@ int dirlink(inode_t* dp, char* name, uint32_t inum) {
 //   skipelem("a", name) = "", setting name = "a"
 //   skipelem("", name) = skipelem("////", name) = 0
 //
-static char* skipelem(char* path, char* name) {
+static char* skipelem(const char* pathname, char* name) {
   char* s;
   int len;
+  char* path = (char*)pathname;
 
   while (*path == '/')
     path++;
@@ -569,8 +572,9 @@ static char* skipelem(char* path, char* name) {
 // If parent != 0, return the inode for the parent and copy the final
 // path element into name, which must have room for DIRSIZ bytes.
 // Must be called inside a transaction since it calls iput().
-static inode_t* namex(char* path, int nameiparent, char* name) {
+static inode_t* namex(const char* pathname, int nameiparent, char* name) {
   inode_t *ip, *next;
+  char* path = (char*)pathname;
 
   if (*path == '/')
     ip = iget(ROOTINO);
@@ -604,12 +608,12 @@ static inode_t* namex(char* path, int nameiparent, char* name) {
   return ip;
 }
 
-inode_t* namei(char* path) {
+inode_t* namei(const char* path) {
   char name[PATH_LENGTH];
   return namex(path, 0, name);
 }
 
-inode_t* nameiparent(char* path, char* name) {
+inode_t* nameiparent(const char* path, char* name) {
   return namex(path, 1, name);
 }
 

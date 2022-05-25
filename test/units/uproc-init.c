@@ -10,6 +10,7 @@ int main() {
   os->init();
   vme_init(pmm->pgalloc, pmm->free);
   uproc->init();
+  vfs->init();
   mpe_init(os->run);
   return 1;
 }

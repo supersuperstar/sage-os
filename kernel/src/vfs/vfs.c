@@ -12,7 +12,7 @@
 // #define rootinode inodetable
 
 // create an inode bind to path
-static inode_t *create(char *path, short type) {
+static inode_t *create(const char *path, short type) {
   struct inode *ip, *dp;
   char name[PATH_LENGTH];
 
@@ -196,14 +196,10 @@ int sys_write(task_t *proc, int fd, void *buf, size_t nbyte) {
 }
 
 int sys_link(task_t *proc, const char *oldpath, const char *newpath) {
-  char old[PATH_LENGTH];
-  memcpy(old, oldpath, PATH_LENGTH);
-  char new[PATH_LENGTH];
-  memcpy(new, newpath, PATH_LENGTH);
   char name[PATH_LENGTH];
   inode_t *ip, *dp;
   // find oldpath inode
-  if ((ip = namei(old)) == 0) return -1;
+  if ((ip = namei(oldpath)) == 0) return -1;
   ilock(ip);
   // inode is not file
   if (ip->type == DINODE_TYPE_D) {
@@ -215,7 +211,7 @@ int sys_link(task_t *proc, const char *oldpath, const char *newpath) {
   iupdate(ip);
   iunlock(ip);
 
-  if ((dp = nameiparent(new, name)) == 0) {
+  if ((dp = nameiparent(newpath, name)) == 0) {
     ilock(ip);
     ip->nlink--;
     iupdate(ip);
@@ -237,14 +233,12 @@ int sys_link(task_t *proc, const char *oldpath, const char *newpath) {
 }
 
 int sys_unlink(task_t *proc, const char *pathname) {
-  char path[PATH_LENGTH];
-  memcpy(path, pathname, PATH_LENGTH);
   char name[PATH_LENGTH];
 
   inode_t *ip, *dp;
   uint32_t off;
   dirent_t de;
-  if ((dp = nameiparent(path, name)) == 0) {
+  if ((dp = nameiparent(pathname, name)) == 0) {
     return -1;
   }
   ilock(dp);
@@ -292,17 +286,12 @@ int sys_fstat(task_t *proc, int fd, stat_t *buf) {
 
 // create dir,return 1 if succeed,0 if fail.
 int sys_mkdir(task_t *proc, const char *pathname) {
-  char path[PATH_LENGTH];
-  memcpy(path, pathname, PATH_LENGTH);
-  inode_t *inode = create(path, DINODE_TYPE_D);
+  inode_t *inode = create(pathname, DINODE_TYPE_D);
   if (inode != NULL) return 0;
   return -1;
 }
 
-int sys_chdir(task_t *proc, const char *path) {
-  char pathname[PATH_LENGTH];
-  memcpy(pathname, path, PATH_LENGTH);
-
+int sys_chdir(task_t *proc, const char *pathname) {
   inode_t *ip;
   task_t *curproc = current_task;
 

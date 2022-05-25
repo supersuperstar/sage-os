@@ -24,8 +24,8 @@ int namecmp(const char* s, const char* t);
 inode_t* dirlookup(inode_t* dp, char* name, uint32_t* poff);
 int dirlink(inode_t* dp, char* name, uint32_t inum);
 
-inode_t* namei(char* path);
-inode_t* nameiparent(char* path, char* name);
+inode_t* namei(const char* path);
+inode_t* nameiparent(const char* path, char* name);
 
 void fs_print_datablock_bitmap_info(int level);
 void fs_print_inode_info(int level);
