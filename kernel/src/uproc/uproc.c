@@ -40,7 +40,7 @@ void uproc_init() {
  * @param name process name
  */
 int uproc_create(task_t *proc, const char *name) {
-  assert_msg(!is_on_irq, "cannot create uproc in irq handler!");
+  // assert_msg(!is_on_irq, "cannot create uproc in irq handler!");
   assert_msg(proc != NULL && name != NULL, "null arguments in uproc_create");
   proc->pid        = kmt_next_pid();
   proc->name       = name;
