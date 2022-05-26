@@ -5,11 +5,12 @@
 #include <user.h>
 #include <fs.h>
 #include <syscalls.h>
+#include <buddy.h>
 
 const cmd_t cmd_list[] = {
     {"man", man},     {"echo", echo},   {"ls", ls},       {"pwd", pwd},
     {"cd", cd},       {"cat", cat},     {"write", write}, {"link", link},
-    {"mkdir", mkdir}, {"rmdir", rmdir}, {"rm", rm},       {"run", run},
+    {"mkdir", mkdir}, {"rmdir", rmdir}, {"rm", rm}, 
     {"ps", ps},       {"stat", stat},   {"mem", mem},
 };
 
@@ -88,45 +89,55 @@ void shell_init() {
 //   sys_exit(proc, 0);
 // }
 
-// bool get_dir(char *arg, char *pwd, char *dir) {
-//   char buf[512] = "";
-//   if (arg[0] == '/') {
-//     sprintf(buf, "%s", arg);
-//   } else {
-//     if (pwd[strlen(pwd) - 1] == '/') {
-//       sprintf(buf, "%s%s", pwd, arg);
-//     } else {
-//       sprintf(buf, "%s/%s", pwd, arg);
-//     }
-//   }
+bool get_dir(char *arg, char *pwd, char *dir) {
+  char buf[512] = "";
+  if (arg[0] == '/') {
+    sprintf(buf, "%s", arg);
+  } else {
+    if (pwd[strlen(pwd) - 1] == '/') {
+      sprintf(buf, "%s%s", pwd, arg);
+    } else {
+      sprintf(buf, "%s/%s", pwd, arg);
+    }
+  }
 
-//   size_t pos = 0;
-//   size_t cur = 0;
-//   size_t len = strlen(buf);
-//   while (pos <= len) {
-//     if (buf[pos] == ' ') {
-//       break;
-//     } else if (!strncmp(buf + pos, "//", 2)) {
-//       return false;
-//     } else if (!strncmp(buf + pos, "/./", 3)) {
-//       pos += 2;
-//       continue;
-//     } else if (!strncmp(buf + pos, "/../", 4)) {
-//       pos += 3;
-//       if (cur > 0 && dir[cur] == '/') --cur;
-//       while (cur > 0 && dir[cur] != '/')
-//         --cur;
-//       continue;
-//     } else {
-//       dir[cur] = buf[pos];
-//       ++pos, ++cur;
-//     }
-//   }
-//   dir[cur] = '\0';
-//   len      = strlen(dir);
-//   if (len > 1 && dir[len - 1] == '/') dir[len - 1] = '\0';
-//   return true;
-// }
+  size_t pos = 0;
+  size_t cur = 0;
+  size_t len = strlen(buf);
+
+  if(arg[0] == '.') {
+    if(arg[1] == '\0') {
+      dir = pwd;
+      return true;
+    }
+    if(arg[1] == '.') {
+      int flag = 2;
+      while (flag)
+      {
+        if(buf[len] == '/') {
+          flag--;
+        }
+        if(flag == 0) {
+          break;
+        }
+        len--;
+      }
+    }
+  }
+  
+  while (pos <= len) {
+    if (buf[pos] == ' ') {
+      break;
+    } else {
+      dir[cur] = buf[pos];
+      ++pos, ++cur;
+    }
+  }
+  dir[cur] = '\0';
+  len      = strlen(dir);
+  if (len > 1 && dir[len - 1] == '/') dir[len - 1] = '\0';
+  return true;
+}
 
 FUNC(man) {
   sprintf(ret, "Available commands: \n");
@@ -147,7 +158,6 @@ FUNC(pwd) {
 }
 
 FUNC(ls) {
-// TODO: support ls path
 #define MAX_DIRENT 16
   inode_t *inode;
   if (*arg == ' ' || *arg == '\0') {
@@ -169,9 +179,12 @@ FUNC(ls) {
 }
 
 FUNC(cd) {
-  if (!sys_chdir(proc, arg) != 0) {
+  char dir[512] = "";
+  if (sys_chdir(proc, arg) != 0) {
     sprintf(ret, "Invalid directory address.\n");
   } else {
+    get_dir(arg, pwd, dir);
+    strcpy(pwd, dir);
     sprintf(ret, "Change directory to %s.\n", arg);
   }
 }
@@ -181,7 +194,7 @@ FUNC(cat) {
   if (fd < 0) {
     sprintf(ret, "VFS ERROR: open failed with status %d.\n", fd);
   } else {
-    sys_read(proc, fd, ret, sizeof(ret));
+    sys_read(proc, fd, ret, 512);
     sys_close(proc, fd);
   }
 }
@@ -242,15 +255,12 @@ FUNC(mkdir) {
 }
 
 FUNC(rmdir) {
-  // char dir[512] = "";
-
-  // int status = sys_rmdir(proc, arg);
-  // if (!status) {
-  //   sprintf(ret, "Successfully removed folder %s.\n", dir);
-  // } else {
-  //   sprintf(ret, "VFS ERROR: rmdir failed with status %d.\n", status);
-  // }
-  // TODO: rmdir
+  int status = sys_unlink(proc, arg);
+  if (!status) {
+    sprintf(ret, "Successfully removed %s.\n", arg);
+  } else {
+    sprintf(ret, "VFS ERROR: unlink failed with status %d.\n", status);
+  }
 }
 
 FUNC(rm) {
@@ -262,6 +272,7 @@ FUNC(rm) {
   }
 }
 
+/*
 FUNC(run) {
   task_t *game = pmm->alloc(sizeof(game));
   kmt_init_task(game, "type game", app_type_game, NULL);
@@ -281,6 +292,7 @@ FUNC(run) {
 
   yield();
 }
+*/
 
 FUNC(ps) {
   bool holding = spin_holding(&task_list_lock);
@@ -295,7 +307,33 @@ FUNC(ps) {
 }
 
 FUNC(stat) {
+  stat_t *targetFile = pmm->alloc(sizeof(stat_t));;
+  int fd = sys_open(proc, arg, O_RDONLY);
+  int status = sys_fstat(proc, fd, targetFile);
+  if (!status) {
+    char *typestring;
+    if (targetFile->type == 1) {
+      typestring = "file";
+    } else if (targetFile->type == 2) {
+      typestring = "directory";
+    } else {
+      typestring = "unused";
+    }
+    sprintf(ret, "file: %s: type=%s, link number=%d, size=%dbytes\n", arg, typestring, targetFile->links, targetFile->size);
+  } else {
+    sprintf(ret, "VFS ERROR: stat failed with status %d.\n", status);
+  }
+  sys_close(proc, fd);
 }
 
 FUNC(mem) {
+  bool holding = spin_holding(&task_list_lock);
+  if (!holding) spin_lock(&task_list_lock);
+  cprintf("tty1 total memory:", "%d\n", total_mem);
+  for (task_t *tp = &root_task; tp != NULL; tp = tp->next) {
+    cprintf("tty1", "pid %d <%s> pmsize: %d\n", tp->pid,
+            tp->name, tp->pmsize);
+  }
+  if (!holding) spin_unlock(&task_list_lock);
+
 }

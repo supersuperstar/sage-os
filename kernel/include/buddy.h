@@ -3,6 +3,8 @@
 #include <common.h>
 #include <list.h>
 
+int total_apply, total_mem;
+
 #define BUDDY_MAX_ORDER 24
 /**
  * @brief page metadata
