@@ -11,7 +11,7 @@ typedef struct cmd {
 } cmd_t;
 
 void shell_init();
-// bool get_dir(char *arg, char *pwd, char *dir);
+bool get_dir(char *arg, char *pwd, char *dir);
 int fork1();
 void runcmd(task_t *proc, char *arg, char *pwd, char *ret, int i);
 
