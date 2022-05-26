@@ -15,8 +15,6 @@ bool get_dir(char *arg, char *pwd, char *dir);
 int fork1();
 void runcmd(task_t *proc, char *arg, char *pwd, char *ret, int i);
 
-void app_type_game(void *arg);
-
 FUNC(man);
 FUNC(echo);
 FUNC(pwd);
