@@ -321,7 +321,9 @@ void app_type_game(void *arg) {
   video_init();
 
   // preemptively get input owner lock
-  kmt->sem_wait(&in->read_lock);
+  kmt->spin_lock(&in->owner_lock);
+  in->owner = current_task->pid;
+  kmt->spin_unlock(&in->owner_lock);
 
   // change display
   struct display_info info = {.current = DISPALY};
@@ -364,7 +366,9 @@ void app_type_game(void *arg) {
       };
       fbdev->ops->write(fbdev, 0, &info, sizeof(struct display_info));
 
-      kmt->sem_signal(&in->read_lock);
+      kmt->spin_lock(&in->owner_lock);
+      in->owner = -1;
+      kmt->spin_unlock(&in->owner_lock);
 
       quit();
     }

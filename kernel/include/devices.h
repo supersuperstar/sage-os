@@ -33,8 +33,7 @@ typedef struct {
   spinlock_t lock;
   sem_t event_sem;
   int owner;
-  // spinlock_t owner_lock;
-  sem_t read_lock;
+  spinlock_t owner_lock;
   struct input_event *events;
   int front, rear;
   int capslock, shift_down[2], ctrl_down[2], alt_down[2];

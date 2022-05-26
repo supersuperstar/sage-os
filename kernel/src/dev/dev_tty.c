@@ -315,12 +315,13 @@ void dev_tty_task(void *arg) {
   while (1) {
     struct input_event ev = {0, 0, 0};
 
-    kmt->sem_wait(&inp->read_lock);
-
-    int nread = in->ops->read(in, 0, &ev, sizeof(ev));
-    panic_on(nread == 0, "unknown error");
-
-    kmt->sem_signal(&inp->read_lock);
+    kmt->spin_lock(&inp->owner_lock);
+    if (inp->owner == -1) inp->owner = current_task->pid;
+    if (inp->owner == current_task->pid) {
+      int nread = in->ops->read(in, 0, &ev, sizeof(ev));
+      panic_on(nread == 0, "unknown error");
+    }
+    kmt->spin_unlock(&inp->owner_lock);
 
     tty_t *tty = ttydev->ptr;
 

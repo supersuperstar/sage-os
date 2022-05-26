@@ -60,7 +60,6 @@ struct task {
   Context* context[CTX_STACK_SIZE];  // process user context
   int nctx;                          // user context stack size
   struct inode* cwd;                 // Current directory
-  struct task* next;
   /* below: only available for process */
   struct task* parent;
   bool wait_subproc;
@@ -75,6 +74,8 @@ struct task {
   AddrSpace as;
   int pmsize;  // proc memory size
   struct list_head pg_map;
+
+  struct task* next;
 };
 
 const char* task_states_str[MAX_TASK_STATES];
