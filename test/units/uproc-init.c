@@ -4,7 +4,7 @@
 #include <logger.h>
 
 int main() {
-  _log_mask = LOG_ERROR | LOG_WARN | LOG_INFO;
+  _log_mask = LOG_ERROR | LOG_WARN;
   ioe_init();
   cte_init(os->trap);
   os->init();

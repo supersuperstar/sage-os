@@ -1,34 +1,6 @@
 #include <ulib.h>
 #include <utils.h>
 
-void hello_test();
-void dfs_test();
-
-int main() {
-  printf("Hello from user\n");
-  dfs_test();
-  hello_test();
-  while (1)
-    ;
-}
-
-void hello_test() {
-  int pid = fork(), x = 0;
-
-  const char *fmt;
-  if (pid) {
-    fmt = "Parent #%d\n";
-  } else {
-    sleep(1);
-    fmt = "Child #%d\n";
-  }
-
-  while (1) {
-    printf(fmt, ++x);
-    sleep(2);
-  }
-}
-
 #define DEST  'O'
 #define EMPTY ' '
 
@@ -41,24 +13,23 @@ static struct move {
     {-1, 0, '^'},
 };
 
-static char map[][16] = {"############",
-                         "# #    #   #",
-                         "# # ## # # #",
-                         "# # #    # #",
-                         "#     ## #O#",
-                         "############",
-                         ""};
+static char map[16][16] = {"############",
+                           "# #    #   #",
+                           "# # ## # # #",
+                           "# # #    # #",
+                           "#     ## #O#",
+                           "############",
+                           ""};
 
 void display();
 
 void dfs(int x, int y) {
   if (map[x][y] == DEST) {
-    cputstr("Found!\n");
+    printf("Found!\n");
   } else {
     display();
     sleep(1);
     int nfork = 0;
-
     for (struct move *m = moves; m < moves + 4; m++) {
       int x1 = x + m->x, y1 = y + m->y;
       if (map[x1][y1] == DEST || map[x1][y1] == EMPTY) {
@@ -68,53 +39,37 @@ void dfs(int x, int y) {
           dfs(x1, y1);
         } else {
           nfork++;
-          kputstr("forked\n");
         }
       }
     }
   }
-  while (1)
-    sleep(1);
-}
-
-void dfs_test() {
-  dfs(1, 1);
-  while (1)
-    sleep(1);
 }
 
 void display() {
-  for (int i = 0;; i++) {
-    for (const char *s = map[i]; *s; s++) {
-      char buf[3] = {*s, '\0'};
-      if (*s == '#') buf[0] = 219;  // █
-      write(1, buf, 1);
-      // cputstr(buf);
-      // switch (*s) {
-      //   case EMPTY:
-      //     cputstr("   ");
-      //     break;
-      //   case DEST:
-      //     cputstr(" O ");
-      //     break;
-      //   case '>':
-      //     cputstr(" > ");
-      //     break;
-      //   case '<':
-      //     cputstr(" < ");
-      //     break;
-      //   case '^':
-      //     cputstr(" ^ ");
-      //     break;
-      //   case 'v':
-      //     cputstr(" V ");
-      //     break;
-      //   default:
-      //     cputstr("###");
-      //     break;
-      // }
+  char buf[300] = {"pid=XXX:\n"};
+  int pid       = getpid();
+
+  buf[4] = '0' + (pid / 100) % 10;
+  buf[5] = '0' + (pid / 10) % 10;
+  buf[6] = '0' + pid % 10;
+
+  int idx = 9;
+
+  // buf[idx++] = '\n';
+  for (int i = 0; i < 16; i++) {
+    if (map[i][0] == '\0') break;
+    for (int j = 0; j < 16; j++) {
+      if (map[i][j] == '\0') break;
+      buf[idx++] = map[i][j] == '#' ? 219 : map[i][j];
     }
-    cputstr("\n");
-    if (strlen(map[i]) == 0) break;
+    buf[idx++] = '\n';
   }
+  buf[idx++] = '\0';
+  write(1, buf, idx);
+}
+
+int main() {
+  printf("Hello from user\n");
+  dfs(1, 1);
+  return 0;
 }

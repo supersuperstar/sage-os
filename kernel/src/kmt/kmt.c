@@ -179,10 +179,7 @@ Context *kmt_context_save(Event ev, Context *context) {
     // assert(!cur->context);
     // TODO: more checks for context
     spin_lock(&task_list_lock);
-    if (cur->wait_sem || cur->wait_subproc)
-      cur->state = ST_S;
-    else
-      cur->state = ST_W;
+    if (cur->state == ST_R) cur->state = ST_W;
     assert_msg(cur->nctx < CTX_STACK_SIZE, "context stack overflow!");
     cur->context[cur->nctx++] = context;
     spin_unlock(&task_list_lock);
@@ -202,13 +199,12 @@ Context *kmt_context_save(Event ev, Context *context) {
  * @return Context* always NULL
  */
 Context *kmt_yield(Event ev, Context *context) {
-  // assert(spin_holding(&ir_lock));
-  // spin_lock(&task_list_lock);
-  // task_t *cur = kmt_get_task();
-  // if (cur && (cur->wait_sem) || (cur->wait_subproc_status)) {
-  //   cur->state = ST_S;
-  // }
-  // spin_unlock(&task_list_lock);
+  spin_lock(&task_list_lock);
+  task_t *cur = current_task;
+  if (cur->wait_sem || cur->wait_subproc_status || cur->count < 0) {
+    cur->state = ST_S;
+  }
+  spin_unlock(&task_list_lock);
   return NULL;
 }
 
