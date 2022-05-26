@@ -57,6 +57,8 @@ void func(void* arg) {
   r=vfs->mkdir(task,"/dev/input");
   printf("mkdri result is %d\n",r);
 
+  r=vfs->unlink(task,"/usr/1/te.c");
+
   while (1)
     ;
   // vfs->link(task,"","/uproc/task1");
