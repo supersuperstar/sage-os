@@ -69,15 +69,17 @@ void uporc_pgunmap(task_t* proc, void* vaddr) {
 void inituvm(task_t* proc, unsigned char* init, int sz) {
   AddrSpace* as = &proc->as;
   void* va      = as->area.start;
-  while (sz > 0) {
-    char* mem;
+  int i;
+  char* mem;
+  for (i = 0; i < sz; i += SZ_PAGE) {
     mem = pmm->pgalloc();
-    memset(mem, 0, sizeof(mem));
-    memcpy(mem, init, sz);
-    uproc_pgmap(proc, va, mem, MMAP_READ | MMAP_WRITE);
-    sz -= SZ_PAGE;
-    init += SZ_PAGE;
-    va += SZ_PAGE;
+    memset(mem, 0, SZ_PAGE);
+    if (i + SZ_PAGE <= sz) {
+      memcpy(mem, (char*)(intptr_t)(init + i), SZ_PAGE);
+    } else {
+      memcpy(mem, (char*)(intptr_t)(init + i), sz - i);
+    }
+    uproc_pgmap(proc, va + i, mem, MMAP_READ | MMAP_WRITE);
   }
 }
 
