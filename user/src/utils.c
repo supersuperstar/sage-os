@@ -1,10 +1,7 @@
 #include <utils.h>
 
-size_t strlen(char* s) {
-  char* ptr = s;
-  while (*ptr)
-    ptr++;
-  return ptr - s;
+void cputc(char c) {
+  write(1, &c, 1);
 }
 
 int cputstr(char* s) {
