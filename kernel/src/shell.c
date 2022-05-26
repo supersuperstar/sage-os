@@ -10,8 +10,9 @@ const cmd_t cmd_list[] = {
     {"man", man},     {"echo", echo},   {"ls", ls},       {"pwd", pwd},
     {"cd", cd},       {"cat", cat},     {"write", write}, {"link", link},
     {"mkdir", mkdir}, {"rmdir", rmdir}, {"rm", rm},       {"run", run},
-    {"ps", ps},
+    {"ps", ps},       {"stat", stat},   {"mem", mem},
 };
+
 const int NR_CMD = sizeof(cmd_list) / sizeof(cmd_t);
 
 void shell_task(void *arg) {
@@ -29,7 +30,7 @@ void shell_task(void *arg) {
 
   sprintf(pwd, "/");
   while (true) {
-    sprintf(buf, "(tty) %s\n $ ", pwd);
+    sprintf(buf, "(tty) %s $ ", pwd);
     sys_write(proc, stdout, buf, strlen(buf));
 
     size_t nread   = sys_read(proc, stdin, cmd, sizeof(cmd));
@@ -42,7 +43,7 @@ void shell_task(void *arg) {
 
     bool succ = false;
     for (int i = 0; i < NR_CMD; ++i) {
-      if (!strncmp(arg, cmd_list[i].name, strlen(cmd_list[i].name))) {
+      if (strncmp(arg, cmd_list[i].name, strlen(cmd_list[i].name)) == 0) {
         succ = true;
         arg += strlen(cmd_list[i].name);
         // skip interval spaces
@@ -52,18 +53,19 @@ void shell_task(void *arg) {
         if (!strcmp("cd", cmd_list[i].name)) {
           cmd_list[i].func(proc, arg, pwd, ret);
         } else {
-          if (fork1(proc) == 0) {
-            task_t *nowproc = current_task;
-            runcmd(nowproc, arg, pwd, ret, i);
-          }
-          int stati;
-          sys_wait(proc, &stati);
+          // if (fork1(proc) == 0) {
+          //   task_t *nowproc = current_task;
+          //   runcmd(nowproc, arg, pwd, ret, i);
+          // }
+          // int stati;
+          // sys_wait(proc, &stati);
+          cmd_list[i].func(proc, arg, pwd, ret);
         }
       }
-      if (!succ) sprintf(ret, "Invalid command.\n");
-      sys_write(proc, stdout, ret, strlen(ret));
-      sys_write(proc, stdout, "\n", 1);
     }
+    if (!succ) sprintf(ret, "Invalid command.\n");
+    sys_write(proc, stdout, ret, strlen(ret));
+    sys_write(proc, stdout, "\n", 1);
   }
   panic("shell cannot exit.");
 }
@@ -73,58 +75,58 @@ void shell_init() {
   kmt->create(task, "shell", shell_task, task);
 }
 
-int fork1(task_t *proc) {
-  int pid;
+// int fork1(task_t *proc) {
+//   int pid;
 
-  pid = sys_fork(proc);
-  if (pid == -1) panic("fork");
-  return pid;
-}
+//   pid = sys_fork(proc);
+//   if (pid == -1) panic("fork");
+//   return pid;
+// }
 
-void runcmd(task_t *proc, char *arg, char *pwd, char *ret, int i) {
-  cmd_list[i].func(proc, arg, pwd, ret);
-  sys_exit(proc, 0);
-}
+// void runcmd(task_t *proc, char *arg, char *pwd, char *ret, int i) {
+//   cmd_list[i].func(proc, arg, pwd, ret);
+//   sys_exit(proc, 0);
+// }
 
-bool get_dir(char *arg, char *pwd, char *dir) {
-  char buf[512] = "";
-  if (arg[0] == '/') {
-    sprintf(buf, "%s", arg);
-  } else {
-    if (pwd[strlen(pwd) - 1] == '/') {
-      sprintf(buf, "%s%s", pwd, arg);
-    } else {
-      sprintf(buf, "%s/%s", pwd, arg);
-    }
-  }
+// bool get_dir(char *arg, char *pwd, char *dir) {
+//   char buf[512] = "";
+//   if (arg[0] == '/') {
+//     sprintf(buf, "%s", arg);
+//   } else {
+//     if (pwd[strlen(pwd) - 1] == '/') {
+//       sprintf(buf, "%s%s", pwd, arg);
+//     } else {
+//       sprintf(buf, "%s/%s", pwd, arg);
+//     }
+//   }
 
-  size_t pos = 0;
-  size_t cur = 0;
-  size_t len = strlen(buf);
-  while (pos <= len) {
-    if (buf[pos] == ' ') {
-      break;
-    } else if (!strncmp(buf + pos, "//", 2)) {
-      return false;
-    } else if (!strncmp(buf + pos, "/./", 3)) {
-      pos += 2;
-      continue;
-    } else if (!strncmp(buf + pos, "/../", 4)) {
-      pos += 3;
-      if (cur > 0 && dir[cur] == '/') --cur;
-      while (cur > 0 && dir[cur] != '/')
-        --cur;
-      continue;
-    } else {
-      dir[cur] = buf[pos];
-      ++pos, ++cur;
-    }
-  }
-  dir[cur] = '\0';
-  len      = strlen(dir);
-  if (len > 1 && dir[len - 1] == '/') dir[len - 1] = '\0';
-  return true;
-}
+//   size_t pos = 0;
+//   size_t cur = 0;
+//   size_t len = strlen(buf);
+//   while (pos <= len) {
+//     if (buf[pos] == ' ') {
+//       break;
+//     } else if (!strncmp(buf + pos, "//", 2)) {
+//       return false;
+//     } else if (!strncmp(buf + pos, "/./", 3)) {
+//       pos += 2;
+//       continue;
+//     } else if (!strncmp(buf + pos, "/../", 4)) {
+//       pos += 3;
+//       if (cur > 0 && dir[cur] == '/') --cur;
+//       while (cur > 0 && dir[cur] != '/')
+//         --cur;
+//       continue;
+//     } else {
+//       dir[cur] = buf[pos];
+//       ++pos, ++cur;
+//     }
+//   }
+//   dir[cur] = '\0';
+//   len      = strlen(dir);
+//   if (len > 1 && dir[len - 1] == '/') dir[len - 1] = '\0';
+//   return true;
+// }
 
 FUNC(man) {
   sprintf(ret, "Available commands: \n");
@@ -145,7 +147,25 @@ FUNC(pwd) {
 }
 
 FUNC(ls) {
-  // TODO: ls
+// TODO: support ls path
+#define MAX_DIRENT 16
+  inode_t *inode;
+  if (*arg == ' ' || *arg == '\0') {
+    inode = proc->cwd;
+  } else {
+    inode = namei(arg);
+  }
+  assert_msg(inode->type == DINODE_TYPE_D, "cwd inode not directory!");
+  dirent_t entries[MAX_DIRENT] = {0};
+  int nbytes = readi(inode, (void *)entries, 0, sizeof(entries));
+  if (nbytes == -1) {
+    sprintf(ret, "ls error: cannot open inode for %s", pwd);
+    return;
+  }
+  for (int i = 0; i < MAX_DIRENT; i++) {
+    if (entries[i].inum == 0) continue;
+    cprintf("tty1", "%s ", entries[i].name);
+  }
 }
 
 FUNC(cd) {
@@ -244,5 +264,21 @@ FUNC(rm) {
 
 FUNC(run) {
 }
+
 FUNC(ps) {
+  bool holding = spin_holding(&task_list_lock);
+  if (!holding) spin_lock(&task_list_lock);
+  cprintf("tty1", "[all tasks]\n");
+  for (task_t *tp = &root_task; tp != NULL; tp = tp->next) {
+    cprintf("tty1", "pid %d <%s>: cpu=%d, state=%s, wait_sem=%s\n", tp->pid,
+            tp->name, tp->owner, task_states_str[tp->state],
+            tp->wait_sem ? tp->wait_sem->name : "null");
+  }
+  if (!holding) spin_unlock(&task_list_lock);
+}
+
+FUNC(stat) {
+}
+
+FUNC(mem) {
 }
