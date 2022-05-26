@@ -10,7 +10,7 @@
 const cmd_t cmd_list[] = {
     {"man", man},     {"echo", echo},   {"ls", ls},       {"pwd", pwd},
     {"cd", cd},       {"cat", cat},     {"write", write}, {"link", link},
-    {"mkdir", mkdir}, {"rmdir", rmdir}, {"rm", rm},       {"run", run},
+    {"mkdir", mkdir}, {"rmdir", rmdir}, {"rm", rm}, 
     {"ps", ps},       {"stat", stat},   {"mem", mem},
 };
 
@@ -111,23 +111,20 @@ bool get_dir(char *arg, char *pwd, char *dir) {
       return true;
     }
     if(arg[1] == '.') {
-      while (buf[len] != '/')
+      int flag = 2;
+      while (flag)
       {
+        if(buf[len] == '/') {
+          flag--;
+        }
+        if(flag == 0) {
+          break;
+        }
         len--;
       }
-      len--;
-      while (buf[len] != '/')
-      {
-        len--;
-      }
-      len--;
     }
   }
-
-  if(len <= 0) {
-    len = 0;
-  }
-
+  
   while (pos <= len) {
     if (buf[pos] == ' ') {
       break;
@@ -275,6 +272,7 @@ FUNC(rm) {
   }
 }
 
+/*
 FUNC(run) {
   task_t *game = pmm->alloc(sizeof(game));
   kmt_init_task(game, "type game", app_type_game, NULL);
@@ -294,6 +292,7 @@ FUNC(run) {
 
   yield();
 }
+*/
 
 FUNC(ps) {
   bool holding = spin_holding(&task_list_lock);
