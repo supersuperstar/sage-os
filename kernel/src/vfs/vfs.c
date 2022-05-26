@@ -100,18 +100,18 @@ void vfs_init() {
   // WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // operation behind need to move to mkfs.c
   // usage:create root dirent and /dev /uproc /usr
-  ialloc(DINODE_TYPE_D);
-  ialloc(DINODE_TYPE_D);
-  dirent_t dir;
-  memset(dir.name, 0, PATH_LENGTH);
-  dir.inum = ROOTINO;
-  strncpy(dir.name, ".", 1);
-  writei(iget(ROOTINO), (char *)&dir, 0, sizeof(dirent_t));
+  // ialloc(DINODE_TYPE_D);
+  // ialloc(DINODE_TYPE_D);
+  // dirent_t dir;
+  // memset(dir.name, 0, PATH_LENGTH);
+  // dir.inum = ROOTINO;
+  // strncpy(dir.name, ".", 1);
+  // writei(iget(ROOTINO), (char *)&dir, 0, sizeof(dirent_t));
 
-  dir.inum = ROOTINO;
-  strncpy(dir.name, "..", 2);
-  writei(iget(ROOTINO), (char *)&dir, sizeof(dirent_t), sizeof(dirent_t));
-  create("/dev", DINODE_TYPE_D);
+  // dir.inum = ROOTINO;
+  // strncpy(dir.name, "..", 2);
+  // writei(iget(ROOTINO), (char *)&dir, sizeof(dirent_t), sizeof(dirent_t));
+  // create("/dev", DINODE_TYPE_D);
 }
 
 // open a file,return  the process fd(fdtable's subscript)
