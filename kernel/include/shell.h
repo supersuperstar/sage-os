@@ -28,7 +28,6 @@ FUNC(link);
 FUNC(mkdir);
 FUNC(rmdir);
 FUNC(rm);
-FUNC(run);
 FUNC(ps);
 FUNC(stat);
 FUNC(mem);
