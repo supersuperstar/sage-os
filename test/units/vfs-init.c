@@ -13,14 +13,14 @@ void func(void* arg) {
   vfs->mkdir(task, "/usr/1");
 
   int fd = vfs->open(task, "/usr/1/te.c", O_CREAT | O_RDWR);
-  // file_print_info(1);
+  file_print_info(1);
   int fd3 = vfs->open(task, "/usr/1/te.c", O_CREAT | O_WRONLY);
-  // file_print_info(1);
+  file_print_info(1);
   char buf[50];
   memset(buf, 0, sizeof(buf));
   int w   = vfs->write(task, 3, "hello world!", 13);
   int fd2 = vfs->open(task, "/usr/1/te.c", O_RDONLY);
-  // file_print_info(1);
+  file_print_info(1);
   vfs->lseek(task, 3, 0);
   int r = vfs->read(task, 3, buf, 13);
   printf("%d %d %d %d %d\n", fd, fd3, w, fd2, r);
@@ -28,20 +28,20 @@ void func(void* arg) {
   vfs->close(task, 3);
   vfs->close(task, 4);
   vfs->close(task, 5);
-  // file_print_info(1);
+  file_print_info(1);
 
   // for(int i=0;i<10;i++){
   //   inode_print(i);
   // }
 
   fd = vfs->open(task, "/usr/1/te.c", O_CREAT | O_RDWR);
-  // file_print_info(1);
+  file_print_info(1);
   fd3 = vfs->open(task, "/usr/1/te.c", O_CREAT | O_WRONLY);
-  // file_print_info(1);
+  file_print_info(1);
   memset(buf, 0, sizeof(buf));
   w   = vfs->write(task, 3, "hello world version 2!", 23);
   fd2 = vfs->open(task, "/usr/1/te.c", O_RDONLY);
-  // file_print_info(1);
+  file_print_info(1);
   r = vfs->read(task, 4, buf, 23);
   printf("%d %d %d %d %d\n", fd, fd3, w, fd2, r);
   printf("data is:%s\n", buf);
@@ -56,6 +56,8 @@ void func(void* arg) {
   printf("read from RANDOM is %d\n",r);
   r=vfs->mkdir(task,"/dev/input");
   printf("mkdri result is %d\n",r);
+
+  r=vfs->unlink(task,"/usr/1/te.c");
 
   while (1)
     ;

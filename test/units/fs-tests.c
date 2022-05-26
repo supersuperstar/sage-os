@@ -51,7 +51,7 @@ int main() {
   printf("------------------------\n");
 
   // //------------------------test data block rw------------------------------
-  // uint64_t start=uptime();
+  uint64_t start=safe_io_read(AM_TIMER_UPTIME).us;
   block_t buf;
   for (int i = 1; i <= 20; i++){
     sprintf((char*)buf.data,"this is data block %d.",i % 2 ? i : i + 100);
@@ -62,8 +62,8 @@ int main() {
     fs->readblk(dev->lookup("sda"), i % 2 ? i : i + 100, &out);
     printf("data %d is :[%s]\n", i, out.data);
   }
-  // uint64_t end=uptime();
-  // printf("random RW 100 blocks time:%d\n",end-start);
+  uint64_t end=safe_io_read(AM_TIMER_UPTIME).us;
+  printf("random RW 100 blocks time: %d ms\n",(end-start)/1000);
 
   //------------------------test inoderw-----------------------------------
   inode_t inode, inodeout;
