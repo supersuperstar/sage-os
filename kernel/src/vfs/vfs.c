@@ -29,7 +29,7 @@ static inode_t *create(const char *path, short type) {
   }
 
   if ((dp = nameiparent(path, name)) == 0) {
-    panic("[vfs.c/create] nameiparent.");
+    warn("[vfs.c/create] nameiparent \"%s\".",path);
     return 0;
   }
   ilock(dp);
@@ -100,18 +100,17 @@ void vfs_init() {
   // WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // operation behind need to move to mkfs.c
   // usage:create root dirent and /dev /uproc /usr
-  // ialloc(DINODE_TYPE_D);
-  // ialloc(DINODE_TYPE_D);
-  // dirent_t dir;
-  // memset(dir.name, 0, PATH_LENGTH);
-  // dir.inum = ROOTINO;
-  // strncpy(dir.name, ".", 1);
-  // writei(iget(ROOTINO), (char *)&dir, 0, sizeof(dirent_t));
 
-  // dir.inum = ROOTINO;
-  // strncpy(dir.name, "..", 2);
-  // writei(iget(ROOTINO), (char *)&dir, sizeof(dirent_t), sizeof(dirent_t));
-  // create("/dev", DINODE_TYPE_D);
+  dirent_t dir;
+  memset(dir.name, 0, PATH_LENGTH);
+  dir.inum = ROOTINO;
+  strncpy(dir.name, ".", 1);
+  writei(iget(ROOTINO), (char *)&dir, 0, sizeof(dirent_t));
+
+  dir.inum = ROOTINO;
+  strncpy(dir.name, "..", 2);
+  writei(iget(ROOTINO), (char *)&dir, sizeof(dirent_t), sizeof(dirent_t));
+  //create("/usr",DINODE_TYPE_D);
 }
 
 // open a file,return  the process fd(fdtable's subscript)
@@ -312,7 +311,7 @@ int sys_unlink(task_t *proc, const char *pathname) {
   }
   ilock(dp);
   // can't unlink . and ..
-  if (namecmp(name, ".") == 0 || namecmp(name, "..") == 0) {
+  if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
     iunlockput(dp);
     return -1;
   }
