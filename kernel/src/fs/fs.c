@@ -106,7 +106,7 @@ void fs_initinodes(device_t* dev) {
     inodes[i].inum = i;
     sprintf(name, "inode lock %d", i);
     spin_init(&(inodes[i].lock), name);
-    fs_writeinode(dev, i, &inodes[i]);
+    fs_readinode(dev, i, &inodes[i]);
   }
 }
 
