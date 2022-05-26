@@ -131,7 +131,7 @@ int sys_fork(task_t *proc) {
   // do not copy parent's rsp0, cr3
   uintptr_t rsp0 = subproc->context[0]->rsp0;
   void *cr3      = subproc->context[0]->cr3;
-  memcpy(subproc->context, proc->context, sizeof(Context));
+  memcpy(subproc->context[0], proc->context[0], sizeof(Context));
   subproc->context[0]->rsp0 = rsp0;
   subproc->context[0]->cr3  = cr3;
   subproc->context[0]->rax  = 0;
