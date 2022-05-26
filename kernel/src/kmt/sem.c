@@ -32,7 +32,7 @@ void sem_wait(sem_t *sem) {
     task_t *cur = kmt->get_task();
     assert(cur);
     cur->wait_sem = sem;
-    // cur->state    = ST_S;
+    cur->state    = ST_S;
     // interrupt
     spin_unlock(&task_list_lock);
     yield();
