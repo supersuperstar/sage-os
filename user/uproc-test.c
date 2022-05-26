@@ -6,8 +6,8 @@ void dfs_test();
 
 int main() {
   printf("Hello from user\n");
-  hello_test();
   dfs_test();
+  hello_test();
   while (1)
     ;
 }
@@ -29,8 +29,8 @@ void hello_test() {
   }
 }
 
-#define DEST  '+'
-#define EMPTY '.'
+#define DEST  'O'
+#define EMPTY ' '
 
 static struct move {
   int x, y, ch;
@@ -41,16 +41,21 @@ static struct move {
     {-1, 0, '^'},
 };
 
-static char map[][16] = {
-    "#####", "#..+#", "##..#", "#####", "",
-};
+static char map[][16] = {"############",
+                         "# #    #   #",
+                         "# # ## # # #",
+                         "# # #    # #",
+                         "#     ## #O#",
+                         "############",
+                         ""};
 
 void display();
 
 void dfs(int x, int y) {
   if (map[x][y] == DEST) {
-    display();
+    cputstr("Found!\n");
   } else {
+    display();
     sleep(1);
     int nfork = 0;
 
@@ -63,6 +68,7 @@ void dfs(int x, int y) {
           dfs(x1, y1);
         } else {
           nfork++;
+          kputstr("forked\n");
         }
       }
     }
@@ -80,31 +86,35 @@ void dfs_test() {
 void display() {
   for (int i = 0;; i++) {
     for (const char *s = map[i]; *s; s++) {
-      switch (*s) {
-        case EMPTY:
-          printf("   ");
-          break;
-        case DEST:
-          printf(" ○ ");
-          break;
-        case '>':
-          printf(" → ");
-          break;
-        case '<':
-          printf(" ← ");
-          break;
-        case '^':
-          printf(" ↑ ");
-          break;
-        case 'v':
-          printf(" ↓ ");
-          break;
-        default:
-          printf("▇▇▇");
-          break;
-      }
+      char buf[3] = {*s, '\0'};
+      if (*s == '#') buf[0] = 219;  // █
+      write(1, buf, 1);
+      // cputstr(buf);
+      // switch (*s) {
+      //   case EMPTY:
+      //     cputstr("   ");
+      //     break;
+      //   case DEST:
+      //     cputstr(" O ");
+      //     break;
+      //   case '>':
+      //     cputstr(" > ");
+      //     break;
+      //   case '<':
+      //     cputstr(" < ");
+      //     break;
+      //   case '^':
+      //     cputstr(" ^ ");
+      //     break;
+      //   case 'v':
+      //     cputstr(" V ");
+      //     break;
+      //   default:
+      //     cputstr("###");
+      //     break;
+      // }
     }
-    printf("\n");
+    cputstr("\n");
     if (strlen(map[i]) == 0) break;
   }
 }
