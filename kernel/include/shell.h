@@ -1,16 +1,21 @@
 #ifndef __SHELL_H__
 #define __SHELL_H__
 
-#define FUNC(name) void shell_##name(char *arg, char *pwd, char *ret)
+#include <thread.h>
+
+#define FUNC(name) void name(task_t *proc, char *arg, char *pwd, char *ret)
 
 typedef struct cmd {
   const char *name;
-  void (*func)(char *arg, char *pwd, char *ret);
+  void (*func)(task_t *proc, char *arg, char *pwd, char *ret);
 } cmd_t;
 
+void shell_init();
 // bool get_dir(char *arg, char *pwd, char *dir);
 int fork1();
-void runcmd(char *arg, char *pwd, char *ret, int i);
+void runcmd(task_t *proc, char *arg, char *pwd, char *ret, int i);
+
+void app_type_game(void *arg);
 
 FUNC(man);
 FUNC(echo);
@@ -25,5 +30,7 @@ FUNC(rmdir);
 FUNC(rm);
 FUNC(run);
 FUNC(ps);
+FUNC(stat);
+FUNC(mem);
 
 #endif
