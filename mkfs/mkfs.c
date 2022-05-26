@@ -58,18 +58,27 @@ int main(int argc, char *argv[]) {
   dirent_t dir;
   dinode_t inode;
 
+  // .
+  dir.inum = ROOTINO;
+  strcpy(dir.name, ".\0");
+  writei(disk, &root, (char *)&dir, 0, sizeof(dirent_t));
+
+  // ..
+  dir.inum = ROOTINO;
+  strcpy(dir.name, "..\0");
+  writei(disk, &root, (char *)&dir, sizeof(dirent_t), sizeof(dirent_t));
   // /a.txt
-  //create dirent for a.txt
+  // create dirent for a.txt
   dir.inum = i_no++;
   strcpy(dir.name, "a.txt\0");
-  //create inode for a.txt
+  // create inode for a.txt
   inode.type  = DINODE_TYPE_F;
   inode.size  = 0;
   inode.nlink = 1;
   memset(inode.addrs, 0, sizeof(inode.addrs));
-  //write dirent a.txt to root addrs
-  writei(disk, &root, (char *)&dir, 0, sizeof(dirent_t));
-  //write inode a.txt
+  // write dirent a.txt to root addrs
+  writei(disk, &root, (char *)&dir, sizeof(dirent_t) * 2, sizeof(dirent_t));
+  // write inode a.txt
   writeinode(disk, dir.inum, &inode);
 
   // /b
@@ -81,8 +90,8 @@ int main(int argc, char *argv[]) {
   inode.nlink = 1;
   memset(inode.addrs, 0, sizeof(inode.addrs));
 
-  writei(disk, &root, (char *)&dir, sizeof(dirent_t), sizeof(dirent_t));
-  
+  writei(disk, &root, (char *)&dir, sizeof(dirent_t) * 3, sizeof(dirent_t));
+
   writeinode(disk, dir.inum, &inode);
 
   // /b/c.txt
