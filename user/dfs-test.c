@@ -8,23 +8,24 @@ static struct move {
   int x, y, ch;
 } moves[] = {
     {0, 1, '>'},
-    {1, 0, 'v'},
+    {1, 0, 'V'},
     {0, -1, '<'},
     {-1, 0, '^'},
 };
 
-static char map[16][16] = {"############",
-                           "# #    #   #",
-                           "# # ## # # #",
-                           "# # #    # #",
-                           "#     ## #O#",
-                           "############",
+static char map[16][16] = {"##########",
+                           "# #      #",
+                           "# # # ## #",
+                           "#   #  #O#",
+                           "##########",
+                           "",
                            ""};
 
 void display();
 
 void dfs(int x, int y) {
   if (map[x][y] == DEST) {
+    display();
     printf("Found!\n");
   } else {
     display();
@@ -48,16 +49,13 @@ void dfs(int x, int y) {
 }
 
 void display() {
-  char buf[300] = {"pid=XXX:\n"};
+  char buf[300] = {"pid=XX:\n"};
   int pid       = getpid();
 
-  buf[4] = '0' + (pid / 100) % 10;
-  buf[5] = '0' + (pid / 10) % 10;
-  buf[6] = '0' + pid % 10;
+  buf[4] = '0' + (pid / 10) % 10;
+  buf[5] = '0' + pid % 10;
 
-  int idx = 9;
-
-  // buf[idx++] = '\n';
+  int idx = 8;
   for (int i = 0; i < 16; i++) {
     if (map[i][0] == '\0') break;
     for (int j = 0; j < 16; j++) {
