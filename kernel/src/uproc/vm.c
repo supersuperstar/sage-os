@@ -28,6 +28,7 @@ void uproc_pgmap(task_t* proc, void* vaddr, void* paddr, int prot) {
   list_for_each_entry(pos, &proc->pg_map, list) {
     if ((intptr_t)pos->va == va) {
       error("try to map mapping va");
+      return;
     }
   }
   // need to introduce slab system, otherwise the waste of space is huge.
