@@ -1,19 +1,21 @@
-#include <common.h>
+
 #include <shell.h>
-#include <user.h>
-#include <fs.h>
+#include <utils.h>
 #include <ulib.h>
+#define bool int
+#define true 1
+#define false 0
 
 const cmd_t cmd_list[] = {
-    {"man", man},     {"echo", echo},   {"ls", ls},       {"pwd", pwd},
-    {"cd", cd},       {"cat", cat},     {"write", write}, {"link", link},
-    {"mkdir", mkdir}, {"rmdir", rmdir}, {"rm", rm},       {"run", run},
-    {"ps", ps},
+    {"man", shell_man},     {"echo", shell_echo}, {"ls", shell_ls},
+    {"pwd", shell_pwd},     {"cd", shell_cd},     {"cat", shell_cat},
+    {"write", shell_write}, {"link", shell_link}, {"mkdir", shell_mkdir},
+    {"rmdir", shell_rmdir}, {"rm", shell_rm},     {"run", shell_run},
+    {"ps", shell_ps},
 };
 const int NR_CMD = sizeof(cmd_list) / sizeof(cmd_t);
 
-void shell_task(void *arg) {
-  task_t *proc  = (task_t *)arg;
+int main() {
   char buf[512] = "";
   char pwd[512] = "";
   char cmd[512] = "";
@@ -47,11 +49,10 @@ void shell_task(void *arg) {
           ++arg;
         // char *tmp = "cd";
         if (!strcmp("cd", cmd_list[i].name)) {
-          cmd_list[i].func(proc, arg, pwd, ret);
+          cmd_list[i].func(arg, pwd, ret);
         } else {
-          if (fork1(proc) == 0) {
-            task_t *nowproc = current_task;
-            runcmd(nowproc, arg, pwd, ret, i);
+          if (fork1() == 0) {
+            runcmd(arg, pwd, ret, i);
           }
           int stati;
           wait(&stati);
@@ -62,24 +63,17 @@ void shell_task(void *arg) {
       write(stdout, "\n", 1);
     }
   }
-  panic("shell cannot exit.");
+  return 0;
 }
 
-void shell_init() {
-  task_t *task = pmm->alloc(sizeof(task_t));
-  kmt->create(task, "shell", shell_task, task);
-}
-
-int fork1(task_t *proc) {
-  int pid;
-
-  pid = sys_fork(proc);
-  if (pid == -1) panic("fork");
+int fork1() {
+  int pid = fork();
+  if (pid == -1) kputstr("fork error!");
   return pid;
 }
 
-void runcmd(task_t *proc, char *arg, char *pwd, char *ret, int i) {
-  cmd_list[i].func(proc, arg, pwd, ret);
+void runcmd(char *arg, char *pwd, char *ret, int i) {
+  cmd_list[i].func(arg, pwd, ret);
   exit(0);
 }
 

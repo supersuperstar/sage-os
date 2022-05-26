@@ -3,7 +3,6 @@
 
 #include <ulib.h>
 
-size_t strlen(char* s);
 int cputstr(char* s);
 void print_time();
 char getc();
