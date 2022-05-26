@@ -263,6 +263,23 @@ FUNC(rm) {
 }
 
 FUNC(run) {
+  task_t *game = pmm->alloc(sizeof(game));
+  kmt_init_task(game, "type game", app_type_game, NULL);
+  game->parent = current_task;
+
+  spin_lock(&task_list_lock);
+
+  current_task->wait_subproc = true;
+  current_task->state        = ST_S;
+
+  task_t *tp = &root_task;
+  while (tp->next)
+    tp = tp->next;
+  tp->next = game;
+
+  spin_unlock(&task_list_lock);
+
+  yield();
 }
 
 FUNC(ps) {
