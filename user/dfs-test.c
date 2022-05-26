@@ -43,6 +43,8 @@ void dfs(int x, int y) {
       }
     }
   }
+  while (1)
+    ;
 }
 
 void display() {
