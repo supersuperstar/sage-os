@@ -197,8 +197,8 @@ static char welcome_text1[] =
     "    \\/_____/\\/__/\\/_/\\/___L\\ \\/____/ \\/_____/\\/_____/\n"
     "                       /\\____/                       \n"
     "                       \\_/__/                        \n"
-    "                                2022/04/15 BUPT OSLAB\n"
-    "---------------------------------------------------------------------\n";
+    "                                2022/05/27 BUPT OSLAB\n"
+    "-----------------------------------------------------\n";
 static void welcome(device_t *dev) {
   // for (char *p = welcome_text; *p; p++) {
   //   switch (*p) {
@@ -316,17 +316,12 @@ void dev_tty_task(void *arg) {
     struct input_event ev = {0, 0, 0};
 
     kmt->spin_lock(&inp->owner_lock);
-    int owner = inp->owner;
-    if (owner == -1) {
-      owner = current_task->pid;
-      tty_mark_all(ttydev->ptr);
-    }
-    kmt->spin_unlock(&inp->owner_lock);
-
-    if (owner == current_task->pid) {
+    if (inp->owner == -1) inp->owner = current_task->pid;
+    if (inp->owner == current_task->pid) {
       int nread = in->ops->read(in, 0, &ev, sizeof(ev));
       panic_on(nread == 0, "unknown error");
     }
+    kmt->spin_unlock(&inp->owner_lock);
 
     tty_t *tty = ttydev->ptr;
 

@@ -10,6 +10,7 @@ int main() {
   cte_init(os->trap);
   os->init();
   vme_init(pmm->pgalloc, pmm->free);
+  // uproc->init();
   vfs->init();
   shell_init();
   mpe_init(os->run);

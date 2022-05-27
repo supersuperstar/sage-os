@@ -84,7 +84,7 @@ static int isdirempty(inode_t *dp) {
   return 1;
 }
 
-int randint(int l, int r) {
+int _randint(int l, int r) {
   return l + (rand() & 0x7fffffff) % (r - l + 1);
 }
 
@@ -227,7 +227,7 @@ int sys_read(task_t *proc, int fd, void *buf, size_t nbyte) {
     case DEV_NULL_FD:
       return 0;
     case DEV_RANDOM_FD:
-      return randint(0, 256);
+      return _randint(0, 256);
     case DEV_INPUT_FD:
       d = dev->lookup("input");
       return d->ops->read(d, 0, buf, nbyte);
