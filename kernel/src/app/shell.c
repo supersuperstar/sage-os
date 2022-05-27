@@ -10,8 +10,8 @@
 const cmd_t cmd_list[] = {
     {"man", man},     {"echo", echo},   {"ls", ls},       {"pwd", pwd},
     {"cd", cd},       {"cat", cat},     {"write", write}, {"link", link},
-    {"mkdir", mkdir}, {"rmdir", rmdir}, {"rm", rm}, 
-    {"ps", ps},       {"stat", stat},   {"mem", mem},
+    {"mkdir", mkdir}, {"rmdir", rmdir}, {"rm", rm},       {"ps", ps},
+    {"stat", stat},   {"mem", mem},
 };
 
 const int NR_CMD = sizeof(cmd_list) / sizeof(cmd_t);
@@ -26,7 +26,7 @@ void shell_task(void *arg) {
   int stdin  = 0;
   int stdout = 1;
 
-  sprintf(buf, "Welcome to SOShell.\nType [man] for help.\n\n");
+  sprintf(buf, "Welcome to Shell! Type [man] for help.\n\n");
   sys_write(proc, stdout, buf, strlen(buf));
 
   sprintf(pwd, "/");
@@ -105,26 +105,25 @@ bool get_dir(char *arg, char *pwd, char *dir) {
   size_t cur = 0;
   size_t len = strlen(buf);
 
-  if(arg[0] == '.') {
-    if(arg[1] == '\0') {
+  if (arg[0] == '.') {
+    if (arg[1] == '\0') {
       dir = pwd;
       return true;
     }
-    if(arg[1] == '.') {
+    if (arg[1] == '.') {
       int flag = 2;
-      while (flag)
-      {
-        if(buf[len] == '/') {
+      while (flag) {
+        if (buf[len] == '/') {
           flag--;
         }
-        if(flag == 0) {
+        if (flag == 0) {
           break;
         }
         len--;
       }
     }
   }
-  
+
   while (pos <= len) {
     if (buf[pos] == ' ') {
       break;
@@ -185,7 +184,7 @@ FUNC(cd) {
   } else {
     get_dir(arg, pwd, dir);
     strcpy(pwd, dir);
-    sprintf(ret, "Change directory to %s.\n", arg);
+    sprintf(ret, "Change directory to %s\n", dir);
   }
 }
 
@@ -244,11 +243,9 @@ FUNC(link) {
 }
 
 FUNC(mkdir) {
-  char dir[512] = "";
-
   int status = sys_mkdir(proc, arg);
   if (!status) {
-    sprintf(ret, "Successfully created folder %s.\n", dir);
+    sprintf(ret, "Successfully created folder %s\n", arg);
   } else {
     sprintf(ret, "VFS ERROR: mkdir failed with status %d.\n", status);
   }
@@ -257,42 +254,20 @@ FUNC(mkdir) {
 FUNC(rmdir) {
   int status = sys_unlink(proc, arg);
   if (!status) {
-    sprintf(ret, "Successfully removed %s.\n", arg);
+    sprintf(ret, "Successfully removed %s\n", arg);
   } else {
-    sprintf(ret, "VFS ERROR: unlink failed with status %d.\n", status);
+    sprintf(ret, "VFS ERROR: unlink failed with status %d\n", status);
   }
 }
 
 FUNC(rm) {
   int status = sys_unlink(proc, arg);
   if (!status) {
-    sprintf(ret, "Successfully removed %s.\n", arg);
+    sprintf(ret, "Successfully removed %s\n", arg);
   } else {
-    sprintf(ret, "VFS ERROR: unlink failed with status %d.\n", status);
+    sprintf(ret, "VFS ERROR: unlink failed with status %d\n", status);
   }
 }
-
-/*
-FUNC(run) {
-  task_t *game = pmm->alloc(sizeof(game));
-  kmt_init_task(game, "type game", app_type_game, NULL);
-  game->parent = current_task;
-
-  spin_lock(&task_list_lock);
-
-  current_task->wait_subproc = true;
-  current_task->state        = ST_S;
-
-  task_t *tp = &root_task;
-  while (tp->next)
-    tp = tp->next;
-  tp->next = game;
-
-  spin_unlock(&task_list_lock);
-
-  yield();
-}
-*/
 
 FUNC(ps) {
   bool holding = spin_holding(&task_list_lock);
@@ -307,8 +282,9 @@ FUNC(ps) {
 }
 
 FUNC(stat) {
-  stat_t *targetFile = pmm->alloc(sizeof(stat_t));;
-  int fd = sys_open(proc, arg, O_RDONLY);
+  stat_t *targetFile = pmm->alloc(sizeof(stat_t));
+  ;
+  int fd     = sys_open(proc, arg, O_RDONLY);
   int status = sys_fstat(proc, fd, targetFile);
   if (!status) {
     char *typestring;
@@ -319,7 +295,8 @@ FUNC(stat) {
     } else {
       typestring = "unused";
     }
-    sprintf(ret, "file: %s: type=%s, link number=%d, size=%dbytes\n", arg, typestring, targetFile->links, targetFile->size);
+    sprintf(ret, "file: %s: type=%s, link number=%d, size=%dbytes\n", arg,
+            typestring, targetFile->links, targetFile->size);
   } else {
     sprintf(ret, "VFS ERROR: stat failed with status %d.\n", status);
   }
@@ -329,11 +306,8 @@ FUNC(stat) {
 FUNC(mem) {
   bool holding = spin_holding(&task_list_lock);
   if (!holding) spin_lock(&task_list_lock);
-  cprintf("tty1 total memory:", "%d\n", total_mem);
-  for (task_t *tp = &root_task; tp != NULL; tp = tp->next) {
-    cprintf("tty1", "pid %d <%s> pmsize: %d\n", tp->pid,
-            tp->name, tp->pmsize);
-  }
+  cprintf("tty1",
+          "total memory apply: %d\ntotal memory usage: %d\ntotal memory: %d",
+          total_apply, total_mem, heap.end - heap.start);
   if (!holding) spin_unlock(&task_list_lock);
-
 }
