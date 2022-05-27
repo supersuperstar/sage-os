@@ -95,6 +95,7 @@ void func(void* arg) {
   r   = vfs->unlink(task, "te.c");
   fd1 = vfs->open(task, "te.c", O_CREAT | O_RDWR);
 
+  //删除一个内有文件的文件夹
   r = vfs->unlink(task, "/bin");
   printf("close result:%d.\n", r);
 

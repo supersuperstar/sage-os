@@ -12,6 +12,7 @@
 task_t *task_reader, *task_writer;
 spinlock_t print_lock;
 spinlock_t cnt_lock;
+device_t* devs;
 int cnt = 0, read = 1, write = 1;
 
 void writer(void *arg) {
@@ -33,7 +34,7 @@ void writer(void *arg) {
     sprintf((char *)blkw.data, "this is data block %d.\000", blkw.blk_no);
     uint64_t s, e;
     s = safe_io_read(AM_TIMER_UPTIME).us;
-    fs->writeblk(dev->lookup("sda"), blkw.blk_no, &blkw);
+    fs->writeblk(devs, blkw.blk_no, &blkw);
     e = safe_io_read(AM_TIMER_UPTIME).us;
     time += e - s;
     spin_lock(&print_lock);
@@ -64,7 +65,7 @@ void reader(void *arg) {
       }
       uint64_t s, e;
       s = safe_io_read(AM_TIMER_UPTIME).us;
-      fs->readblk(dev->lookup("sda"), blkr.blk_no, &blkr);
+      fs->readblk(devs, blkr.blk_no, &blkr);
       e = safe_io_read(AM_TIMER_UPTIME).us;
       time += e - s;
       spin_lock(&print_lock);
@@ -100,6 +101,7 @@ int main() {
   spin_init(&print_lock, "print_lock");
   spin_init(&cnt_lock, "cnt_lock");
 
+  devs = dev->lookup("sda");
   create_threads();
 
   mpe_init(os->run);

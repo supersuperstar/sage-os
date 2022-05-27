@@ -108,7 +108,7 @@ void fs_initinodes(device_t* dev) {
     spin_init(&(inodes[i].lock), name);
     fs_readinode(dev, i, &inodes[i]);
   }
-  inodes[ROOTINO].type=DINODE_TYPE_D;
+  inodes[ROOTINO].type = DINODE_TYPE_D;
 }
 
 // ok
@@ -131,7 +131,7 @@ void fs_init() {
   fs_initblks(dev->lookup(D));
   fs_allocblk(dev->lookup(D));
   file_init();
-  inodes[0].type=DINODE_TYPE_F;
+  inodes[0].type = DINODE_TYPE_F;
 }
 
 // inode operations
@@ -596,7 +596,7 @@ static inode_t* namex(const char* pathname, int nameiparent, char* name) {
     }
     if ((next = dirlookup(ip, name, 0)) == 0) {
       iunlockput(ip);
-      warn("[fs.c/namex] dirlookup \"%s\" == 0.path not exist!",pathname);
+      warn("[fs.c/namex] dirlookup \"%s\" == 0.path not exist!", pathname);
       return 0;
     }
     iunlockput(ip);

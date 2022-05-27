@@ -1,4 +1,3 @@
-#include <user.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -6,11 +5,13 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/mman.h>
-//#include <dirent.h>
+#include <dirent.h>
+#include <errno.h>
 
-#include "../kernel/framework/fs_defs.h"
+#include "my_fs_defs.h"
 
-const char img_path[] = "fs-img";
+char img_path[30];
+int inum_table[NBLOCK] = {0};
 
 uint32_t allocblk(uint8_t *disk);
 void readblk(uint8_t *disk, uint32_t blk_no, block_t *buf);
@@ -18,20 +19,56 @@ void writeblk(uint8_t *disk, uint32_t blk_no, block_t *buf);
 void zeroblk(uint8_t *disk, uint32_t blk_no);
 void writeinode(uint8_t *disk, uint32_t inode_no, dinode_t *inode);
 int writei(uint8_t *disk, dinode_t *ip, char *src, uint32_t off, uint32_t n);
+int ialloc();
 void writeimg(dinode_t parent, int *inum, const char *path, int type);
 
+void list(const char *path, dinode_t *inode, int parent_inum, int now_inum) {
+  struct stat buf;
+
+  if (stat(path, &buf) == 0) {
+    if (buf.st_mode & S_IFREG) {
+      // file
+    } else if (buf.st_mode & S_IFDIR) {
+      // dir
+      DIR *dir;
+      struct dirent *entry;
+      if ((dir = opendir(path)) == NULL) {
+        printf("Error %d while open dir %s: %s\n", errno, path,
+               strerror(errno));
+        exit(EXIT_FAILURE);
+      }
+      while ((entry = readdir(dir)) != NULL) {
+        char bufpath[512];
+        // entry->d_name
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+          continue;
+        sprintf(bufpath, "%s%s%s", path,
+                path[strlen(path) - 1] == '/' ? "" : "/", entry->d_name);
+        list(bufpath);
+      }
+      closedir(dir);
+    }
+  } else {
+    printf("Error %d while listing %s: %s\n", errno, path, strerror(errno));
+  }
+}
+
 int main(int argc, char *argv[]) {
+  if (argc < 3) {
+    printf("usage:\n./mkfs 64 build/kernel-x86_64-qemu fs-img/");
+    return 0;
+  }
   int fd, size = atoi(argv[1]) << 20;
   uint8_t *disk;
-
-  // TODO: argument parsing
 
   assert((fd = open(argv[2], O_RDWR)) > 0);
   assert((ftruncate(fd, size)) == 0);
   assert((disk = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) !=
          (void *)-1);
 
-  // TODO: mkfs
+  strcpy(img_path, argv[3]);
+  // mkfs 64 build/kernel-x86_64-qemu fs-img/
+
   dinode_t root;
   superblock_t sb;
   // write super block
@@ -67,6 +104,7 @@ int main(int argc, char *argv[]) {
   dir.inum = ROOTINO;
   strcpy(dir.name, "..\0");
   writei(disk, &root, (char *)&dir, sizeof(dirent_t), sizeof(dirent_t));
+
   // /a.txt
   // create dirent for a.txt
   dir.inum = i_no++;
@@ -107,28 +145,39 @@ int main(int argc, char *argv[]) {
   close(fd);
 }
 
-// void writeimg(dinode_t parent, int *inum, const char *path, int type) {
-//   DIR *dir   = opendir(path);
-//   int nownum = inum;
-//   int child  = 0;
-//
-//   if (dir != NULL) {
-//     struct dirent *entry;
-//     while ((entry = readdir(dir)) != NULL) {
-//       if (strcmp(entry->d_name, ".") == 0) {
-//       } else if (strcmp(entry->d_name, "..") == 0) {
-//       }
-//       dirent_t dirent;
-//       dirent.inum = ++inum;
-//       strcpy(dirent.name, entry->d_name);
-//       dinode_t inode;
-//       inode.type  = DINODE_TYPE_D;
-//       inode.size  = 0;
-//       inode.nlink = 0;
-//       memset(inode.addrs, 0, sizeof(inode.addrs));
-//     }
-//   }
-// }
+void writeimg(dinode_t parent, int *inum, const char *path, int type) {
+  DIR *dir   = opendir(path);
+  int nownum = inum;
+  int child  = 0;
+
+  if (dir != NULL) {
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+      if (strcmp(entry->d_name, ".") == 0) {
+      } else if (strcmp(entry->d_name, "..") == 0) {
+      }
+      dirent_t dirent;
+      dirent.inum = ++inum;
+      strcpy(dirent.name, entry->d_name);
+      dinode_t inode;
+      inode.type  = DINODE_TYPE_D;
+      inode.size  = 0;
+      inode.nlink = 0;
+      memset(inode.addrs, 0, sizeof(inode.addrs));
+    }
+  }
+}
+
+int ialloc() {
+  int i;
+  for (i = 0; i < NBLOCK; i++) {
+    if (inum_table[i] == 0) {
+      inum_table[i] = 1;
+      return i;
+    }
+  }
+  return -1;
+}
 
 uint32_t allocblk(uint8_t *disk) {
   uint32_t i, j, k;

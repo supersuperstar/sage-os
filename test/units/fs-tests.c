@@ -22,11 +22,11 @@ int main() {
   o3 = OFFSET_ALLBITMAP;
   o4 = OFFSET_BLOCK(0);
   o5 = OFFSET_BLOCK((NBLOCK));
-  // printf("OFFSET_BOOT is %d\n", o1);
-  // printf("OFFSET_ALLINODE is %d\n", o2);
-  // printf("OFFSET_ALLBITMAP is %d\n", o3);
-  // printf("OFFSET_BLOCK 0 is %d\n", o4);
-  // printf("OFFSET_BLOCK N is %d\n", o5);
+  printf("OFFSET_BOOT is %d\n", o1);
+  printf("OFFSET_ALLINODE is %d\n", o2);
+  printf("OFFSET_ALLBITMAP is %d\n", o3);
+  printf("OFFSET_BLOCK 0 is %d\n", o4);
+  printf("OFFSET_BLOCK N is %d\n", o5);
 
   printf("------------------------\n");
   printf("|\tBOOT      \t|\n");
@@ -51,19 +51,36 @@ int main() {
   printf("------------------------\n");
 
   // //------------------------test data block rw------------------------------
-  uint64_t start=safe_io_read(AM_TIMER_UPTIME).us;
+
   block_t buf;
-  for (int i = 1; i <= 20; i++){
-    sprintf((char*)buf.data,"this is data block %d.",i % 2 ? i : i + 100);
-    fs->writeblk(dev->lookup("sda"), i % 2 ? i : i + 100, &buf);
+  device_t* devs;
+  char bufs[BSIZE * 20];
+  devs = dev->lookup("sda");
+
+  //---------------顺序读写------------------
+  uint64_t start = safe_io_read(AM_TIMER_UPTIME).us;
+  devs->ops->write(devs, OFFSET_BLOCK(30), bufs, BSIZE * 20);
+  devs->ops->read(devs, OFFSET_BLOCK(30), bufs, BSIZE * 20);
+  uint64_t end = safe_io_read(AM_TIMER_UPTIME).us;
+  printf("RW 20 blocks time in order: %d ms\n", (end - start) / 1000);
+  //---------------随机读写------------------
+  uint64_t total = 0;
+  for (int i = 1; i <= 20; i++) {
+    sprintf((char*)buf.data, "this is data block %d.", i % 2 ? i : i + 100);
+    start = safe_io_read(AM_TIMER_UPTIME).us;
+    fs->writeblk(devs, i % 2 ? i : i + 100, &buf);
+    end = safe_io_read(AM_TIMER_UPTIME).us;
+    total += end - start;
   }
   block_t out;
   for (int i = 1; i <= 20; i++) {
-    fs->readblk(dev->lookup("sda"), i % 2 ? i : i + 100, &out);
-    printf("data %d is :[%s]\n", i, out.data);
+    start = safe_io_read(AM_TIMER_UPTIME).us;
+    fs->readblk(devs, i % 2 ? i : i + 100, &out);
+    end = safe_io_read(AM_TIMER_UPTIME).us;
+    total += end - start;
+    // printf("data %d is :[%s]\n", i, out.data);
   }
-  uint64_t end=safe_io_read(AM_TIMER_UPTIME).us;
-  printf("random RW 100 blocks time: %d ms\n",(end-start)/1000);
+  printf("RW 20 blocks time randomly: %d ms\n", total / 1000);
 
   //------------------------test inoderw-----------------------------------
   inode_t inode, inodeout;
@@ -73,7 +90,7 @@ int main() {
   inode.nlink = 5;
   inode.type  = DINODE_TYPE_D;
   for (int i = 0; i < NDIRECT; i++) {
-    inode.addrs[i] = OFFSET_BLOCK(i);
+    inode.addrs[i] = i + 1;
   }
   fs->writeinode(dev->lookup("sda"), inode.inum, &inode);
   fs->readinode(dev->lookup("sda"), inode.inum, &inodeout);
@@ -89,27 +106,31 @@ int main() {
   int free[5] = {1, 3, 6, 9, 16};
   printf("OFFSET BITMAP:");
   for (int i = 0; i < 5; i++) {
-    printf("%d(%d) ", free[i], OFFSET_BITMAP(free[i]));
+    printf("%d(0x%8x) ", free[i], OFFSET_BITMAP(free[i]));
   }
   printf("\n");
   // alloc 20 block 0~19
+  printf("alloc 20 block is :");
   for (int i = 0; i < 20; i++) {
     uint32_t blk_no = fs->allocblk(dev->lookup("sda"));
-    printf("alloc %d block is :%d\n", i + 1, blk_no);
+    printf(" %d", blk_no);
   }
+  printf("\n");
   // free block 1,3,6,9,16
   for (int i = 0; i < 5; i++) {
     fs->freeblk(dev->lookup("sda"), free[i]);
   }
   // alloc again
+  printf("alloc 20 block is :");
   for (int i = 0; i < 20; i++) {
     int blk_no = fs->allocblk(dev->lookup("sda"));
-    printf("alloc %d block is :%d\n", i + 1, blk_no);
+    printf(" %d", blk_no);
   }
+  printf("\n");
 
   fs_print_datablock_bitmap_info(0);
   fs_print_inode_info(0);
-  
+
   mpe_init(os->run);
 
   while (1)
